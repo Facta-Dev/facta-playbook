@@ -85,6 +85,8 @@ forked skill packs vendored for use, not authored here.
 | `Facta-Dev/heimdall-platform` | TypeScript | Heimdall — "the guardian of the pipeline": reply triage. Reference implementation for every playbook here |
 | `Facta-Dev/trustanova` | Python | TrustaNova — AI-assisted online dispute resolution (ODR) |
 | `Facta-Dev/ReachPilot`, `Facta-Dev/ReachPilotPro` | Python / Rust | ReachPilot — multi-platform social engagement engine |
+| `Facta-Dev/package_builder` | HTML | Package Builder (`pb`) — the FACTA template factory: project skeletons (React, Python, Rust, RN, CLI, Chrome ext), the `pb` Claude Code plugin, 16 invariants as PR blockers (`pb.facta.dev`) |
+| `Facta-Dev/ei2` | Python | **Eidos** — 1,756 book-derived archetype packages for Claude Code across 12 segments; assets-only offer |
 | `Facta-Dev/zypho-editor`, `zypho-platform`, `zypho_backend`, `zypho_frontend`, `zypho-chrome-extension` | TS / Python / HTML | The zypho editor suite |
 | `contextzero/nest` | — | NEST — local-first control plane for AI coding agents (free, self-hosted) |
 | `contextzero/ctx0` | — | CTX0 — the managed-cloud version of NEST |
@@ -123,8 +125,6 @@ forked skill packs vendored for use, not authored here.
 | `Facta-Dev/archify` | Architecture / workflow / sequence diagram skill |
 | `Facta-Dev/ponytail` | Fork of the lazy-senior-dev skill behind the `ponytail` plugin |
 | `Facta-Dev/superpowers`, `Facta-Dev/frontend-slides`, `Facta-Dev/marketingskills`, `Facta-Dev/ui-ux-pro-max-skill`, `Facta-Dev/awesome-claude-*` | Vendored skill/framework collections |
-| `Facta-Dev/package_builder` | The factory behind every product — HTML, 12 instantiable stacks behind a fail-closed spec gate (`pb.facta.dev`) |
-| `Facta-Dev/ei2` | ei2 — Python prompt/content package library (assets-only product) |
 
 ### 4.5 Internal tooling
 
