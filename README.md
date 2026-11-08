@@ -123,8 +123,9 @@ forked skill packs vendored for use, not authored here.
 | `Facta-Dev/archify` | Architecture / workflow / sequence diagram skill |
 | `Facta-Dev/ponytail` | Fork of the lazy-senior-dev skill behind the `ponytail` plugin |
 | `Facta-Dev/superpowers`, `Facta-Dev/frontend-slides`, `Facta-Dev/marketingskills`, `Facta-Dev/ui-ux-pro-max-skill`, `Facta-Dev/awesome-claude-*` | Vendored skill/framework collections |
-| `Facta-Dev/package_builder` | HTML | The factory behind every product: 12 instantiable stacks behind a fail-closed spec gate (`pb.facta.dev`) |
-| `Facta-Dev/ei2` | Python | ei2 — prompt/content package library (assets-only product) |
+| `Facta-Dev/package_builder` | The factory behind every product — HTML, 12 instantiable stacks behind a fail-closed spec gate (`pb.facta.dev`) |
+| `Facta-Dev/ei2` | ei2 — Python prompt/content package library (assets-only product) |
+
 ### 4.5 Internal tooling
 
 | Repo | What it is |
