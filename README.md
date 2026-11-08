@@ -102,6 +102,7 @@ forked skill packs vendored for use, not authored here.
 | `Facta-Dev/claude-skill` | Python | Skill that makes Claude build cinematic landing pages |
 | `Facta-Dev/ai-job-search` | JavaScript | AI job-application framework that runs locally |
 | `Facta-Dev/agents-office` | JavaScript | Agents Office v3 — 3D isometric office where agents do real work |
+| `Facta-Dev/synthia_frontend` | JavaScript | SYNTHIA platform — enterprise AI orchestration dashboard (React) |
 
 ### 4.3 Client rebuilds
 
@@ -134,7 +135,8 @@ forked skill packs vendored for use, not authored here.
 | `Facta-Dev/aws-ec2-setup` | Declarative Ubuntu infrastructure stack (PostgreSQL 17 + pgvector) |
 | `Facta-Dev/claude-code-cli-cost-tracker` | Cost tracking for the `claude` CLI |
 | `matiasbaglieri/terrain` | Agent tooling: RTK-style read/grep, skills and codegraph wiring |
-| `matiasbaglieri/OmniRoute` | Model/gateway routing dashboard |
+| `Facta-Dev/OmniRoute` | Model/gateway routing dashboard (private working copy of `diegosouzapw/OmniRoute`) |
+| `contextzero/repomix` | Private working copy of `yamadashy/repomix` with local changes on `main` |
 
 ### 4.6 Reference clones (upstream, read-only)
 
