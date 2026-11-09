@@ -120,13 +120,19 @@ bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --group=core \
 | `--depth=` | clone depth (default `1`) |
 | `--dry-run` | print the plan and the exact commands, clone nothing |
 
+Both `--flag=value` and `--flag value` are accepted.
+
+The inventory is `install/repos.txt` — one `group|org/repo|why` per line,
+derived from README §4. It is the single source of truth: add a repo there and
+in the README table, never in the script.
+
 | Group | Repos (README §4) |
 | --- | --- |
-| `core` | `facta-playbook`, `package_builder`, `ei2`, `facta_archetype`, `agents-office` |
-| `products` | `talos`, `deino`, `staxis`, `v0ss`, `enyo-platform`, `heimdall-platform`, `trustanova`, `ReachPilot`, `ReachPilotPro`, `zypho-platform`, `zypho_backend`, `zypho_frontend`, `zypho-chrome-extension`, `zypho-editor`, `facta_frontend`, `synthia_frontend`, `nest`, `ctx0` |
+| `core` | `facta-playbook` (this repo) |
+| `products` | §4.1 + §4.2: `talos`, `deino`, `staxis`, `v0ss`, `enyo-platform`, `heimdall-platform`, `trustanova`, `ReachPilot`, `ReachPilotPro`, `package_builder`, `ei2`, the `zypho-*` suite, `nest`, `ctx0`, `facta_archetype`, `facta_frontend`, `blog-templates`, `3d-landings-pro`, `claude-skill`, `ai-job-search`, `agents-office`, `synthia_frontend` |
 | `tools` | `aws-ec2-setup`, `claude-code-cli-cost-tracker`, `terrain`, `OmniRoute`, `repomix` |
-| `clients` | `everythink_platform`, `everythink_android`, `everythink_ios`, `everythink_backend`, `everythiink_arxiv`, `transportation-bank`, `technorides_eu`, `technorides_web`, `technorides_web_premium`, `trustanova-platform` |
-| `reference` | skill and factory packs: `skills`, `skills-images-video-audio-3d`, `garden-skills`, `beautifulgo`, `beautifulnodejs`, `beautifulpython`, `beautifulrust`, `archify`, `ponytail`, `superpowers`, `frontend-slides`, `marketingskills`, `ui-ux-pro-max-skill`, plus the upstream read-only clones of README §4.6 |
+| `clients` | `everythink_platform`, `everythiink_arxiv`, `everythink_android`, `everythink_ios`, `everythink_backend`, `transportation-bank`, `technorides_eu`, `technorides_web`, `technorides_web_premium`, `trustanova-platform` |
+| `reference` | skill and factory packs (§4.4) plus the upstream read-only clones (§4.6) |
 | `all` | every group above |
 
 `Facta-Dev/` owns the products and tooling; `contextzero/` owns `nest` and

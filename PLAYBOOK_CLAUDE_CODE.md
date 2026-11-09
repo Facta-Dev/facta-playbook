@@ -89,6 +89,8 @@ acceptance checklist).
 | 20 | MCP servers (`.mcp.json`), plugins | Optional | 6.6 |
 | 21 | Managed settings / managed CLAUDE.md (organizations) | Optional (org level) | 14.5 |
 | 22 | Output styles, status line | Optional | 6.7 |
+| 23 | `kit/CLAUDE.md` — user-scope instructions (installed at `~/.claude/CLAUDE.md`) | Required (user scope) | 20 |
+| 24 | `kit/settings.fragment.json` — model-routing env, default model and the deny list, merged into `~/.claude/settings.json` | Required (user scope) | 20 |
 
 ---
 
@@ -123,6 +125,12 @@ toward usage limits). Delegate to a subagent when output would flood the main
 conversation; do small, tightly coupled edits in the main thread. Route
 low-reasoning work (search, mapping) to lower-cost models via the agent's
 `model` field.
+
+A fresh machine pays this budget before any work starts: the installation
+runbook ([PLAYBOOK_INSTALL.md](PLAYBOOK_INSTALL.md), §0) keeps the
+always-loaded surface under target and measures it with `kit_check.py`.
+Installation is shell-only, so it costs zero model tokens; the model is
+consulted only for judgment.
 
 ### 2.4 Language policy
 
@@ -1292,6 +1300,51 @@ ownership files before generalizing.
 - [ ] Threats in section 14 mitigated; secrets denied; sandbox/container strategy for unattended runs.
 - [ ] Compliance evidence mapping reviewed with the audit playbook.
 - [ ] Rollout plan with pilot team and success criteria.
+
+### Installation
+- [ ] `install-user-kit.sh` ran; `kit_check.py` exits 0, or 1 with known warnings.
+- [ ] `settings.json` is `chmod 600` and holds no plaintext secret.
+- [ ] The working set was cloned by group (`clone-repos.sh --group=...`).
+- [ ] Every active repo passes `configure-repo.sh --check`.
+
+---
+
+## 20. Installation and bootstrap
+
+This section says what an install needs; [PLAYBOOK_INSTALL.md](PLAYBOOK_INSTALL.md)
+is the full runbook (flags, groups, verification, rollback). Installation is
+shell-only and therefore costs **zero model tokens**; the model is consulted
+only for judgment calls.
+
+**`kit/` ships the user-scope layer** — the files installed into `~/.claude`:
+`kit/CLAUDE.md` (instructions), `kit/agents/` (`advisor`, `kit-curator`),
+`kit/skills/` (the SDD and audit skills), `kit/templates/sdd/` and
+`kit/settings.fragment.json` (model-routing env, default model and the deny
+list — merged into `settings.json`, never a replacement for it).
+
+**`scripts/claude-kit/` ships the install scripts:**
+
+| Script | Role |
+|---|---|
+| `install-user-kit.sh` | Installs `kit/` into `~/.claude`; skips user-owned files unless `--force`, backs up every overwrite, merges the settings fragment |
+| `clone-repos.sh` | Clones the working set by group (`core`, `products`, `tools`, `clients`, `reference`); `--dry-run` prints the plan |
+| `configure-repo.sh` | Wires one repo: routing block, `.claude/README.md`, deny list, `.gitignore`, optional language kit; `--check` verifies without writing |
+| `kit_check.py` | Read-only validator: agents, skills, rules, `CLAUDE.md`, settings, command collisions |
+| `dedupe_plugins.py` | Moves user copies of plugin components aside (dry run by default, `--restore` puts them back) |
+
+**A new machine runs three commands:**
+
+```bash
+bash scripts/claude-kit/install-user-kit.sh     # user scope
+bash scripts/claude-kit/clone-repos.sh --group=core --dir ~/work
+bash scripts/claude-kit/configure-repo.sh ~/work/<repo> --kit=<lang>
+```
+
+Every step is idempotent: re-running skips what is already there and never
+duplicates the `model-routing:ollama` marker. Note that under
+`permissions.defaultMode: "bypassPermissions"` the **deny** list is the
+enforced lever — an `allow` list is inert — so user-scope denies must anchor
+`//` or `~/`, never `./`.
 
 ---
 

@@ -1,0 +1,94 @@
+# Working set — group|org/repo|why
+# Derived from README.md §4 (repository map). One repo per line.
+# '#' comments and blank lines are ignored by scripts/claude-kit/clone-repos.sh.
+#
+# core       the playbook itself (start here)
+# products   §4.1 + §4.2 products, sites and side products
+# tools      §4.5 internal tooling
+# clients    §4.3 client rebuilds
+# reference  §4.4 skill/factory packs + §4.6 read-only upstream clones
+
+# --- core -----------------------------------------------------------------
+core|Facta-Dev/facta-playbook|Operating contract: playbooks, routing, install runbook
+
+# --- products (§4.1) ------------------------------------------------------
+products|Facta-Dev/talos|TALOS: organizational AI infrastructure (Cortex, Billing, Conductor)
+products|Facta-Dev/deino|Deino: auditable forecasting infrastructure
+products|Facta-Dev/staxis|Staxis: crypto trading infrastructure
+products|Facta-Dev/v0ss|v0ss: real-time subtitles over your own knowledge base
+products|Facta-Dev/enyo-platform|ENYO: self-hosted security testing and OSINT platform
+products|Facta-Dev/heimdall-platform|Heimdall: reply triage, reference implementation
+products|Facta-Dev/trustanova|TrustaNova: AI-assisted dispute resolution (ODR)
+products|Facta-Dev/ReachPilot|ReachPilot: social engagement engine (Python)
+products|Facta-Dev/ReachPilotPro|ReachPilot Pro: social engagement engine (Rust)
+products|Facta-Dev/package_builder|Package Builder: project skeleton factory and the pb plugin
+products|Facta-Dev/ei2|Eidos: book-derived archetype packages
+products|Facta-Dev/zypho-editor|Zypho editor suite
+products|Facta-Dev/zypho-platform|Zypho platform
+products|Facta-Dev/zypho_backend|Zypho backend
+products|Facta-Dev/zypho_frontend|Zypho frontend
+products|Facta-Dev/zypho-chrome-extension|Zypho Chrome extension
+products|contextzero/nest|NEST: local-first control plane for coding agents
+products|contextzero/ctx0|CTX0: managed-cloud version of NEST
+
+# --- products (§4.2 content, site and side products) ----------------------
+products|Facta-Dev/facta_archetype|Content/social engine: landings, decks, per-product identities
+products|Facta-Dev/facta_frontend|facta.dev site and the investor deck
+products|Facta-Dev/blog-templates|Crawled blog post templates by provider
+products|Facta-Dev/3d-landings-pro|Scroll-scrubbed 3D landing templates
+products|Facta-Dev/claude-skill|Skill that makes Claude build cinematic landing pages
+products|Facta-Dev/ai-job-search|Local AI job-application framework
+products|Facta-Dev/agents-office|Agents Office v3: 3D isometric office where agents work
+products|Facta-Dev/synthia_frontend|SYNTHIA: enterprise AI orchestration dashboard
+
+# --- tools (§4.5) ----------------------------------------------------------
+tools|Facta-Dev/aws-ec2-setup|Declarative Ubuntu infrastructure stack (PostgreSQL 17 + pgvector)
+tools|Facta-Dev/claude-code-cli-cost-tracker|Cost tracking for the claude CLI
+tools|matiasbaglieri/terrain|Agent tooling: read/grep, skills and codegraph wiring
+tools|Facta-Dev/OmniRoute|Model and gateway routing dashboard
+tools|contextzero/repomix|Private working copy of yamadashy/repomix
+
+# --- clients (§4.3) --------------------------------------------------------
+clients|everythink-ai/everythink_platform|EveryThink platform (90-day rebuild)
+clients|everythink-ai/everythiink_arxiv|EveryThink arXiv corpus
+clients|matiasbaglieri/everythink_android|EveryThink Android client
+clients|matiasbaglieri/everythink_ios|EveryThink iOS client
+clients|matiasbaglieri/everythink_backend|EveryThink backend
+clients|Technorides/transportation-bank|TechnoRides transportation bank backend and reference book
+clients|Technorides/technorides_eu|TechnoRides EU platform
+clients|Technorides/technorides_web|TechnoRides web platform
+clients|Technorides/technorides_web_premium|TechnoRides premium web platform
+clients|Facta-Dev/trustanova-platform|TrustaNova platform rebuild (ODR monorepo)
+
+# --- reference (§4.4 skill and factory packs) ------------------------------
+reference|Facta-Dev/skills|Engineering skill pack
+reference|Facta-Dev/skills-images-video-audio-3d|Image, video, audio and 3D generation skills
+reference|Facta-Dev/garden-skills|Web design, knowledge retrieval and video presentation skills
+reference|Facta-Dev/beautifulgo|Idiomatic Go skill pack
+reference|Facta-Dev/beautifulnodejs|Idiomatic Node.js skill pack
+reference|Facta-Dev/beautifulpython|Idiomatic Python skill pack
+reference|Facta-Dev/beautifulrust|Idiomatic Rust skill pack
+reference|Facta-Dev/archify|Architecture, workflow and sequence diagram skill
+reference|Facta-Dev/ponytail|Lazy-senior-dev skill behind the ponytail plugin
+reference|Facta-Dev/superpowers|Vendored skill collection
+reference|Facta-Dev/frontend-slides|Vendored skill collection
+reference|Facta-Dev/marketingskills|Vendored skill collection
+reference|Facta-Dev/ui-ux-pro-max-skill|Vendored skill collection
+reference|Facta-Dev/awesome-claude-skills|Curated index of Claude skills, resources and tools
+
+# --- reference (§4.6 upstream clones, read-only) ---------------------------
+reference|storytold/craft-anything|Upstream clone, read-only
+reference|rmcrackan/Libation|Upstream clone, read-only
+reference|OlaProeis/Ferrite|Upstream clone, read-only
+reference|jo-inc/camofox-browser|Upstream clone, read-only
+reference|aldinokemal/go-whatsapp-web-multidevice|Upstream clone, read-only
+reference|EasyDevv/project-to-markdown|Upstream clone, read-only
+reference|JoasASantos/REA-Prompts|Upstream clone, read-only
+reference|samber/cc-skills-golang|Upstream clone, read-only
+reference|Facta-Dev/ChatDev|Upstream fork in the Facta-Dev org, read-only
+reference|Facta-Dev/Fooocus|Upstream fork in the Facta-Dev org, read-only
+reference|Facta-Dev/FreeCAD|Upstream fork in the Facta-Dev org, read-only
+reference|Facta-Dev/HunyuanVideo|Upstream fork in the Facta-Dev org, read-only
+reference|Facta-Dev/MinerU|Upstream fork in the Facta-Dev org, read-only
+reference|Facta-Dev/Wav2Lip|Upstream fork in the Facta-Dev org, read-only
+reference|Facta-Dev/facefusion|Upstream fork in the Facta-Dev org, read-only

@@ -48,6 +48,10 @@ is already pulled locally.
 4. Ollama listening on `127.0.0.1:11434` (or a gateway on `20128` — if the
    profiles under `~/.claude/profiles/` are used, that gateway must be running).
 
+The full machine bootstrap (clone, user kit, repo wiring) is
+[PLAYBOOK_INSTALL.md](PLAYBOOK_INSTALL.md); this runbook covers only the model
+wiring.
+
 ## 3. `~/.claude/settings.json`
 
 Add to `env` (keep any existing keys):
