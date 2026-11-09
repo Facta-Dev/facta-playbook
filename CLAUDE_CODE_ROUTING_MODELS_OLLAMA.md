@@ -9,6 +9,15 @@ a strong one is consulted only before a plan locks, after the same error twice,
 and before a task is called done. **The native `--advisor` flag does not work
 on Ollama** (see §7); this runbook reproduces the pattern with a subagent.
 
+> **Companion guide: [PLAYBOOK_CLAUDE_CODE.md](PLAYBOOK_CLAUDE_CODE.md)** — the
+> Claude Code implementation kit (agents, skills, rules, hooks, roles,
+> coordination, SDD/TDD). This runbook is its model-routing slice: §3–§5 map to
+> the capability plane (agent roster, `CLAUDE.md`) and the control plane
+> (`settings.json`); the `advisor` agent is an ordinary roster entry (§6.3) and
+> the tier aliases are the concrete values behind that playbook's `model` field
+> (§6.2). Read the playbook first if you are building the kit from scratch;
+> come back here to wire the models.
+
 ---
 
 ## 1. Tiers
@@ -64,6 +73,19 @@ the expensive model.
 `settings.json` `env` overrides what `ollama launch claude` injects — verified
 by launching a session that exported the old values and reading its `env`.
 
+If nothing in the shell exports the endpoint, a bare `claude` cannot reach
+Ollama (`Failed to authenticate: OAuth session expired`). Add the endpoint to
+the same `env` block on those machines:
+
+```json
+"ANTHROPIC_BASE_URL": "http://127.0.0.1:11434",
+"ANTHROPIC_AUTH_TOKEN": "ollama"
+```
+
+The token is the fixed literal `ollama` accepted by the local proxy, not a
+secret. Verified on this machine: a bare `claude` then resolves
+`glm-5.3-flash:cloud` with the Ollama endpoint env removed from the shell.
+
 Never store API keys in this file; it is plain text.
 
 ## 4. `~/.claude/agents/advisor.md`
@@ -71,27 +93,27 @@ Never store API keys in this file; it is plain text.
 ```markdown
 ---
 name: advisor
-description: Asesor de decisión. Consultar antes de fijar un plan, cuando el mismo error reaparezca dos veces, y antes de declarar una tarea terminada. Solo lee y decide.
+description: Decision advisor. Consult before locking a plan, when the same error reappears twice, and before declaring a task done. Read-only.
 tools: Read, Grep, Glob
 model: opus
 ---
 
-Sos el asesor de decisión. Recibís el contexto que te pasa la sesión principal
-(plan, diff, resultados de tests, transcript parcial).
+You are the decision advisor. You receive the context passed by the main
+session (plan, diff, test results, partial transcript).
 
-Respondé SOLO:
+Answer ONLY:
 
-1. Riesgo no obvio que el trabajo actual no está cubriendo.
-2. Decisión recomendada, en una frase imperativa.
-3. Evidencia que falta antes de avanzar (o "suficiente" si no falta nada).
+1. Non-obvious risk the current work is not covering.
+2. Recommended decision, in one imperative sentence.
+3. Evidence missing before moving forward (or "enough" if nothing is missing).
 
-Reglas:
+Rules:
 
-- No edites archivos ni ejecutes comandos: tu salida es consejo.
-- Si el contexto es insuficiente para decidir, decilo y pedí exactamente qué leer.
-- No repitas el plan de vuelta ni resumas el diff; el valor está en lo que falta.
-- Preferí la solución más simple que resuelve el problema real; marcá el
-  over-engineering cuando lo veas.
+- Do not edit files or run commands: your output is advice.
+- If the context is insufficient to decide, say so and ask exactly what to read.
+- Do not repeat the plan back or summarize the diff; the value is in what is missing.
+- Prefer the simplest solution that solves the real problem; flag
+  over-engineering when you see it.
 ```
 
 `model: opus` is the alias, so moving the escalation model is one env change,
@@ -104,15 +126,17 @@ override it in turn.
 ```markdown
 ## Model tiers (Ollama)
 
-Los alias resuelven por `ANTHROPIC_DEFAULT_*` (settings.json): `opus` =
-escalation, `sonnet` = workhorse, `haiku` = barato. Subí de tier con
-`/model opus` cuando el problema es de diseño o la misma solución falló dos
-veces; volvé a `sonnet` al terminar.
+Aliases resolve through `ANTHROPIC_DEFAULT_*` (settings.json): `opus` =
+escalation, `sonnet` = workhorse, `haiku` = cheap. Escalate with `/model opus`
+when the problem is design-related or the same solution has failed twice; go
+back to `sonnet` when done.
 
-- Consultá el agent `advisor` antes de fijar un plan, cuando el mismo error
-  reaparezca dos veces, y antes de declarar una tarea terminada.
-- Pasale contexto concreto (plan, diff, output del test); no le pidas que
-  investigue el repo entero.
+- Consult the `advisor` agent before locking a plan, when the same error
+  reappears twice, and before declaring a task done.
+- Pass concrete context (plan, diff, test output); do not ask it to investigate
+  the whole repo.
+- All code, comments, tests, specs, and documentation are generated in English
+  (playbook §2.4).
 ```
 
 ## 6. Per-repo block
@@ -135,6 +159,7 @@ Runbook: `facta-playbook/CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md`.
   (plan, diff, test output) — not the whole repo.
 - Escalate with `/model opus` for design decisions or after two failed
   attempts; return to `sonnet` when the task is done.
+- All code, comments, tests, specs, and documentation are generated in English.
 ```
 
 Rollout (2026-11-08): heimdall-platform, enyo/enyo-platform, deino, talos,
@@ -184,7 +209,7 @@ claude -p "ok" --model haiku --output-format json | grep -o '"modelUsage":{"[^"]
 #   -> "modelUsage":{"minimax-m3.1-flash:cloud
 
 # advisor agent is discoverable and runs
-claude -p "Invocá el subagent advisor con este contexto: 'test'. Devolvé solo su respuesta." \
+claude -p "Invoke the advisor subagent with this context: 'test'. Return only its response." \
   --output-format json | grep -o '"subagent_stats":{[^}]*'
 #   -> "subagent_stats":{"spawned":1,...
 ```
@@ -209,6 +234,8 @@ claude -p "Invocá el subagent advisor con este contexto: 'test'. Devolvé solo 
 
 ## 11. Rollback
 
-Remove the five `env` keys and `"model": "sonnet"` from `settings.json`, delete
+Remove the five tier `env` keys (plus `ANTHROPIC_BASE_URL` /
+`ANTHROPIC_AUTH_TOKEN` if you added them) and `"model": "sonnet"` from
+`settings.json`, delete
 `~/.claude/agents/advisor.md`, and revert the `~/.claude/CLAUDE.md` section.
 Per-repo blocks are inert without the global settings.

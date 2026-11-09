@@ -124,6 +124,16 @@ conversation; do small, tightly coupled edits in the main thread. Route
 low-reasoning work (search, mapping) to lower-cost models via the agent's
 `model` field.
 
+### 2.4 Language policy
+
+All generated artifacts are in **English**: source code, identifiers, comments,
+docstrings, test names, commit messages, specs and ADRs, `CLAUDE.md` and rules,
+agent and skill definitions, and documentation. State it once in the root
+`CLAUDE.md` so every session and subagent inherits it; non-English text appears
+only in user-facing localization resources. Mixed-language code, comments and
+prompts cost context, break grep/search, and produce inconsistent review
+findings.
+
 ---
 
 ## 3. Directory structure
@@ -367,7 +377,10 @@ Design rules:
 5. **Model/effort**: reasoning-heavy roles (architecture, security, curation)
    `opus`/high effort; execution roles `sonnet`; mapping/search `haiku`.
    Never hard-code a model the organization may disallow without `inherit`
-   as the fallback (`availableModels` can substitute).
+   as the fallback (`availableModels` can substitute). A worked three-tier
+   mapping (escalation / workhorse / cheap) with an `advisor` agent that
+   reproduces the native advisor pattern on any Anthropic-compatible backend
+   is in [CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md](CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md).
 6. **Isolation**: `isolation: worktree` for agents that make broad edits in
    parallel; their worktree is auto-removed when unchanged.
 7. **Hooks inside agents** (e.g., read-only SQL validator) only run after the
@@ -1472,3 +1485,72 @@ If the project follows hexagonal vertical slicing with companion playbooks:
 | Test strategy | Matrix from the test playbook (unit, integration, contract, e2e, security, concurrency, migration) per AC |
 | Shared files | Shared kernel, SDK, generated API specs, lockfiles, CI/infra → integrator |
 | Evidence | Spec/test traceability, release evidence bundle, guard logs → SOC 2 / ISO SDLC controls |
+
+---
+
+## Appendix C — Facta-Dev companion repositories
+
+Companion repositories that plug into this kit: Agent Skill packs per stack,
+a cost tracker for the metrics plane, and skill packs for the capability plane.
+Treat every clone as external code: review, pin and allowlist it (§6.6, §14.1),
+and accept workspace trust deliberately (§14.3).
+
+### C.1 Stack kits and cost tracking
+
+```bash
+gh repo clone Facta-Dev/beautifulpython              # Python backend
+gh repo clone Facta-Dev/beautifulrust                # Rust
+gh repo clone Facta-Dev/beautifulgo                  # Go
+gh repo clone Facta-Dev/beautifulnodejs              # Node.js + TypeScript
+gh repo clone Facta-Dev/claude-code-cli-cost-tracker # agent cost tracking
+```
+
+| Repository | Stack / concern | What it provides | Upstream |
+|---|---|---|---|
+| `beautifulpython` | Python backend | Agent Skills plus a lint config that teach agents to write, review, port and enforce idiomatic Python | main project |
+| `beautifulrust` | Rust | Agent Skills plus a tested clippy config for idiomatic Rust | `morganlinton/BeautifulRust` (fork) |
+| `beautifulgo` | Go | Agent Skills for idiomatic Go | main project |
+| `beautifulnodejs` | Node.js + TypeScript | Agent Skills plus lint config for a Fastify/Zod/tsyringe/Drizzle/BullMQ/Pino/OTel stack | main project |
+| `claude-code-cli-cost-tracker` | Cost tracking | Reports what agent work actually costs; feeds the cost metrics (§13.5) and session budgets (§8.7) | main project |
+
+Language kits install as project or user skills (`.claude/skills/`,
+`~/.claude/skills/`); `paths`-scoped skills auto-activate on matching files
+(§6.4). Their lint config belongs to project tooling, not to a rule file.
+
+### C.2 Skill packs
+
+```bash
+gh repo clone Facta-Dev/skills
+gh repo clone Facta-Dev/claude-skill
+gh repo clone Facta-Dev/garden-skills
+gh repo clone Facta-Dev/ponytail
+gh repo clone Facta-Dev/ui-ux-pro-max-skill
+gh repo clone Facta-Dev/superpowers
+gh repo clone Facta-Dev/awesome-claude-skills
+```
+
+| Repository | Content | Upstream (fork) |
+|---|---|---|
+| `skills` | "Skills for Real Engineers": small, composable engineering skills | `mattpocock/skills` |
+| `claude-skill` | MotionSites Web Builder: cinematic landing pages | `Motionsites-AI/claude-skill` |
+| `garden-skills` | Curated production-ready skills: web design, knowledge retrieval, image generation | `ConardLi/garden-skills` |
+| `ponytail` | Lazy-senior-dev behavior rules: the best code is the code never written | `DietrichGebert/ponytail` |
+| `ui-ux-pro-max-skill` | Design intelligence for professional UI/UX across platforms | `nextlevelbuilder/ui-ux-pro-max-skill` |
+| `superpowers` | Agentic skills framework and software-development methodology | `obra/superpowers` |
+| `awesome-claude-skills` | Curated index of Claude Skills, resources and tools (default branch `master`) | `ComposioHQ/awesome-claude-skills` |
+
+### C.3 Fork handling
+
+The seven skill repositories above plus `beautifulrust` are Facta-Dev forks
+with an `upstream` remote configured; `beautifulpython`, `beautifulgo`,
+`beautifulnodejs` and `claude-code-cli-cost-tracker` are the main projects.
+To refresh a fork that has no local commits:
+
+```bash
+git fetch --all --prune
+git merge --ff-only upstream/main        # master for awesome-claude-skills
+```
+
+If a fork has local commits, integrate upstream through a PR; never rewrite or
+force-push (`git push --force` is denied in §7.2). Agents may run the fetch and
+fast-forward commands; they never push from the kit.

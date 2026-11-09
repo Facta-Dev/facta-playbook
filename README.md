@@ -65,8 +65,32 @@ never duplicate a baseline plugin in a project file.
 | `PLAYBOOK_AUDIT.md` | SOC 2 / ISO 27001 / ISO 9001 preparation, consuming the other playbooks as controls | Certification, enterprise or regulated deals |
 | `PLAYBOOK_REA.md` | REA setup: register the reverse-engineering MCP + skill with every agent on the machine | Analyzing binaries, bundles or captured traffic |
 | `CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md` | Model tiers (`opus`/`sonnet`/`haiku`), `advisor` agent, settings, verification, gotchas, rollback | Setting up a new machine or a new repo |
+| `PLAYBOOK_INSTALL.md` | Install path: clone the playbook and the working set, install the user-scope kit, configure each repo, verify — every step is a shell command, so the bootstrap costs zero model tokens | Provisioning a new machine or re-provisioning one |
 
-### 3.1 Per-language kits
+### 3.1 User-scope kit and install path
+
+`kit/` is the canonical user-scope (`~/.claude`) layer, versioned here so a new
+machine is one command away:
+
+| Path | What it is |
+| --- | --- |
+| `kit/CLAUDE.md` | User-scope instructions (English artifacts, model tiers, kit governance) |
+| `kit/agents/` | `advisor` (read-only decision advisor) and `kit-curator` (kit maintenance) |
+| `kit/skills/` | The 8 SDD + audit skills: `spec-new`, `spec-clarify`, `spec-plan`, `spec-tasks`, `tdd-cycle`, `spec-verify`, `retro`, `kit-audit` |
+| `kit/templates/sdd/` | Spec, plan, tasks and lessons templates |
+| `kit/settings.fragment.json` | Model-routing env, default model and the deny list — no secrets, no endpoint |
+| `scripts/claude-kit/install-user-kit.sh` | Installs the kit into `~/.claude` (skips existing files unless `--force`, backs up every overwrite, merges the settings fragment) |
+
+```bash
+bash scripts/claude-kit/install-user-kit.sh --dry-run   # preview
+bash scripts/claude-kit/install-user-kit.sh             # install
+```
+
+The installer never deletes and never overwrites without `--force`; see
+`PLAYBOOK_INSTALL.md` for the full bootstrap (clone, install, configure,
+verify) and `kit/README.md` for the ownership rules.
+
+### 3.2 Per-language kits
 
 Each language directory ships the backend playbooks specialized to that
 language's implementation, plus the matching `.claude/` kit:
