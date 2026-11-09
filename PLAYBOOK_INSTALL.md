@@ -57,7 +57,7 @@ Target: a full bootstrap with **zero model calls**; at most one cheap-tier probe
 | rtk | optional (token-saving shell proxy) | `rtk --version` |
 
 `gh auth status` must report a logged-in account with repo scope before
-cloning anything private.
+cloning anything private; `gh auth login` when it does not.
 
 ---
 
@@ -147,6 +147,33 @@ group (`selected` repeats the install-set entries from `reference` and
 `ctx0`; `everythink-ai`, `Technorides` and `matiasbaglieri` own the client
 rebuilds. Shallow clones are for consumption. Use full history (`--depth 0`)
 only in the repositories you actually contribute to.
+
+### 3.1 Explicit clone commands (the `selected` set)
+
+The script above is the automation; these are the commands it runs. Use them
+by hand when you want to see or pick what lands on disk, or when the
+inventory is not available:
+
+```bash
+mkdir -p ~/work
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/beautifulpython.git ~/work/beautifulpython
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/beautifulrust.git ~/work/beautifulrust
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/beautifulgo.git ~/work/beautifulgo
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/beautifulnodejs.git ~/work/beautifulnodejs
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/claude-code-cli-cost-tracker.git ~/work/claude-code-cli-cost-tracker
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/skills.git ~/work/skills
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/claude-skill.git ~/work/claude-skill
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/garden-skills.git ~/work/garden-skills
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/ponytail.git ~/work/ponytail
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/ui-ux-pro-max-skill.git ~/work/ui-ux-pro-max-skill
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/superpowers.git ~/work/superpowers
+git clone --depth 1 --single-branch https://github.com/Facta-Dev/awesome-claude-skills.git ~/work/awesome-claude-skills
+```
+
+`gh repo clone Facta-Dev/<repo> ~/work/<repo> -- --depth 1 --single-branch` is
+equivalent and required for the private repos in the other groups
+(`gh auth login` first). Cloning is not the last step: the packs must be
+registered and installed (§4.1) and the cost tracker's `install.sh` run.
 
 ---
 
