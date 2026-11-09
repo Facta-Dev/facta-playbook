@@ -16,6 +16,8 @@
 #     --no-settings  do not merge kit/settings.fragment.json
 #     --dest=DIR     destination root (default: $HOME/.claude)
 #
+# Both `--flag=value` and `--flag value` are accepted.
+#
 # Exit 0 = installed (or no-op), exit 1 = fatal (missing kit/, bad JSON).
 
 set -euo pipefail
@@ -34,6 +36,7 @@ while [[ $# -gt 0 ]]; do
     --force)       FORCE=1; shift;;
     --no-settings) MERGE_SETTINGS=0; shift;;
     --dest=*)      DEST="${1#--dest=}"; shift;;
+    --dest)        DEST="${2:-}"; shift 2;;
     -h|--help)
       sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
       exit 0;;
@@ -135,17 +138,15 @@ if [[ "$MERGE_SETTINGS" -eq 1 ]]; then
     exit 1
   fi
   TARGET="$DEST/settings.json"
-  if [[ -f "$TARGET" ]]; then
-    backup_file "$TARGET" "settings.json"
-  fi
   if [[ "$DRY_RUN" -eq 1 ]]; then
     say "merge $FRAGMENT -> $TARGET"
   else
     mkdir -p "$DEST"
-    python3 - "$FRAGMENT" "$TARGET" <<'PY'
+    RENDERED="$(mktemp)"
+    python3 - "$FRAGMENT" "$TARGET" "$RENDERED" <<'PY'
 import json, sys
 
-fragment_path, target_path = sys.argv[1], sys.argv[2]
+fragment_path, target_path, out_path = sys.argv[1], sys.argv[2], sys.argv[3]
 
 try:
     with open(fragment_path) as fh:
@@ -165,14 +166,18 @@ if not isinstance(target, dict):
     sys.exit("install-user-kit: ERROR — settings.json is not a JSON object")
 
 
-def merge(base, frag, key=None):
+def merge(base, frag):
     """Deep merge: existing user values win; deny lists are unioned."""
     for k, v in frag.items():
         if k not in base:
             base[k] = v
         elif isinstance(base[k], dict) and isinstance(v, dict):
-            merge(base[k], v, k)
-        elif k == "deny" and isinstance(base[k], list) and isinstance(v, list):
+            merge(base[k], v)
+        elif k == "deny" and isinstance(v, list):
+            if not isinstance(base[k], list):
+                sys.stderr.write(
+                    "install-user-kit: WARN — permissions.deny was not a list; replacing it\n")
+                base[k] = []
             for rule in v:
                 if rule not in base[k]:
                     base[k].append(rule)
@@ -180,11 +185,29 @@ def merge(base, frag, key=None):
 
 merge(target, fragment)
 
-with open(target_path, "w") as fh:
+# The bare `claude` default model is the cost trap of the routing runbook
+# (section 10): without an explicit "sonnet" every session runs the
+# escalation model. Existing values win, so warn instead of forcing.
+if target.get("model") != fragment.get("model"):
+    sys.stderr.write(
+        "install-user-kit: WARN — settings.json model is %r, expected %r; "
+        "a bare `claude` runs the escalation model until it is set\n"
+        % (target.get("model"), fragment.get("model")))
+
+with open(out_path, "w") as fh:
     json.dump(target, fh, indent=2, sort_keys=False)
     fh.write("\n")
 PY
-    say "merge $FRAGMENT -> $TARGET"
+    if [[ -f "$TARGET" ]] && cmp -s "$TARGET" "$RENDERED"; then
+      say "settings unchanged $TARGET"
+      rm -f "$RENDERED"
+    else
+      if [[ -f "$TARGET" ]]; then
+        backup_file "$TARGET" "settings.json"
+      fi
+      mv "$RENDERED" "$TARGET"
+      say "merge $FRAGMENT -> $TARGET"
+    fi
   fi
 else
   say "skip settings merge (--no-settings)"

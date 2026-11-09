@@ -1327,7 +1327,7 @@ list — merged into `settings.json`, never a replacement for it).
 | Script | Role |
 |---|---|
 | `install-user-kit.sh` | Installs `kit/` into `~/.claude`; skips user-owned files unless `--force`, backs up every overwrite, merges the settings fragment |
-| `clone-repos.sh` | Clones the working set by group (`core`, `products`, `tools`, `clients`, `reference`); `--dry-run` prints the plan |
+| `clone-repos.sh` | Clones the working set by group (`core`, `products`, `tools`, `clients`, `reference`, or `all` — the default); `--dry-run` prints the plan |
 | `configure-repo.sh` | Wires one repo: routing block, `.claude/README.md`, deny list, `.gitignore`, optional language kit; `--check` verifies without writing |
 | `kit_check.py` | Read-only validator: agents, skills, rules, `CLAUDE.md`, settings, command collisions |
 | `dedupe_plugins.py` | Moves user copies of plugin components aside (dry run by default, `--restore` puts them back) |
@@ -1336,7 +1336,7 @@ list — merged into `settings.json`, never a replacement for it).
 
 ```bash
 bash scripts/claude-kit/install-user-kit.sh     # user scope
-bash scripts/claude-kit/clone-repos.sh --group=core --dir ~/work
+bash scripts/claude-kit/clone-repos.sh --group=all --dir ~/work
 bash scripts/claude-kit/configure-repo.sh ~/work/<repo> --kit=<lang>
 ```
 
@@ -1476,7 +1476,7 @@ warn mode: {"systemMessage": "..."}; always log violations to the coordination l
     "allow": ["Bash(git status *)", "Bash(git diff *)", "Bash(git log *)",
               "Bash(scripts/tdd/run-tests *)", "Bash(scripts/claude/doctor)"],
     "deny":  ["Bash(git push --force *)", "Bash(git reset --hard *)", "Bash(rm -rf *)",
-              "Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)", "Read(**/*.pem)"]
+              "Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)", "Read(**/*.pem)", "Read(**/*.key)"]
   },
   "hooks": {
     "SessionStart": [{ "matcher": "startup|resume|clear|compact",

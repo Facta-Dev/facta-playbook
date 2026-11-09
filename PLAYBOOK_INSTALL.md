@@ -31,8 +31,9 @@ Target: a full bootstrap with **zero model calls**; at most one cheap-tier probe
 2. Shallow, single-branch clones: `--depth 1 --single-branch`.
 3. No `@-imports` of playbooks anywhere: `CLAUDE.md` links by path, never
    `@file`.
-4. Always-loaded surface (user `CLAUDE.md` + rules without `paths` + skill and
-   agent descriptions) stays under 20 KB; scope rules with `paths:`.
+4. The always-loaded rule bytes (rules without a `paths:` block) stay under
+   20,480 B, the ceiling `kit_check.py` enforces; `CLAUDE.md` stays under 200
+   lines. Scope per-stack rules with `paths:` so they load only where needed.
 5. Never copy plugin components into user or project scope: plugins are
    namespaced (`/ecc:*`, `ecc:*`, `/ponytail:*`). A user copy of a plugin
    agent shadows it by name.
@@ -49,7 +50,7 @@ Target: a full bootstrap with **zero model calls**; at most one cheap-tier probe
 | --- | --- | --- |
 | git | any supported | `git --version` |
 | gh | any, authenticated | `gh auth status` |
-| claude | v2.1.309 or later | `claude --version` |
+| claude | v2.1.251 or later (2.1.309+ recommended) | `claude --version` |
 | ollama | ≥ 0.33 with `ollama launch claude` | `ollama --version` |
 | python3 | 3.9+ (stdlib only) | `python3 --version` |
 | rtk | optional (token-saving shell proxy) | `rtk --version` |
@@ -76,7 +77,9 @@ cloning anything private.
    bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh --no-settings # leave settings.json untouched
    ```
 
-   It installs `kit/CLAUDE.md`, `kit/agents`, `kit/skills` and `kit/templates/sdd` into `~/.claude/`, and **never overwrites user-owned files**: an existing destination is skipped, not replaced. Backups land in `~/.claude/backups/install-<date>/`.
+   It installs `kit/CLAUDE.md`, `kit/agents`, `kit/skills` and `kit/templates/sdd` into `~/.claude/`, and **never overwrites user-owned files**: an existing destination is skipped, not replaced. Backups land in `~/.claude/backups/install-<UTC timestamp>/`.
+
+   It also merges `kit/settings.fragment.json` into `~/.claude/settings.json`: the model-tier `env` (including the Ollama endpoint), the `"model": "sonnet"` default and the `permissions.deny` list. Existing keys win; the installer warns when `model` is not `sonnet`, because a bare `claude` then runs the escalation model. `--no-settings` skips the merge entirely.
 
 3. Validate the user scope:
 
@@ -84,9 +87,10 @@ cloning anything private.
    python3 ~/facta-playbook/scripts/claude-kit/kit_check.py   # 0 clean, 1 warnings, 2 errors
    ```
 
-   The report prints `agents`, `skills`, `rules`, `always_loaded_bytes`,
-   `claude_md_lines`, `collision_warnings`. Always-loaded bytes must stay
-   under 20,480 B.
+   The text report ends with `agents= skills= rules= always_loaded= claude_md=
+   collisions= broken_links=`. The `--json` summary exposes the same values
+   under `agents`, `skills`, `rules`, `always_loaded_bytes`, `claude_md_lines`,
+   `collision_warnings`. Always-loaded bytes must stay under 20,480 B.
 
 4. Lock down the control plane:
 
@@ -101,7 +105,7 @@ cloning anything private.
    python3 ~/facta-playbook/scripts/claude-kit/dedupe_plugins.py --apply
    ```
 
-   The dry run lists what would move into `~/.claude/backups/dedupe-<date>/`.
+   The dry run lists what would move into `~/.claude/backups/dedupe-<UTC timestamp>/`.
    Nothing is deleted; `--restore` puts it back.
 
 ---
@@ -109,13 +113,13 @@ cloning anything private.
 ## 3. Clone the working set
 
 ```bash
-bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --group=core \
+bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --group=all \
   --dir ~/work --depth 1 --dry-run
 ```
 
 | Flag | Meaning |
 | --- | --- |
-| `--group=` | `core`, `products`, `tools`, `clients`, `reference`, `all` |
+| `--group=` | `core`, `products`, `tools`, `clients`, `reference`, `all` (default `all`) |
 | `--dir=` | destination root (default `~/work`) |
 | `--depth=` | clone depth (default `1`) |
 | `--dry-run` | print the plan and the exact commands, clone nothing |
@@ -157,10 +161,12 @@ The script is idempotent and does exactly this:
 - appends the `<!-- model-routing:ollama -->` block to the repo's `CLAUDE.md` **only when the marker is absent** (text: `CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md §6`);
 - writes `.claude/README.md` pointing at the playbooks instead of restating them;
 - merges **only** `permissions.deny` into the repo's `.claude/settings.json` (never `allow`, never hooks, never `env`);
-- appends `.gitignore` entries: `CLAUDE.local.md`, `.claude/install-state.json`, `.claude/settings.local.json`, `logs/`;
+- appends `.gitignore` entries: `CLAUDE.local.md`, `.claude/settings.local.json`, `.claude/install-state.json`, `.claude/backups/`, `.claude/logs/`;
 - with `--kit`, runs that kit's own `scripts/install-claude-runtime.sh`.
 
 `--check` verifies the repo without writing anything; `--dry-run` prints the diff it would apply.
+
+Per-script flags and the no-delete contract: [scripts/claude-kit/README.md](scripts/claude-kit/README.md).
 
 ---
 
@@ -212,8 +218,8 @@ Accepted gap: the deny list covers `Read`, so `cat .env` through Bash is **not**
 | --- | --- | --- |
 | Clone fails with 403/404 | not authenticated or missing repo scope | `gh auth status`; `gh auth login`; add the repo to the org |
 | Clone fails with `repository not found` | wrong org prefix | Products and tooling are `Facta-Dev/`, clients are `everythink-ai/` / `Technorides/` / `matiasbaglieri/` |
-| `install-user-kit.sh` refuses to overwrite | destination is user-owned | That is the contract; use `--force` only for installer-owned files. A `settings.json` merge conflict is resolved from the backup at `~/.claude/backups/install-<date>/settings.json`; only `permissions.deny` is merged |
-| `kit_check.py` exits 2 | findings with level `error` | Read the `area` field: `agents`, `skills`, `rules`, `claude-md`, `settings`, `commands` |
+| `install-user-kit.sh` refuses to overwrite | destination is user-owned | That is the contract; use `--force` only for installer-owned files. A `settings.json` merge conflict is resolved from the backup at `~/.claude/backups/install-<UTC timestamp>/settings.json`; only `permissions.deny` is merged |
+| `kit_check.py` exits 2 | findings with level `error` | Read the `area` field: `agents`, `skills`, `rules`, `claude-md`, `settings`, `commands`, `links` |
 | Deny probe passes through | project-relative pattern at user scope | User-scope denies must anchor `//` or `~/` (`Read(//**/.env)`), never `./.env` |
 | Deny probe passes through | expecting `allow` to block | Under `bypassPermissions`, `deny` is enforced and `allow` is inert |
 | Skill not discovered | wrong layout | A skill is `skills/<name>/SKILL.md`; a flat `.md` is ignored |
@@ -226,7 +232,7 @@ Accepted gap: the deny list covers `Read`, so `cat .env` through Bash is **not**
 
 | Action | Command |
 | --- | --- |
-| Restore the user scope | `~/.claude/backups/install-<date>/` holds the pre-install `settings.json` and kit files — copy back what you need |
+| Restore the user scope | `~/.claude/backups/install-<UTC timestamp>/` holds the pre-install `settings.json` and kit files — copy back what you need |
 | Undo a dedupe | `python3 ~/facta-playbook/scripts/claude-kit/dedupe_plugins.py --restore` |
 | Undo a repo configuration | `bash ~/facta-playbook/scripts/claude-kit/configure-repo.sh <path> --dry-run` to review before writing; the routing block is marker-guarded, so remove the `<!-- model-routing:ollama -->` section by hand |
 | Drop a clone | `rm -rf ~/work/<repo>` — shallow clones hold no local work |

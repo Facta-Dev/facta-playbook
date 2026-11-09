@@ -101,7 +101,10 @@ def check_skills(root: Path) -> int:
         count += 1
         meta, text = frontmatter(skill)
         if meta.get("name") != skill.parent.name:
-            add("error", "skills", f"{skill.parent.name}: frontmatter name != directory name")
+            # Language-kit templates carry a <app> placeholder that rename.sh
+            # substitutes at scaffold time; not a defect in the template.
+            level = "warn" if "<" in meta.get("name", "") else "error"
+            add(level, "skills", f"{skill.parent.name}: frontmatter name != directory name")
         desc = meta.get("description", "")
         if not desc:
             add("error", "skills", f"{skill.parent.name}: missing description")
@@ -135,7 +138,11 @@ def check_rules(root: Path) -> tuple[int, int]:
 
 
 def check_claude_md(root: Path) -> int:
+    # A project-scope root is the .claude directory itself; its CLAUDE.md lives
+    # one level up, at the repo root.
     path = root / "CLAUDE.md"
+    if not path.is_file() and root.name == ".claude":
+        path = root.parent / "CLAUDE.md"
     if not path.is_file():
         add("error", "claude-md", "CLAUDE.md missing")
         return 0
@@ -155,8 +162,13 @@ def check_settings(root: Path) -> None:
         add("error", "settings", f"invalid JSON: {exc}")
         return
     for key, value in settings.get("env", {}).items():
-        if SECRET_NAME.search(key) and value not in ("ollama", ""):
-            add("error", "settings", f"env.{key} looks like a plaintext secret")
+        text = str(value)
+        # A plaintext secret in settings.json is a real problem, but the key
+        # name alone is a weak signal: MAX_OUTPUT_TOKENS and friends are
+        # config, not credentials. Only warn, and only for long opaque values.
+        if (SECRET_NAME.search(key) and text not in ("ollama", "")
+                and len(text) >= 20 and not text.isdigit()):
+            add("warn", "settings", f"env.{key} looks like a plaintext secret")
     for event, entries in settings.get("hooks", {}).items():
         for entry in entries:
             for hook in entry.get("hooks", []):

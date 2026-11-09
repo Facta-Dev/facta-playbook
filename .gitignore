@@ -1,0 +1,6 @@
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/install-state.json
+.claude/backups/
+.claude/logs/
+__pycache__/

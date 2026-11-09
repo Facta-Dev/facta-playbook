@@ -20,8 +20,12 @@ is shell only; the model is consulted later, for judgment calls only.
    `git clone --depth 1 https://github.com/Facta-Dev/facta-playbook.git ~/facta-playbook`
 2. **Bootstrap** the user-scope kit (`~/.claude`):
    `bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh` (`--dry-run` to preview)
-3. **Configure** a repo — `clone-repos.sh --group=core --dir ~/work` clones the
-   working set, `configure-repo.sh <repo> --kit=<lang>` wires each one.
+3. **Configure** the repos you need:
+   `bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --group=all --dir ~/work`
+   clones the working set, then
+   `bash ~/facta-playbook/scripts/claude-kit/configure-repo.sh ~/work/<repo> --kit=<lang>`
+   wires each one. Use `--group=core|products|tools|clients|reference` to clone
+   only part of it.
 
 Flags, groups, verification and rollback: [PLAYBOOK_INSTALL.md](PLAYBOOK_INSTALL.md).
 
@@ -98,8 +102,8 @@ machine is one command away; `scripts/claude-kit/` is the install layer.
 | `kit/agents/` | `advisor` (read-only decision advisor) and `kit-curator` (kit maintenance) |
 | `kit/skills/` | The 8 SDD + audit skills: `spec-new`, `spec-clarify`, `spec-plan`, `spec-tasks`, `tdd-cycle`, `spec-verify`, `retro`, `kit-audit` |
 | `kit/templates/sdd/` | Spec, plan, tasks and lessons templates |
-| `kit/settings.fragment.json` | Model-routing env, default model and the deny list — no secrets, no endpoint |
-| `scripts/claude-kit/` | `install-user-kit.sh` (kit into `~/.claude`), `clone-repos.sh` (working set by group), `configure-repo.sh` (wire one repo, `--check` to verify), `kit_check.py` (read-only validator), `dedupe_plugins.py` (move user copies of plugin components aside) |
+| `kit/settings.fragment.json` | Model-routing env (local Ollama endpoint plus the fixed literal token `ollama`), default model and the deny list — no real credentials |
+| `scripts/claude-kit/` | `install-user-kit.sh` (kit into `~/.claude`), `clone-repos.sh` (working set by group), `configure-repo.sh` (wire one repo, `--check` to verify), `kit_check.py` (read-only validator), `dedupe_plugins.py` (move user copies of plugin components aside) — flags and the no-delete contract: [scripts/claude-kit/README.md](scripts/claude-kit/README.md) |
 | `install/repos.txt` | The working-set inventory — one `group\|org/repo\|why` per line, mirrored from §4. Single source of truth for `clone-repos.sh` |
 
 The installers never delete and never overwrite without `--force`; see
@@ -179,7 +183,7 @@ forked skill packs vendored for use, not authored here.
 | `Facta-Dev/beautifulgo`, `beautifulnodejs`, `beautifulpython`, `beautifulrust` | Idiomatic-language skill packs |
 | `Facta-Dev/archify` | Architecture / workflow / sequence diagram skill |
 | `Facta-Dev/ponytail` | Fork of the lazy-senior-dev skill behind the `ponytail` plugin |
-| `Facta-Dev/superpowers`, `Facta-Dev/frontend-slides`, `Facta-Dev/marketingskills`, `Facta-Dev/ui-ux-pro-max-skill`, `Facta-Dev/awesome-claude-*` | Vendored skill/framework collections |
+| `Facta-Dev/superpowers`, `Facta-Dev/frontend-slides`, `Facta-Dev/marketingskills`, `Facta-Dev/ui-ux-pro-max-skill`, `Facta-Dev/awesome-claude-skills`, `Facta-Dev/awesome-claude-*` | Vendored skill/framework collections |
 
 ### 4.5 Internal tooling
 

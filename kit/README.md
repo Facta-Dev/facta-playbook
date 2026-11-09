@@ -17,5 +17,11 @@ managed = the installer writes it. Overwrites are always backed up.
 
 `kit/` is the single source of truth for the user scope: edit here, then
 reinstall — do not hand-edit `~/.claude`. No secrets and no `@`-imports of
-playbooks in this directory; `settings.fragment.json` carries no endpoint or
-token (see `CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md` §3).
+playbooks in this directory. `settings.fragment.json` carries the Ollama
+endpoint and the fixed literal token `ollama` (not a secret), so a bare
+`claude` reaches Ollama on a fresh machine (see
+`CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md` §3).
+
+`kit/CLAUDE.md` does not import `@RTK.md`: RTK is optional machine tooling.
+On a machine that uses it, keep (or add) `@RTK.md` as the first line of
+`~/.claude/CLAUDE.md`; the installer skips an existing file unless `--force`.

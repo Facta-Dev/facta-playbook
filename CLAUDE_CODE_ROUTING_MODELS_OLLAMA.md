@@ -13,9 +13,9 @@ on Ollama** (see §7); this runbook reproduces the pattern with a subagent.
 > Claude Code implementation kit (agents, skills, rules, hooks, roles,
 > coordination, SDD/TDD). This runbook is its model-routing slice: §3–§5 map to
 > the capability plane (agent roster, `CLAUDE.md`) and the control plane
-> (`settings.json`); the `advisor` agent is an ordinary roster entry (§6.3) and
-> the tier aliases are the concrete values behind that playbook's `model` field
-> (§6.2). Read the playbook first if you are building the kit from scratch;
+> (`settings.json`); the `advisor` agent is one of the kit's own agents
+> (`kit/agents/advisor.md`, installed into `~/.claude/agents/`), and the tier
+> aliases are the concrete values behind that playbook's `model` field (§6.2). Read the playbook first if you are building the kit from scratch;
 > come back here to wire the models.
 
 ---
@@ -90,9 +90,18 @@ The token is the fixed literal `ollama` accepted by the local proxy, not a
 secret. Verified on this machine: a bare `claude` then resolves
 `glm-5.3-flash:cloud` with the Ollama endpoint env removed from the shell.
 
+`kit/settings.fragment.json` in the playbook repo ships these two keys, and
+`scripts/claude-kit/install-user-kit.sh` merges them into `~/.claude/settings.json`
+on a fresh machine — so a manual edit is only needed for a hand-built
+`settings.json`.
+
 Never store API keys in this file; it is plain text.
 
 ## 4. `~/.claude/agents/advisor.md`
+
+> The canonical file is [`kit/agents/advisor.md`](kit/agents/advisor.md) —
+> `install-user-kit.sh` installs it. The copy below is kept inline so this
+> runbook stands alone; edit the kit file first.
 
 ```markdown
 ---
@@ -126,6 +135,9 @@ not an edit here. Since v2.1.251 this frontmatter value overrides
 override it in turn.
 
 ## 5. `~/.claude/CLAUDE.md`
+
+> The canonical file is [`kit/CLAUDE.md`](kit/CLAUDE.md). The excerpt below is
+> kept inline so this runbook stands alone; edit the kit file first.
 
 ```markdown
 ## Model tiers (Ollama)
