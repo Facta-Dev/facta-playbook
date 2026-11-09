@@ -208,15 +208,15 @@ Everything here is idempotent.
 ```bash
 bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dry-run    # plan
 bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh              # install
-bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dir ~/work --remote
+bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dir ~/work --local
 bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --self-test
 ```
 
 It is shell only (zero model tokens), registers each repo's marketplace and
-installs its plugins into **user scope**. An installed plugin is skipped. When
-the clone exists under `--dir` (default `~/work`) the marketplace resolves
-from that clone, so `git pull` updates the plugin; `--remote` always registers
-`Facta-Dev/<repo>` instead.
+installs its plugins into **user scope**. An installed plugin is skipped. The
+marketplace comes from `Facta-Dev/<repo>` on GitHub by default; `--local`
+resolves it from the clone under `--dir` (default `~/work`) instead, so
+`git pull` updates the plugin.
 
 | Repo | Marketplace | Plugins |
 | --- | --- | --- |

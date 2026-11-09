@@ -3,14 +3,17 @@
 # install-skill-packs.sh — register and install the skill-pack plugins.
 #
 # Shell only (no model tokens). Idempotent: an installed plugin is skipped.
-# The marketplace source is the local clone when it exists, so `git pull` in
-# the clone updates the plugin; otherwise the GitHub repo is registered.
+# The marketplace source is `Facta-Dev/<repo>` on GitHub by default;
+# `--local` resolves it from the local clone instead, so `git pull` in the
+# clone updates the plugin. GitHub is the default because a `directory`-sourced
+# marketplace is user-local config, not the form the runbook documents.
 #
 # Usage:
-#   bash scripts/claude-kit/install-skill-packs.sh [--dir=DIR] [--remote]
-#        [--only=NAME[,NAME]] [--dry-run] [--self-test]
+#   bash scripts/claude-kit/install-skill-packs.sh [--dir=DIR] [--local]
+#        [--remote] [--only=NAME[,NAME]] [--dry-run] [--self-test]
 #     --dir=DIR    working-set root (default ~/work)
-#     --remote     always register the GitHub source, never the local clone
+#     --local      register the local clone as the marketplace source
+#     --remote     GitHub source (the default; kept for old invocations)
 #     --only=...   run only these marketplace names
 #     --dry-run    print the install commands, change nothing
 #     --self-test  check the table against the local marketplace.json files
@@ -25,16 +28,18 @@
 set -euo pipefail
 
 DIR="$HOME/work"
-REMOTE=0
+REMOTE=1
 DRY_RUN=0
 ONLY=""
 SELF_TEST=0
+ORG="${FACTA_ORG:-Facta-Dev}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dir=*)   DIR="${1#--dir=}"; shift;;
     --dir)     DIR="${2:-}"; shift 2;;
     --remote)  REMOTE=1; shift;;
+    --local)   REMOTE=0; shift;;
     --only=*)  ONLY="${1#--only=}"; shift;;
     --only)    ONLY="${2:-}"; shift 2;;
     --dry-run) DRY_RUN=1; shift;;
@@ -87,6 +92,8 @@ command -v claude >/dev/null || { echo "install-skill-packs: claude not on PATH"
 
 INSTALLED="$(claude plugin list --json 2>/dev/null \
   | python3 -c 'import json,sys;print("\n".join(p["id"] for p in json.load(sys.stdin)))' || true)"
+MARKETS="$(claude plugin marketplace list --json 2>/dev/null \
+  | python3 -c 'import json,sys;print("\n".join(m["name"] for m in json.load(sys.stdin)))' || true)"
 
 install=0
 skip=0
@@ -96,7 +103,25 @@ for row in "${PACKS[@]}"; do
   IFS='|' read -r repo market plugins <<<"$row"
   if [[ -n "$ONLY" && ",$ONLY," != *",$market,"* ]]; then continue; fi
   src="$repo"
+  if [[ "$REMOTE" -eq 1 ]]; then src="$ORG/$repo"; fi
   if [[ "$REMOTE" -eq 0 && -d "$DIR/$repo/.claude-plugin" ]]; then src="$DIR/$repo"; fi
+  # The marketplace name comes from the repo's marketplace.json, not the repo
+  # name (skills -> mattpocock, beautifulgo -> beautiful-go). Add the source
+  # once per row; the registration, not the install call, owns the source.
+  if ! grep -qxE "$market" <<<"$MARKETS"; then
+    add=(claude plugin marketplace add "$src")
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+      printf 'would run'; printf ' %q' "${add[@]}"; printf '\n'
+    else
+      if out="$("${add[@]}" 2>&1)"; then
+        echo "market   $market <- $src"
+      else
+        echo "FAIL     market $market <- $src: $(printf '%s' "$out" | tail -1)" >&2
+        fail=$((fail + 1))
+        continue
+      fi
+    fi
+  fi
   IFS=',' read -r -a list <<<"$plugins"
   for plugin in "${list[@]}"; do
     id="$plugin@$market"
@@ -105,17 +130,17 @@ for row in "${PACKS[@]}"; do
       skip=$((skip + 1))
       continue
     fi
-    cmd=(claude plugin install "$plugin" --marketplace "$src" --scope user -y --json)
+    cmd=(claude plugin install "$id" --scope user -y --json)
     if [[ "$DRY_RUN" -eq 1 ]]; then
       printf 'would run'; printf ' %q' "${cmd[@]}"; printf '\n'
       install=$((install + 1))
       continue
     fi
     if out="$("${cmd[@]}" 2>&1)"; then
-      echo "install  $id <- $src"
+      echo "install  $id"
       install=$((install + 1))
     else
-      echo "FAIL     $id <- $src: $(printf '%s' "$out" | tail -1)" >&2
+      echo "FAIL     $id: $(printf '%s' "$out" | tail -1)" >&2
       fail=$((fail + 1))
     fi
   done
