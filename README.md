@@ -21,11 +21,13 @@ is shell only; the model is consulted later, for judgment calls only.
 2. **Bootstrap** the user-scope kit (`~/.claude`):
    `bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh` (`--dry-run` to preview)
 3. **Configure** the repos you need:
-   `bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --group=all --dir ~/work`
-   clones the working set, then
+   `bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --dir ~/work`
+   clones the install set (`selected`: the four language skill packs, the cost
+   tracker and the skill packs), then
    `bash ~/facta-playbook/scripts/claude-kit/configure-repo.sh ~/work/<repo> --kit=<lang>`
-   wires each one. Use `--group=core|products|tools|clients|reference` to clone
-   only part of it. Skill packs and the cost tracker ship their own installers —
+   wires each one. `--group=selected|core|products|tools|clients|reference|all`
+   narrows or widens the set (`all` is the whole map in §4). Skill packs and the
+   cost tracker ship their own installers —
    see [PLAYBOOK_INSTALL.md §4.1](PLAYBOOK_INSTALL.md#41-repositories-that-install-something).
 4. **Install tooling**: `bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dir ~/work`
    registers the skill-pack marketplaces and installs their plugins; the cost

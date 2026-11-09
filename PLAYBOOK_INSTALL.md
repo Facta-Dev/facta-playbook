@@ -114,13 +114,13 @@ cloning anything private.
 ## 3. Clone the working set
 
 ```bash
-bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --group=all \
+bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --group=selected \
   --dir ~/work --depth 1 --dry-run
 ```
 
 | Flag | Meaning |
 | --- | --- |
-| `--group=` | `core`, `products`, `tools`, `clients`, `reference`, `all` (default `all`) |
+| `--group=` | `selected` (default — the install set), `core`, `products`, `tools`, `clients`, `reference`, `all` |
 | `--dir=` | destination root (default `~/work`) |
 | `--depth=` | clone depth (default `1`) |
 | `--dry-run` | print the plan and the exact commands, clone nothing |
@@ -129,16 +129,19 @@ Both `--flag=value` and `--flag value` are accepted.
 
 The inventory is `install/repos.txt` — one `group|org/repo|why` per line,
 derived from README §4. It is the single source of truth: add a repo there and
-in the README table, never in the script.
+in the README table, never in the script. A repo can appear in more than one
+group (`selected` repeats the install-set entries from `reference` and
+`tools`); the script clones it once per run.
 
 | Group | Repos (README §4) |
 | --- | --- |
+| `selected` (default) | The install set: `beautifulpython`, `beautifulrust`, `beautifulgo`, `beautifulnodejs`, `claude-code-cli-cost-tracker`, `skills`, `claude-skill`, `garden-skills`, `ponytail`, `ui-ux-pro-max-skill`, `superpowers`, `awesome-claude-skills` |
 | `core` | `facta-playbook` (this repo) |
 | `products` | §4.1 + §4.2: `talos`, `deino`, `staxis`, `v0ss`, `enyo-platform`, `heimdall-platform`, `trustanova`, `ReachPilot`, `ReachPilotPro`, `package_builder`, `ei2`, the `zypho-*` suite, `nest`, `ctx0`, `facta_archetype`, `facta_frontend`, `blog-templates`, `3d-landings-pro`, `claude-skill`, `ai-job-search`, `agents-office`, `synthia_frontend` |
 | `tools` | `aws-ec2-setup`, `claude-code-cli-cost-tracker`, `terrain`, `OmniRoute`, `repomix` |
 | `clients` | `everythink_platform`, `everythiink_arxiv`, `everythink_android`, `everythink_ios`, `everythink_backend`, `transportation-bank`, `technorides_eu`, `technorides_web`, `technorides_web_premium`, `trustanova-platform` |
 | `reference` | skill and factory packs (§4.4) plus the upstream read-only clones (§4.6) |
-| `all` | every group above |
+| `all` | every group above, each repo cloned once |
 
 `Facta-Dev/` owns the products and tooling; `contextzero/` owns `nest` and
 `ctx0`; `everythink-ai`, `Technorides` and `matiasbaglieri` own the client

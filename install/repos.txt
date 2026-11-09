@@ -2,11 +2,26 @@
 # Derived from README.md §4 (repository map). One repo per line.
 # '#' comments and blank lines are ignored by scripts/claude-kit/clone-repos.sh.
 #
+# selected   the install set every machine gets (default for clone-repos.sh)
 # core       the playbook itself (start here)
 # products   §4.1 + §4.2 products, sites and side products
 # tools      §4.5 internal tooling
 # clients    §4.3 client rebuilds
 # reference  §4.4 skill/factory packs + §4.6 read-only upstream clones
+
+# --- selected (the set a new machine installs) ----------------------------
+selected|Facta-Dev/beautifulpython|Python backend skill pack
+selected|Facta-Dev/beautifulrust|Rust skill pack
+selected|Facta-Dev/beautifulgo|Go skill pack
+selected|Facta-Dev/beautifulnodejs|Node.js skill pack
+selected|Facta-Dev/claude-code-cli-cost-tracker|Cost tracking for the claude CLI
+selected|Facta-Dev/skills|Engineering skill pack
+selected|Facta-Dev/claude-skill|Cinematic landing-page skill
+selected|Facta-Dev/garden-skills|Web design, knowledge retrieval and presentation skills
+selected|Facta-Dev/ponytail|Lazy-senior-dev skill
+selected|Facta-Dev/ui-ux-pro-max-skill|UI/UX design intelligence
+selected|Facta-Dev/superpowers|Agentic skills framework
+selected|Facta-Dev/awesome-claude-skills|Curated index of Claude skills and tools
 
 # --- core -----------------------------------------------------------------
 core|Facta-Dev/facta-playbook|Operating contract: playbooks, routing, install runbook

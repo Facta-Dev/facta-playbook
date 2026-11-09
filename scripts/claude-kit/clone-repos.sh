@@ -8,9 +8,9 @@
 # consumed from here, not authored in it.
 #
 # Usage:
-#   bash scripts/claude-kit/clone-repos.sh [--group=core|products|tools|clients|reference|all]
+#   bash scripts/claude-kit/clone-repos.sh [--group=selected|core|products|tools|clients|reference|all]
 #        [--dir=DIR] [--depth=N] [--dry-run]
-#     --group=NAME  group to clone (default: all)
+#     --group=NAME  group to clone (default: selected -- the install set)
 #     --dir=DIR     destination root (default: $HOME/work)
 #     --depth=N     clone depth (default: 1)
 #     --dry-run     print the exact commands, clone nothing
@@ -25,7 +25,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 INVENTORY="$ROOT_DIR/install/repos.txt"
 
-GROUP="all"
+GROUP="selected"
 DEST="${HOME}/work"
 DEPTH=1
 DRY_RUN=0
@@ -105,6 +105,7 @@ clone_one() {
 
 say "group=$GROUP dest=$DEST depth=$DEPTH dry_run=$DRY_RUN"
 
+SEEN=" "
 while IFS='|' read -r group slug why; do
   group="${group#"${group%%[![:space:]]*}"}"
   slug="${slug#"${slug%%[![:space:]]*}"}"
@@ -112,6 +113,10 @@ while IFS='|' read -r group slug why; do
   [[ -z "$group" || "$group" == \#* ]] && continue
   [[ "$GROUP" != "all" && "$group" != "$GROUP" ]] && continue
   [[ -z "$slug" ]] && continue
+  # A repo can belong to several groups (selected duplicates the reference
+  # entries); clone it once per run.
+  [[ "$SEEN" == *" $slug "* ]] && continue
+  SEEN+="$slug "
   clone_one "$group" "$slug" "$why"
 done < "$INVENTORY"
 

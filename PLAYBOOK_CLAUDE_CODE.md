@@ -1328,7 +1328,7 @@ list — merged into `settings.json`, never a replacement for it).
 | Script | Role |
 |---|---|
 | `install-user-kit.sh` | Installs `kit/` into `~/.claude`; skips user-owned files unless `--force`, backs up every overwrite, merges the settings fragment |
-| `clone-repos.sh` | Clones the working set by group (`core`, `products`, `tools`, `clients`, `reference`, or `all` — the default); `--dry-run` prints the plan |
+| `clone-repos.sh` | Clones the working set by group (`selected` — the default install set — `core`, `products`, `tools`, `clients`, `reference`, or `all`); `--dry-run` prints the plan |
 | `install-skill-packs.sh` | Registers each skill-pack marketplace and installs its plugins into user scope; shell only, idempotent, `--dry-run` plans, `--self-test` checks the table against the clones |
 | `configure-repo.sh` | Wires one repo: routing block, `.claude/README.md`, deny list, `.gitignore`, optional language kit; `--check` verifies without writing |
 | `kit_check.py` | Read-only validator: agents, skills, rules, `CLAUDE.md`, settings, command collisions |
@@ -1338,7 +1338,7 @@ list — merged into `settings.json`, never a replacement for it).
 
 ```bash
 bash scripts/claude-kit/install-user-kit.sh       # user scope
-bash scripts/claude-kit/clone-repos.sh --group=all --dir ~/work
+bash scripts/claude-kit/clone-repos.sh --group=selected --dir ~/work
 bash scripts/claude-kit/install-skill-packs.sh --dir ~/work
 bash scripts/claude-kit/configure-repo.sh ~/work/<repo> --kit=<lang>
 ```
