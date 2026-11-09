@@ -1,0 +1,109 @@
+# ponytail: rename every `<app>` -> your project name before building.
+# `<app>` is a placeholder and is NOT a valid crate name; the workspace
+# will not parse until you replace it. See README.md "How to apply".
+[workspace]
+resolver = "3"
+members = [
+    "crates/<app>-core",
+    "crates/<app>-auth",
+    "crates/<app>-adminusers",
+    "crates/<app>-ports",
+    "crates/<app>-widgets",
+    "crates/<app>-mailer",
+    "crates/<app>-loom",
+    "crates/<app>-warden",
+    "crates/<app>-api",
+    "crates/<app>-sdk",
+    "crates/<app>-cli",
+]
+
+# Inherited by every member via `version = { workspace = true }` etc.
+[workspace.package]
+version      = "0.1.0"
+edition      = "2024"
+rust-version = "1.88"
+license      = "Proprietary"
+authors      = ["Eng <eng@example.com>"]
+repository   = "https://github.com/acme/<app>"
+
+# One source of truth for versions. Members write `dep = { workspace = true }`.
+[workspace.dependencies]
+# Internal crates: declared by path so members write `<app>-core = { workspace = true }`.
+"<app>-core"    = { path = "crates/<app>-core" }
+"<app>-ports"   = { path = "crates/<app>-ports" }
+"<app>-widgets" = { path = "crates/<app>-widgets" }
+"<app>-mailer"  = { path = "crates/<app>-mailer" }
+"<app>-loom"    = { path = "crates/<app>-loom" }
+"<app>-warden"  = { path = "crates/<app>-warden" }
+"<app>-sdk"     = { path = "crates/<app>-sdk" }
+"<app>-auth"    = { path = "crates/<app>-auth" }
+"<app>-adminusers" = { path = "crates/<app>-adminusers" }
+
+# Async runtime + web
+tokio       = { version = "1", features = ["full"] }
+async-trait = "0.1"
+axum        = { version = "0.8", features = ["macros"] }
+tower-http  = { version = "0.6", features = ["full"] }
+reqwest     = { version = "0.13", features = ["json", "rustls"], default-features = false }
+
+# Serde / errors / ids / db / config
+serde       = { version = "1", features = ["derive"] }
+serde_json  = "1"
+thiserror   = "2"
+anyhow      = "1"
+config      = "0.14"
+uuid        = { version = "1", features = ["v4", "v7", "serde"] }
+chrono      = { version = "0.4", features = ["serde"] }
+sqlx        = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "migrate", "macros"] }
+tracing     = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# OpenAPI / Swagger UI
+utoipa             = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
+utoipa-swagger-ui  = { version = "9", features = ["axum"] }
+
+# Metrics (feature-gated on -api)
+metrics             = "0.24"
+metrics-exporter-prometheus = { version = "0.18", default-features = false }
+
+# Auth
+argon2     = "0.5"
+jsonwebtoken = "9"
+oauth2     = { version = "5", default-features = false }
+hmac       = "0.12"
+
+# Observability
+opentelemetry = "0.27"
+tracing-opentelemetry = "0.28"
+
+# Testing
+nextest = { version = "2", default-features = false } # ponytail: used via `cargo nextest run`, not as a lib dep; kept here as a version pin.
+
+# CLI arg parsing (<app>-cli)
+clap = { version = "4", features = ["derive", "env"] }
+
+# Release hardening: thin LTO + stripped symbols + abort-on-panic (no unwinding
+# surface, smaller binary, fails fast). Applied to every `--release` build,
+# including the Dockerfile runtime image.
+[profile.release]
+lto           = "thin"
+strip         = "symbols"
+panic         = "abort"
+codegen-units = 1
+opt-level     = 3
+
+# Strict lint posture, inherited by every crate via `[lints] workspace = true`.
+[workspace.lints.rust]
+unsafe_code                    = "forbid"
+missing_debug_implementations  = "warn"
+unreachable_pub                = "warn"
+
+[workspace.lints.clippy]
+all      = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery  = { level = "warn", priority = -1 }
+# Targeted opt-outs so the strict default stays signal, not noise.
+module_name_repetitions = "allow"
+missing_errors_doc      = "allow"
+must_use_candidate      = "allow"
+too_long_first_doc_paragraph = "allow"

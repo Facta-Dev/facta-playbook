@@ -1,0 +1,122 @@
+# `<app>` — production backend stack. One command brings up the API + Postgres
+# + edge nginx:
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# ponytail: rename every `<app>` -> your project name before bringing this up.
+# TLS terminates upstream (ALB / Cloudflare / etc.); nginx (this stack) serves
+# :80 and reverse-proxies /api/ → the api container. A one-shot `migrations`
+# service applies the schema before api/worker boot (go release-step parity).
+# Secrets come from .env (env_file); DATABASE_URL and <APP>_JWT_SECRET
+# are fail-closed via ${VAR:?} so the stack refuses to start without them.
+#
+# Required env (set in .env, gitignored — see .env.example):
+#   DATABASE_URL             — postgres connection string
+#   <APP>_JWT_SECRET         — JWT signing secret (>= 32 bytes)
+#   <APP>_APIKEY_HMAC_SECRET — HMAC secret for signed API keys (>= 32 bytes)
+# Optional:
+#   <APP>_API_IMAGE          — image:tag override (default ghcr.io/<scope>/<app>-api:latest)
+name: <app>
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-<app>}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-<app>}
+    volumes:
+      - <app>_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-<app>} -d ${POSTGRES_DB:-<app>}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # One-shot schema runner (go release-step parity): same image, /app/server
+  # subcommand; the API never migrates itself (replicas race).
+  migrations:
+    image: ${<APP>_API_IMAGE:-ghcr.io/<scope>/<app>-api:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.static
+    entrypoint: ["/app/server", "migrate"]
+    restart: "no"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: ${<APP>_API_IMAGE:-ghcr.io/<scope>/<app>-api:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.static
+    env_file:
+      - .env
+    environment:
+      <APP>_ENV: production
+      <APP>_BIND: 0.0.0.0:8080
+      # Fail-closed: the stack refuses to start without a DB URL + JWT secret.
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      <APP>_JWT_SECRET: ${<APP>_JWT_SECRET:?<APP>_JWT_SECRET is required}
+      <APP>_APIKEY_HMAC_SECRET: ${<APP>_APIKEY_HMAC_SECRET:?<APP>_APIKEY_HMAC_SECRET is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      # /readyz probes the DB (SELECT 1); 200 = ready, 503 = degraded.
+      test: ["CMD", "/app/server", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  worker:
+    # Background loops (outbox email deliveries + expired-session janitor) —
+    # go cmd/worker parity. Same image as api; compose swaps the entrypoint.
+    image: ${<APP>_API_IMAGE:-ghcr.io/<scope>/<app>-api:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.static
+    entrypoint: ["/app/worker"]
+    healthcheck:
+      disable: true
+    env_file:
+      - .env
+    environment:
+      # Fail-closed: same required env as api.
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      <APP>_JWT_SECRET: ${<APP>_JWT_SECRET:?<APP>_JWT_SECRET is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./infra/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t && wget -q -O /dev/null http://127.0.0.1/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  <app>_pg_data:

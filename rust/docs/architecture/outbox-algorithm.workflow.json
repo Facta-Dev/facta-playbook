@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "backend-rust Outbox Algorithm",
+    "quality_profile": "showcase",
+    "output": "outbox-algorithm.workflow.html"
+  },
+  "lanes": [
+    {
+      "id": "writers",
+      "label": "Writers"
+    },
+    {
+      "id": "outbox",
+      "label": "Outbox"
+    },
+    {
+      "id": "worker",
+      "label": "Worker"
+    },
+    {
+      "id": "delivery",
+      "label": "Delivery"
+    },
+    {
+      "id": "ledger",
+      "label": "Ledger"
+    }
+  ],
+  "phases": [
+    {
+      "id": "enqueue",
+      "label": "Enqueue",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "drain",
+      "label": "Drain",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "settle",
+      "label": "Deliver + settle",
+      "fromCol": 4,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "emit",
+    "enqueue",
+    "claim",
+    "render",
+    "send",
+    "settle"
+  ],
+  "nodes": [
+    {
+      "id": "emit",
+      "lane": "writers",
+      "col": 0,
+      "type": "backend",
+      "label": "Auth use-cases",
+      "sublabel": "signup · reset"
+    },
+    {
+      "id": "enqueue",
+      "lane": "outbox",
+      "col": 1,
+      "type": "database",
+      "label": "email_jobs",
+      "sublabel": "pool INSERT"
+    },
+    {
+      "id": "claim",
+      "lane": "worker",
+      "col": 2,
+      "type": "database",
+      "label": "Claim CTE",
+      "sublabel": "SKIP LOCKED · 5m lease"
+    },
+    {
+      "id": "render",
+      "lane": "worker",
+      "col": 3,
+      "type": "backend",
+      "label": "Render",
+      "sublabel": "template · locale"
+    },
+    {
+      "id": "send",
+      "lane": "delivery",
+      "col": 4,
+      "type": "cloud",
+      "label": "Sender",
+      "sublabel": "Console · SMTP"
+    },
+    {
+      "id": "backoff",
+      "lane": "delivery",
+      "col": 2,
+      "type": "backend",
+      "label": "Backoff",
+      "sublabel": "requeue · 2^n ±10%",
+      "width": 110
+    },
+    {
+      "id": "settle",
+      "lane": "ledger",
+      "col": 5,
+      "type": "database",
+      "label": "Settle",
+      "sublabel": "sent · failed"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "emit",
+      "to": "enqueue",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e2",
+      "from": "enqueue",
+      "to": "claim",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "poll 2s · batch 10",
+      "labelSegment": 1,
+      "labelDy": 12
+    },
+    {
+      "id": "e3",
+      "from": "claim",
+      "to": "render",
+      "label": "due rows",
+      "labelAt": [
+        365,
+        320
+      ]
+    },
+    {
+      "id": "e4",
+      "from": "render",
+      "to": "send"
+    },
+    {
+      "id": "e5",
+      "from": "send",
+      "to": "settle",
+      "label": "sent"
+    },
+    {
+      "id": "e6",
+      "from": "send",
+      "to": "backoff",
+      "route": "straight",
+      "label": "failed"
+    },
+    {
+      "id": "e7",
+      "from": "backoff",
+      "to": "claim",
+      "route": "return-left",
+      "fromSide": "left",
+      "toSide": "left",
+      "label": "requeued 2^n",
+      "labelSegment": 1,
+      "labelAt": [
+        226,
+        407
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Outbox enqueue (post-write)",
+      "items": [
+        "auth use-cases INSERT email_jobs via the outbox_pg adapter on its own pool connection after the state write — a dual-write window remains",
+        "the claim CTE takes queued-due-now rows plus sending rows older than the 5-minute lease"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Drain",
+      "items": [
+        "loom's run_outbox_worker polls every <APP>_OUTBOX_POLL (2s) with batch <APP>_OUTBOX_BATCH (10); a batch of 0 clamps to 16",
+        "senders: Console when <APP>_OFFLINE or the SMTP host is empty, else SmtpSender (STARTTLS) via mailer::render"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Outcomes",
+      "items": [
+        "success lands sent with sent_at; failure backs off 2^n minutes with ±10% jitter (deterministic per job+attempt) up to max_retries 3",
+        "dead-letters to status failed; the janitor purges expired sessions and code rows hourly"
+      ]
+    }
+  ]
+}

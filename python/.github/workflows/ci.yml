@@ -1,0 +1,26 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# The template ships without a lockfile (INV-T3): `uv sync` resolves
+# latest-for-range until a uv.lock exists post-rename. Lane = go's, tuned.
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install uv
+        run: pip install uv
+      - name: sync (no shipped lockfile — INV-T3)
+        run: uv sync
+      - name: make ci (fmt + vet + lint + gen-check + tests + evals)
+        run: make ci
+      - name: audit
+        run: make vuln
+      - name: actionlint
+        uses: raven-actions/actionlint@v1

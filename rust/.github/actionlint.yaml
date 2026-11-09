@@ -1,0 +1,7 @@
+# actionlint config — declares the custom self-hosted runner label used by
+# deploy.yml + rollback.yml. ponytail: rename.sh substitutes <app> here too,
+# so the label stays in sync with the `runs-on: [self-hosted, <app>-prod]`
+# references in the workflows post-rename.
+self-hosted-runner:
+  labels:
+    - <app>-prod

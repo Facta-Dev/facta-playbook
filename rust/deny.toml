@@ -1,0 +1,45 @@
+# cargo-deny config. Run with `cargo deny check` (also wired into the CI
+# `audit` job). See https://embarkstudios.github.io/cargo-deny/.
+
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+# Transitive advisories with no fixed upgrade. Re-review on each `cargo update`;
+# remove an entry the moment a fix ships. Each ignore MUST name the id + reason.
+# ponytail: no ignores yet — add one per advisory only after confirming the
+# vulnerable code path is unreachable in this workspace.
+ignore = []
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true # internal path deps (`<app>-* { workspace = true }`) are fine
+deny = []
+skip = []
+skip-tree = []
+
+[licenses]
+version = 2
+confidence-threshold = 0.92
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "CC0-1.0",
+    "MPL-2.0",
+    "Zlib",
+    "OpenSSL",
+]
+
+[sources]
+unknown-registry = "warn"
+unknown-git = "warn"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

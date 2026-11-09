@@ -1,0 +1,86 @@
+# docker-compose.yml — local stack for `<app>` backend.
+# ponytail: rename every `<app>` -> your project name before `docker compose up`.
+# Mirrors .env.example; override via a real .env file (`--env-file .env`).
+#
+# Usage:
+#   docker compose up --build
+#   docker compose up db            # just postgres
+# Health: postgres publishes pg_isready; the app waits for it via depends_on.
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: <app>
+      POSTGRES_PASSWORD: <app>
+      POSTGRES_DB: <app>
+    ports:
+      - "5432:5432"
+    volumes:
+      - <app>_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U <app>"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # One-shot schema runner — the API never migrates itself (replicas race);
+  # the boot path goes through this service (go compose parity), same image.
+  migrations:
+    build: .
+    entrypoint: ["/app/server", "migrate"]
+    restart: "no"
+    environment:
+      <APP>_DATABASE_URL: postgres://<app>:<app>@db:5432/<app>
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    environment:
+      <APP>_ENV: development
+      <APP>_BIND: 0.0.0.0:8080
+      <APP>_LOG_LEVEL: info
+      RUST_BACKTRACE: "1"
+      # Link to the compose `db` service, not localhost.
+      <APP>_DATABASE_URL: postgres://<app>:<app>@db:5432/<app>
+      <APP>_DATABASE_MAX_CONNECTIONS: "20"
+      <APP>_DATABASE_MIN_CONNECTIONS: "2"
+      # dev-only secret: config.Load rejects the .env.example placeholder.
+      <APP>_JWT_SECRET: dev-compose-secret-32-bytes-min!
+      <APP>_APIKEY_HMAC_SECRET: dev-compose-secret-32-bytes-min!
+      <APP>_METRICS_ENABLED: "false"
+      # Outbox email: the in-process worker drains email_jobs; empty endpoint
+      # selects NoopMailer (parity with go/py compose, which set no provider).
+      <APP>_MAILER_ENDPOINT: ""
+    ports:
+      - "8080:8080"
+
+  worker:
+    # Background loops (outbox email deliveries + expired-session janitor) —
+    # go cmd/worker parity. Same image as api; compose swaps the entrypoint.
+    build: .
+    entrypoint: ["/app/worker"]
+    restart: unless-stopped
+    environment:
+      <APP>_ENV: development
+      <APP>_LOG_LEVEL: info
+      <APP>_DATABASE_URL: postgres://<app>:<app>@db:5432/<app>
+      # dev-only secret: config.Load rejects the .env.example placeholder.
+      <APP>_JWT_SECRET: dev-compose-secret-32-bytes-min!
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+
+volumes:
+  <app>_pgdata:

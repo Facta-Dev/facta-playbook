@@ -1,0 +1,17 @@
+// This domain.go deliberately violates domain purity by importing the
+// adapter layer (net/http); the evals validator must reject it.
+//
+// FROZEN test data: rename.sh excludes evals/fixtures/ from its
+// substitution pass, so the paths below stay as-shipped. The .go.txt
+// extension keeps the file out of every Go build (evals has no non-test
+// source); the test reads it as text.
+package widgets
+
+import "net/http"
+
+type Widget struct {
+	ID string
+}
+
+// WidgetHandler lives here as an anti-pattern: HTTP belongs in http.go.
+func WidgetHandler(w http.ResponseWriter, r *http.Request) {}

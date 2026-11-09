@@ -1,0 +1,24 @@
+# Secrets — the .env.example is the tracked template; real .env never commit.
+.env
+.env.*
+!.env.example
+
+# Build output
+/bin/
+*.exe
+
+# Coverage / profiling
+coverage.out
+*.pprof
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# go.sum is NOT ignored: the skeleton ships none (INV-T3); after
+# scripts/rename.sh + go mod tidy, commit it like any Go module.
+
+# Personal agent state — never shared
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md

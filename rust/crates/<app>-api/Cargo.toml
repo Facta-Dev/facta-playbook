@@ -1,0 +1,71 @@
+[package]
+name         = "<app>-api"
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+description  = "<app> · composition root: AppState, router, main"
+
+[lints]
+workspace = true
+
+[features]
+# go parity: login/refresh/OAuth mint tokens — the mint paths are ON in
+# production by default. The `mint` feature remains an opt-out for builds
+# that want the old verify-only seam (routes stay, mint shims answer 500).
+default = ["mint"]
+mock = ["<app>-ports/mock", "<app>-widgets/mock"]
+# go parity (was H2 "no mint in production"): login/refresh/oauth mint
+# tokens in the shipped binary. Kept as an explicit opt-out toggle (removing
+# it flips the mint shims to answering 500).
+mint = ["<app>-auth/mint", "<app>-warden/mint"]
+# Prometheus metrics plane. When off, the binary is byte-identical to a build
+# that never had it. `metrics_enabled` (config) is the runtime gate.
+metrics = ["dep:metrics", "dep:metrics-exporter-prometheus"]
+
+[dependencies]
+"<app>-core"    = { workspace = true, features = ["openapi"] }
+"<app>-ports"   = { workspace = true }
+"<app>-widgets" = { workspace = true }
+"<app>-loom"    = { workspace = true }
+"<app>-mailer"  = { workspace = true }
+"<app>-warden"  = { workspace = true }
+"<app>-auth"    = { workspace = true }
+"<app>-adminusers" = { workspace = true }
+async-trait     = { workspace = true }
+axum            = { workspace = true }
+chrono          = { workspace = true }
+futures-util    = { version = "0.3", default-features = false, features = ["std"] }
+tokio           = { workspace = true }
+tower-http      = { workspace = true }
+sqlx            = { workspace = true }
+anyhow          = { workspace = true }
+serde           = { workspace = true }
+serde_json      = { workspace = true }
+config          = { workspace = true }
+tracing         = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid            = { workspace = true }
+utoipa             = { workspace = true }
+utoipa-swagger-ui  = { workspace = true }
+# ponytail: argon2 is a workspace dep, available for a future password-hash
+# verification path at the login boundary. Not pulled into -api today because
+# no login handler exists yet. Ceiling: `Argon2::default().verify_password()`.
+# Upgrade: add `argon2 = { workspace = true }` here when the login handler is built.
+
+[dependencies.metrics]
+workspace = true
+optional = true
+
+[dependencies.metrics-exporter-prometheus]
+workspace = true
+optional = true
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+http  = "1"
+# Enables `ports::mock` for test/example/bench targets only (resolver = "3"
+# keeps it out of the lib build). Router tests import `MockWidgetRepository`.
+"<app>-ports" = { workspace = true, features = ["mock"] }
+# mint rides on the default features (go parity) — tests get it for free;
+# no dev-dependency wiring needed anymore.

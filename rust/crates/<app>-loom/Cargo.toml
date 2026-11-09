@@ -1,0 +1,35 @@
+[package]
+name         = "<app>-loom"
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+description  = "<app> · realtime hub + background worker loops (outbox drain, janitor)"
+
+[lints]
+workspace = true
+
+[features]
+default = []
+mock = ["<app>-ports/mock", "<app>-widgets/mock"]
+
+# Worker entry point (go cmd/worker parity), same image different entry.
+[[bin]]
+name = "<app>-worker"
+path = "src/bin/worker.rs"
+
+[dependencies]
+"<app>-core"    = { workspace = true }
+"<app>-ports"   = { workspace = true }
+"<app>-widgets" = { workspace = true }
+"<app>-mailer"  = { workspace = true }
+"<app>-warden"  = { workspace = true }
+async-trait     = { workspace = true }
+axum            = { workspace = true, features = ["ws"] }
+chrono          = { workspace = true }
+futures-util    = { version = "0.3", default-features = false, features = ["sink", "std"] }
+serde_json      = { workspace = true }
+sqlx            = { workspace = true }
+tokio           = { workspace = true }
+tracing         = { workspace = true }
+tracing-subscriber = { workspace = true }

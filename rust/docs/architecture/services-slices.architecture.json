@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "backend-rust Services — Feature Slices",
+    "quality_profile": "showcase",
+    "output": "services-slices.architecture.html"
+  },
+  "components": [
+    {
+      "id": "composition",
+      "type": "backend",
+      "label": "<app>-api",
+      "sublabel": "router · state · config",
+      "pos": [
+        40,
+        96
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "backend",
+      "label": "<app>-auth",
+      "sublabel": "signup · session · oauth",
+      "pos": [
+        290,
+        96
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "widgets",
+      "type": "backend",
+      "label": "<app>-widgets",
+      "sublabel": "CRUD · SSE",
+      "pos": [
+        540,
+        96
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "warden",
+      "type": "security",
+      "label": "<app>-warden",
+      "sublabel": "JWT · hashing · cookies",
+      "pos": [
+        40,
+        240
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "ports",
+      "type": "backend",
+      "label": "<app>-ports",
+      "sublabel": "sqlx adapters",
+      "pos": [
+        290,
+        240
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "mailer",
+      "type": "backend",
+      "label": "<app>-mailer",
+      "sublabel": "templates · senders",
+      "pos": [
+        540,
+        240
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "loom",
+      "type": "backend",
+      "label": "<app>-loom",
+      "sublabel": "workers · hub",
+      "pos": [
+        770,
+        240
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "<app>-core",
+      "sublabel": "domain types · EmailJob",
+      "pos": [
+        40,
+        384
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "email_jobs",
+      "type": "database",
+      "label": "email_jobs",
+      "sublabel": "outbox · SKIP LOCKED",
+      "pos": [
+        540,
+        384
+      ],
+      "size": [
+        130,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Composition root",
+      "wraps": [
+        "composition"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Feature slices",
+      "wraps": [
+        "auth",
+        "widgets"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Platform",
+      "wraps": [
+        "warden",
+        "ports",
+        "mailer",
+        "loom"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "State",
+      "wraps": [
+        "core",
+        "email_jobs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "composition",
+      "to": "auth",
+      "label": "axum routes",
+      "labelAt": [
+        230,
+        172
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "composition",
+      "to": "warden",
+      "label": "middleware",
+      "labelAt": [
+        105,
+        200
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "auth",
+      "to": "ports",
+      "label": "repo traits",
+      "labelAt": [
+        355,
+        200
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "loom",
+      "to": "email_jobs",
+      "label": "drain",
+      "labelAt": [
+        835,
+        344
+      ]
+    },
+    {
+      "id": "c6",
+      "from": "loom",
+      "to": "mailer",
+      "label": "render → send",
+      "labelAt": [
+        720,
+        254
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "warden",
+      "to": "core",
+      "label": "types · Error",
+      "labelAt": [
+        105,
+        344
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Crate workspace",
+      "items": [
+        "11 crates prefixed <app>-: core, ports, auth, adminusers, warden, mailer, loom, api, widgets, sdk, cli",
+        "adapters live in ports/src/adapters/*_pg.rs with runtime-checked sqlx::query string SQL — no macros, no .sqlx cache, builds without a database"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Auth path",
+      "items": [
+        "warden owns the HS256 JWT codec with jti == sessions.id (revoking the session revokes the token), argon2id over an HMAC-SHA256 pepper pre-hash, cookies and the error envelope",
+        "<app>-auth holds the signup/session/password/oauth use-cases behind ports repository traits"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Background + realtime",
+      "items": [
+        "loom runs run_outbox_worker + run_janitor and the realtime hub (rooms user:<id>)",
+        "mailer picks Console when <APP>_OFFLINE or the SMTP host is empty, else SmtpSender"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "backend-node Container Architecture",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "all",
+        "label": "All",
+        "focus": ["browser-clients", "edge", "app-api", "worker", "postgres", "mail-vendor"],
+        "note": "HTTP · WS · SSE in through nginx, the hexagon (features + platform + shared), the outbox worker, Postgres and the mail vendor."
+      },
+      {
+        "id": "auth",
+        "label": "Auth",
+        "focus": ["browser-clients", "edge", "app-api", "postgres"],
+        "note": "Signup → verify code → login gates → JWT 15m + rotating refresh 720h; codes and sessions live in Postgres, tokens never do."
+      },
+      {
+        "id": "realtime",
+        "label": "Realtime",
+        "focus": ["browser-clients", "edge", "app-api"],
+        "note": "WS /api/v1/ws?token= with close 4001 on failed auth; SSE flushes widget lifecycle events from the in-process hub."
+      },
+      {
+        "id": "ops",
+        "label": "Ops",
+        "focus": ["edge", "app-api", "worker", "postgres", "mail-vendor"],
+        "note": "readyz = SELECT 1; migrations applied by node-pg-migrate — never at startup; the worker claims email_jobs with SKIP LOCKED."
+      }
+    ],
+    "output": "c4-containers.html"
+  },
+  "components": [
+    {
+      "id": "browser-clients",
+      "type": "external",
+      "label": "API clients",
+      "sublabel": "browser · SSE · WS",
+      "pos": [40, 280],
+      "size": [130, 60]
+    },
+    {
+      "id": "edge",
+      "type": "cloud",
+      "label": "Edge nginx",
+      "sublabel": "upstream :80 · TLS",
+      "pos": [260, 280],
+      "size": [130, 60]
+    },
+    {
+      "id": "app-api",
+      "type": "backend",
+      "label": "<app>-api",
+      "sublabel": "Fastify · hexagon",
+      "pos": [480, 280],
+      "size": [130, 60]
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Outbox worker",
+      "sublabel": "email_jobs · SKIP LOCKED",
+      "pos": [700, 280],
+      "size": [130, 60]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL 17",
+      "sublabel": "pg Pool · node-pg-migrate pairs",
+      "pos": [700, 120],
+      "size": [130, 60]
+    },
+    {
+      "id": "mail-vendor",
+      "type": "external",
+      "label": "Mail Vendor",
+      "sublabel": "SMTP · console",
+      "pos": [920, 120],
+      "size": [130, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "The <app> runtime",
+      "wraps": ["edge", "app-api", "worker"]
+    },
+    {
+      "kind": "region",
+      "label": "The data plane",
+      "wraps": ["postgres", "mail-vendor"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "clients-to-edge",
+      "from": "browser-clients",
+      "to": "edge",
+      "label": "HTTP · WS · SSE",
+      "variant": "emphasis"
+    },
+    {
+      "id": "edge-to-api",
+      "from": "edge",
+      "to": "app-api",
+      "label": "route /api"
+    },
+    {
+      "id": "api-to-db",
+      "from": "app-api",
+      "to": "postgres",
+      "label": "typed queries.ts",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "via": [
+        [545, 230],
+        [765, 230]
+      ],
+      "labelAt": [655, 222]
+    },
+    {
+      "id": "worker-to-db",
+      "from": "worker",
+      "to": "postgres",
+      "label": "claim jobs",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDx": 52
+    },
+    {
+      "id": "worker-to-mail",
+      "from": "worker",
+      "to": "mail-vendor",
+      "label": "render + send",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [
+        [880, 310],
+        [880, 150]
+      ],
+      "labelAt": [880, 230]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Build",
+      "items": [
+        "src/features/* · src/platform/* · src/shared/* · src/gen/api",
+        "pnpm; no pnpm-lock.yaml committed — pnpm install self-heal post-rename (INV-T3)",
+        "one image, two entrypoints: src/bin/api.ts + src/bin/worker.ts"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Run",
+      "items": [
+        "<APP>_OFFLINE=true forces the console sender, no sockets (INV-T7)",
+        "migrations via node-pg-migrate — never at server startup",
+        "readyz SELECT 1 through the pg Pool gates every deploy"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Quality gates",
+      "items": [
+        "make ci = prettier + tsc + eslint + gen-check + vitest",
+        "acceptance @cucumber/cucumber on the fake-wired app; integration tests deferred (documented delta)",
+        "auth ships: bcrypt+pepper · JWT 15m · rotating refresh 720h · audit logs"
+      ]
+    }
+  ]
+}

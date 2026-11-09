@@ -1,0 +1,23 @@
+# Full-build context stays tiny (~7KB): nothing outside TS source matters to
+# the builder. migrations/ is bind-mounted by the compose services at runtime
+# (node-pg-migrate reads it from the mount, not the image), so it does not
+# need to ship inside the image.
+.git
+.github
+.claude
+.env*
+docs
+scripts
+infra
+evals
+specs
+migrations
+test
+dist
+docker-compose*.yml
+Dockerfile*
+Makefile
+node_modules
+coverage
+*.md
+tmp

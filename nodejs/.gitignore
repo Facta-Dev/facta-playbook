@@ -1,0 +1,10 @@
+# <app>. Local state only — the repo ships without any lockfile (INV-T3:
+# the first real pnpm install happens after rename.sh, on the renamed copy).
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+pnpm-lock.yaml
+package-lock.json

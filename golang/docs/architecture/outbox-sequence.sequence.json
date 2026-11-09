@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "backend-go Outbox Sequence",
+    "quality_profile": "showcase",
+    "viewBox": [
+      980,
+      760
+    ],
+    "animation": "trace",
+    "output": "outbox-sequence.sequence.html"
+  },
+  "participants": [
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "auth slices",
+      "sublabel": "use-cases"
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "Postgres",
+      "sublabel": "email_jobs rows"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "outbox worker",
+      "sublabel": "drain · janitor"
+    },
+    {
+      "id": "smtp",
+      "type": "external",
+      "label": "Mail vendor",
+      "sublabel": "SMTP · console"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 240,
+      "label": "Enqueue (post-write)"
+    },
+    {
+      "from": 258,
+      "to": 460,
+      "label": "Claim + render"
+    },
+    {
+      "from": 480,
+      "to": 600,
+      "label": "Send + settle"
+    }
+  ],
+  "messages": [
+    {
+      "from": "api",
+      "to": "pg",
+      "y": 168,
+      "label": "INSERT user, then email_jobs",
+      "variant": "emphasis"
+    },
+    {
+      "from": "pg",
+      "to": "api",
+      "y": 210,
+      "label": "committed",
+      "variant": "return"
+    },
+    {
+      "from": "worker",
+      "to": "pg",
+      "y": 264,
+      "label": "poll 2s: claim due rows"
+    },
+    {
+      "from": "pg",
+      "to": "worker",
+      "y": 306,
+      "label": "queued rows · sending lease",
+      "variant": "return"
+    },
+    {
+      "from": "worker",
+      "to": "smtp",
+      "y": 348,
+      "label": "render verify_email → send"
+    },
+    {
+      "from": "smtp",
+      "to": "worker",
+      "y": 390,
+      "label": "ack",
+      "variant": "return"
+    },
+    {
+      "from": "worker",
+      "to": "pg",
+      "y": 432,
+      "label": "mark_sent"
+    },
+    {
+      "from": "worker",
+      "to": "pg",
+      "y": 474,
+      "label": "on failure: retry 2^n · dead-letter"
+    },
+    {
+      "from": "worker",
+      "to": "pg",
+      "y": 520,
+      "label": "hourly: purge sessions + code rows"
+    },
+    {
+      "from": "pg",
+      "to": "worker",
+      "y": 554,
+      "label": "purged",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 174,
+      "to": 228,
+      "type": "backend"
+    },
+    {
+      "participant": "pg",
+      "from": 180,
+      "to": 228,
+      "type": "database"
+    },
+    {
+      "participant": "worker",
+      "from": 258,
+      "to": 560,
+      "type": "backend"
+    },
+    {
+      "participant": "pg",
+      "from": 258,
+      "to": 312,
+      "type": "database"
+    },
+    {
+      "participant": "smtp",
+      "from": 342,
+      "to": 396,
+      "type": "external"
+    },
+    {
+      "participant": "pg",
+      "from": 426,
+      "to": 480,
+      "type": "database"
+    },
+    {
+      "participant": "pg",
+      "from": 514,
+      "to": 560,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Zero-broker outbox",
+      "items": [
+        "the enqueue runs on its own pool connection after the state change — a dual-write window remains; delivery is at-least-once once the row exists",
+        "claim = queued due now OR sending older than the 5-minute lease, FOR UPDATE SKIP LOCKED"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Delivery",
+      "items": [
+        "render + send: templates from platform/email; Console when <APP>_OFFLINE or host empty, else SMTP PlainAuth STARTTLS",
+        "batch 10 per tick (<APP>_OUTBOX_BATCH), poll every 2s (<APP>_OUTBOX_POLL)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Failure + purge",
+      "items": [
+        "failure requeues with 2^n-minute backoff (±20% jitter) and dead-letters at max_retries 3",
+        "the janitor sweeps expired sessions, email_verifications and password_resets hourly"
+      ]
+    }
+  ]
+}

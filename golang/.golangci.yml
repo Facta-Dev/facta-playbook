@@ -1,0 +1,44 @@
+# golangci-lint v2 — hexagonal discipline (guide: depguard as arch guard).
+#
+#   domain-pure:     feature domain.go may import only stdlib + shared kernel
+#   slice-isolation: internal/features never import another feature slice
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - depguard
+  settings:
+    depguard:
+      rules:
+        domain-pure:
+          files:
+            - "**/internal/features/**/domain.go"
+          deny:
+            - pkg: net/http
+              desc: domain stays transport-agnostic — adapters live in http.go
+            - pkg: database/sql
+              desc: persistence is a port; use interfaces in ports.go
+            - pkg: github.com/jackc/pgx/v5
+              desc: domain must not touch pgx — adapters in postgres.go
+            - pkg: github.com/<scope>/<app>/internal/gen
+              desc: generated db/api code is an adapter concern, not domain
+            - pkg: github.com/<scope>/<app>/internal/platform
+              desc: domain depends on its own ports, not platform infra
+            - pkg: github.com/<scope>/<app>/internal/features
+              desc: slices never depend on other slices
+        slice-isolation:
+          files:
+            - "**/internal/features/**"
+          deny:
+            - pkg: github.com/<scope>/<app>/internal/features
+              desc: vertical slices are sealed — route composition through cmd/api
+  exclusions:
+    rules:
+      - path: (.+)_test\.go
+        linters:
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt

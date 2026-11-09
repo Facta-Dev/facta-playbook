@@ -1,0 +1,29 @@
+# Build context stays small: only pyproject.toml, README.md, src/, alembic.ini
+# and migrations/ matter to the image. Everything else is dev-only or runtime
+# bind-mounted by compose.
+.git
+.github
+.claude
+.env*
+docs
+scripts
+infra
+evals
+specs
+tests
+.venv
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.import_linter_cache
+**/__pycache__
+*.pyc
+uv.lock
+docker-compose*.yml
+Dockerfile*
+Makefile
+*.md
+!README.md
+tmp
+dist
+build

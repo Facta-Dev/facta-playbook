@@ -1,0 +1,54 @@
+# Production composition: edge nginx + the published image (built locally
+# when the image is absent). Migrations run as a release step — the
+# `migrations` service uses the same /migrate binary, never the API boot —
+# and secrets come from the host .env, never baked into the image.
+services:
+  nginx:
+    build: ./infra/nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+
+  api:
+    image: ${<APP>_API_IMAGE:-ghcr.io/<scope>/<app>/api:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["/api", "-probe"]
+      interval: 15s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+  # Release-step runner (CI):
+  #   docker compose -f docker-compose.prod.yml --profile tools run --rm migrations
+  migrations:
+    image: ${<APP>_API_IMAGE:-ghcr.io/<scope>/<app>/api:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles: [tools]
+    entrypoint: ["/migrate"]
+    depends_on: []
+    environment:
+      <APP>_MIGRATIONS_DIR: /migrations
+    volumes:
+      - ./migrations:/migrations:ro
+    # The DSN rides in .env as <APP>_DATABASE_URL (env_file) — or pass it:
+    #   <APP>_DATABASE_URL=... docker compose ... run --rm migrations
+    env_file: .env
+
+  worker:
+    image: ${<APP>_API_IMAGE:-ghcr.io/<scope>/<app>/api:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    entrypoint: ["/worker"]
+    env_file: .env

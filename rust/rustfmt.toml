@@ -1,0 +1,19 @@
+# rustfmt config — shared by `cargo fmt` and the CI fmt-check job.
+# ponytail: `imports_granularity` and `group_imports` are unstable options;
+# they are honored by nightly rustfmt and silently ignored by stable (which
+# prints a warning to stderr but does not fail the gate). Install nightly
+# rustfmt (`rustup component add rustfmt --toolchain nightly`) if you want
+# them applied on format; the --check gate still passes on either channel.
+edition = "2024"
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+newline_style = "Unix"
+use_small_heuristics = "Default"
+reorder_imports = true
+reorder_modules = true
+remove_nested_parens = true
+use_field_init_shorthand = true
+use_try_shorthand = true
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"

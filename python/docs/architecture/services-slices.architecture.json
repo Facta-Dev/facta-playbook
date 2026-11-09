@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "backend-python Services — Feature Slices",
+    "quality_profile": "showcase",
+    "output": "services-slices.architecture.html"
+  },
+  "components": [
+    {
+      "id": "composition",
+      "type": "backend",
+      "label": "src/app/bin/api.py",
+      "sublabel": "config · engine · FastAPI",
+      "pos": [40, 96],
+      "size": [130, 60]
+    },
+    {
+      "id": "auth",
+      "type": "backend",
+      "label": "auth slices",
+      "sublabel": "signup · session · password",
+      "pos": [290, 96],
+      "size": [130, 60]
+    },
+    {
+      "id": "widgets",
+      "type": "backend",
+      "label": "widgets · realtime",
+      "sublabel": "CRUD · ws · SSE",
+      "pos": [540, 96],
+      "size": [130, 60]
+    },
+    {
+      "id": "platform",
+      "type": "backend",
+      "label": "platform",
+      "sublabel": "authx · envelope · oauthx",
+      "pos": [40, 240],
+      "size": [130, 60]
+    },
+    {
+      "id": "queries",
+      "type": "backend",
+      "label": "typed queries",
+      "sublabel": "text() SQL · SQLAlchemy",
+      "pos": [290, 240],
+      "size": [130, 60]
+    },
+    {
+      "id": "loom",
+      "type": "backend",
+      "label": "platform/email",
+      "sublabel": "outbox · senders",
+      "pos": [540, 240],
+      "size": [130, 60]
+    },
+    {
+      "id": "hub",
+      "type": "backend",
+      "label": "platform/realtime",
+      "sublabel": "hub rooms user:<id>",
+      "pos": [770, 240],
+      "size": [130, 60]
+    },
+    {
+      "id": "shared",
+      "type": "backend",
+      "label": "shared",
+      "sublabel": "apperr · rolex · idgen",
+      "pos": [40, 384],
+      "size": [130, 60]
+    },
+    {
+      "id": "email_jobs",
+      "type": "database",
+      "label": "email_jobs",
+      "sublabel": "outbox · SKIP LOCKED",
+      "pos": [540, 384],
+      "size": [130, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Composition root",
+      "wraps": ["composition"]
+    },
+    {
+      "kind": "region",
+      "label": "Feature slices",
+      "wraps": ["auth", "widgets"]
+    },
+    {
+      "kind": "region",
+      "label": "Platform",
+      "wraps": ["platform", "queries", "loom", "hub"]
+    },
+    {
+      "kind": "region",
+      "label": "State",
+      "wraps": ["shared", "email_jobs"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "composition",
+      "to": "auth",
+      "label": "register(app, service)",
+      "labelAt": [230, 172]
+    },
+    {
+      "id": "c2",
+      "from": "composition",
+      "to": "platform",
+      "label": "deps wiring",
+      "labelAt": [105, 200]
+    },
+    {
+      "id": "c3",
+      "from": "auth",
+      "to": "queries",
+      "label": "queries.py",
+      "labelAt": [355, 200]
+    },
+    {
+      "id": "c4",
+      "from": "widgets",
+      "to": "loom",
+      "label": "enqueue · publish",
+      "labelAt": [605, 200]
+    },
+    {
+      "id": "c5",
+      "from": "loom",
+      "to": "email_jobs",
+      "label": "drain",
+      "labelAt": [605, 344]
+    },
+    {
+      "id": "c6",
+      "from": "loom",
+      "to": "hub",
+      "label": "ws hub",
+      "labelAt": [720, 254]
+    },
+    {
+      "id": "c7",
+      "from": "platform",
+      "to": "shared",
+      "label": "apperr · rolex",
+      "labelAt": [105, 344]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Vertical slices",
+      "items": [
+        "src/app/features/{authsignup, authsession, authpassword, authoauth, adminusers, widgets} each ship domain.py · ports.py · usecase.py · queries.py · postgres.py · http.py · module.py; the realtime slice ships only module.py — its hub lives in platform/realtime",
+        "everything is wired from the src/app/bin/api.py composition root: Settings → engine → slices → FastAPI → uvicorn"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Platform + typed queries",
+      "items": [
+        "platform/authx mints HS256 JWTs and hashes argon2id with an optional concatenated pepper",
+        "each slice hand-writes parameterized text() queries over SQLAlchemy (schema source = migrations/)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Realtime + email",
+      "items": [
+        "platform/realtime keeps in-process rooms user:<id> and publishes never-block, drop-on-full",
+        "platform/email owns the email_jobs outbox (outbox.py: stage + claim + settle) plus templates and the console/SMTP select_sender"
+      ]
+    }
+  ]
+}

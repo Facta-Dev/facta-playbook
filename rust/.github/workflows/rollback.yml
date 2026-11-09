@@ -1,0 +1,92 @@
+# Rollback — redeploy a previous image tag. Manual only.
+# ponytail: rename every `<app>`/`<scope>` -> your project name before dispatch.
+#
+# Trigger from the Actions tab: pass the tag to roll back to (e.g. `sha-abc123`
+# or a release tag like `v1.2.3`). Pulls that exact tag and restarts the api
+# service with it, then health-checks /api/readyz. Reuses the deploy-prod
+# concurrency group so a rollback cancels an in-flight deploy (and vice versa).
+#
+# Secret-gated stubs: same generic-secret pattern as deploy.yml — see the
+# deploy.yml header comment for the mapping rationale.
+name: rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag to roll back to (e.g. sha-abc123 or v1.2.3)"
+        required: true
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  DEPLOY_DIR: /opt/<app>
+  COMPOSE: docker compose -f docker-compose.prod.yml
+
+jobs:
+  rollback:
+    name: pull + restart api at tag
+    runs-on: [self-hosted, <app>-prod]
+    steps:
+      - name: Validate tag input
+        run: |
+          tag="${{ github.event.inputs.tag }}"
+          [ -n "$tag" ] || { echo "::error::tag is required"; exit 1; }
+          echo "rolling back api to tag=$tag"
+
+      - name: Check required secrets present (fail-closed)
+        run: |
+          [ -n "${{ secrets.GITHUB_TOKEN }}" ]        || { echo "::error::GITHUB_TOKEN not set"; exit 1; }
+          [ -n "${{ secrets.DATABASE_URL }}" ]        || { echo "::error::DATABASE_URL secret not set"; exit 1; }
+          [ -n "${{ secrets.JWT_SECRET }}" ]          || { echo "::error::JWT_SECRET secret not set"; exit 1; }
+          [ -n "${{ secrets.APIKEY_HMAC_SECRET }}" ]  || { echo "::error::APIKEY_HMAC_SECRET secret not set"; exit 1; }
+          [ -n "${{ secrets.POSTGRES_PASSWORD }}" ]   || { echo "::error::POSTGRES_PASSWORD secret not set"; exit 1; }
+
+      - name: Sync compose files (latest main — compose is current, image is pinned)
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Pull the pinned tag + restart api
+        working-directory: ${{ env.DEPLOY_DIR }}
+        env:
+          <APP>_API_IMAGE: ghcr.io/<scope>/<app>-api:${{ github.event.inputs.tag }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          <APP>_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          <APP>_APIKEY_HMAC_SECRET: ${{ secrets.APIKEY_HMAC_SECRET }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          ${{ env.COMPOSE }} --env-file .env pull api
+          ${{ env.COMPOSE }} --env-file .env up -d --no-build api
+
+      - name: Health check (wait for /api/readyz)
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          set -e
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 5 -o /dev/null "http://127.0.0.1/api/readyz" 2>/dev/null; then
+              ok=1; echo "rollback healthy (~$((i*4))s)"; break
+            fi
+            sleep 4
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::api not ready after rollback to ${{ github.event.inputs.tag }}"
+            ${{ env.COMPOSE }} ps
+            exit 1
+          fi
+
+      - name: Docker logout
+        if: always()
+        run: docker logout ghcr.io >/dev/null 2>&1 || true

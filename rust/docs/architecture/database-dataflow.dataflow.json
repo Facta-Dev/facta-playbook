@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "backend-rust Dataflow — identity + outbox",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1068,
+      720
+    ],
+    "output": "database-dataflow.dataflow.html"
+  },
+  "stages": [
+    {
+      "label": "Clients"
+    },
+    {
+      "label": "Use-cases"
+    },
+    {
+      "label": "Postgres"
+    },
+    {
+      "label": "Outbox"
+    },
+    {
+      "label": "Delivery"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Auth client",
+      "sublabel": "SPA · SDK",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "oauth",
+      "type": "external",
+      "label": "Google · GitHub",
+      "sublabel": "One-Tap · callback",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Use-case services",
+      "sublabel": "auth · adminusers · widgets",
+      "stage": 1,
+      "row": 0,
+      "width": 150
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "users · sessions",
+      "sublabel": "sqlx tx",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "codes",
+      "type": "database",
+      "label": "code tables",
+      "sublabel": "verifications · resets",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "jobs",
+      "type": "database",
+      "label": "email_jobs",
+      "sublabel": "outbox · statuses",
+      "stage": 3,
+      "row": 0,
+      "tag": "own pool"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "outbox worker",
+      "sublabel": "poll 2s · batch 10",
+      "stage": 3,
+      "row": 1
+    },
+    {
+      "id": "mailer",
+      "type": "cloud",
+      "label": "mail sender",
+      "sublabel": "Console · SMTP",
+      "stage": 4,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "id": "f1",
+      "from": "client",
+      "to": "api",
+      "label": "REST + Bearer",
+      "route": "straight"
+    },
+    {
+      "id": "f2",
+      "from": "oauth",
+      "to": "api",
+      "label": "ID token · code",
+      "labelDy": 22
+    },
+    {
+      "id": "f3",
+      "from": "api",
+      "to": "pg",
+      "label": "users · sessions",
+      "labelAt": [
+        400,
+        295
+      ]
+    },
+    {
+      "id": "f4",
+      "from": "api",
+      "to": "codes",
+      "label": "6-digit codes",
+      "labelAt": [
+        452,
+        320
+      ]
+    },
+    {
+      "id": "f5",
+      "from": "api",
+      "to": "jobs",
+      "label": "enqueue (own connection)",
+      "route": "bottom-channel",
+      "variant": "emphasis",
+      "channelY": 230
+    },
+    {
+      "id": "f6",
+      "from": "jobs",
+      "to": "worker",
+      "label": "claim CTE",
+      "labelAt": [
+        620,
+        196
+      ]
+    },
+    {
+      "id": "f7",
+      "from": "worker",
+      "to": "mailer",
+      "label": "render → send",
+      "labelDy": -14
+    },
+    {
+      "id": "f8",
+      "from": "worker",
+      "to": "jobs",
+      "label": "complete · retry 2^n",
+      "variant": "dashed",
+      "labelAt": [
+        790,
+        336
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Core state",
+      "items": [
+        "users holds role + provider ids (google_id · github_id); sessions hold the opaque 128-char refresh token with is_active + absolute expires_at",
+        "codes live in email_verifications (6-digit · 5 tries · <APP>_VERIFY_CODE_TTL 24h) and password_resets (30m · <APP>_RESET_RATE_LIMIT 3 per 5 min)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Outbox",
+      "items": [
+        "auth use-cases INSERT email_jobs through the outbox on its own pool connection — not atomic with the state change, so a crash between them can lose the mail (ports/adapters/outbox_pg.rs)",
+        "the claim CTE takes queued-due rows plus sending rows older than the 5-minute lease — FOR UPDATE SKIP LOCKED, at-least-once"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Delivery + ledgers",
+      "items": [
+        "failures back off 2^n minutes with ±10% jitter (deterministic per job+attempt) and dead-letter to status failed at max_retries 3",
+        "audit_logs records admin actions; the janitor (<APP>_JANITOR_POLL 1h) purges expired sessions and code rows"
+      ]
+    }
+  ]
+}

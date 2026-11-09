@@ -1,0 +1,68 @@
+# evals-live.yml — live-tier evals for the .claude skills layer.
+# ponytail: rename every `<app>` -> your project name before this workflow runs.
+#
+# Distinct from the default `ci.yml` `eval` job (offline `cargo test`, always
+# runs on push/PR). This workflow drives evals/run-live.sh, which needs a
+# live `claude` CLI + real API budget, so it is workflow_dispatch-only and
+# NEVER auto-fires on push or pull_request (INV-T16 — it must stay outside
+# scripts/verify-template.sh and the default CI lanes).
+#
+# Fail-closed on a missing ANTHROPIC_API_KEY secret: the guard step checks
+# the secret via an env var (not directly in an `if:` expression) and every
+# later step is gated on that check, so a fork PR or a repo with no secret
+# configured gets a clean skip rather than a failure.
+name: evals-live
+
+on:
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: "Live eval tier to run"
+        required: true
+        type: choice
+        default: "2"
+        options:
+          - "2"
+          - "3"
+          - "all"
+
+permissions:
+  contents: read
+
+jobs:
+  live-evals:
+    name: live evals (tier ${{ inputs.tier }})
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: check ANTHROPIC_API_KEY is configured
+        id: guard
+        env:
+          KEY_PRESENT: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          if [ "$KEY_PRESENT" != "true" ]; then
+            echo "evals-live: ANTHROPIC_API_KEY not configured on this repo — skipping (fail-closed, not a failure)." 
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: setup node
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: install claude CLI
+        if: steps.guard.outputs.skip != 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: run live evals
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EVALS: "1"
+          TIER: ${{ inputs.tier == 'all' && '3' || inputs.tier }}
+        run: bash evals/run-live.sh

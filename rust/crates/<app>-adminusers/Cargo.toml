@@ -1,0 +1,23 @@
+[package]
+name         = "<app>-adminusers"
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+description  = "<app> · identity service: adminusers use-cases"
+
+[lints]
+workspace = true
+
+[dependencies]
+"<app>-core"  = { workspace = true }
+"<app>-ports" = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }
+uuid          = { workspace = true }
+tracing       = { workspace = true }
+
+[dev-dependencies]
+tokio            = { workspace = true }
+chrono           = { workspace = true }
+async-trait      = { workspace = true }

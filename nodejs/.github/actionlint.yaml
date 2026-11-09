@@ -1,0 +1,4 @@
+# actionlint read-only config (auto-detected at .github/actionlint.yaml).
+# The <APP> placeholder makes the secrets-name rule fire pre-rename; a
+# renamed repo has no such issue, so only `configuration` and `sets` ship.
+configuration: {}

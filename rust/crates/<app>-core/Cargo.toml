@@ -1,0 +1,31 @@
+[package]
+name         = "<app>-core"
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+description  = "<app> · shared domain types, errors, ids, vocabulary"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde     = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+uuid      = { workspace = true }
+chrono    = { workspace = true }
+
+# Optional integrations are feature-gated so `core` stays minimal by default.
+[features]
+default = []
+sqlx    = ["dep:sqlx"]      # only pull DB types in when a consumer asks
+openapi = ["dep:utoipa"]    # ponytail: add utoipa to workspace deps if needed
+
+[dependencies.sqlx]
+workspace = true
+optional = true
+
+[dependencies.utoipa]
+workspace = true
+optional = true

@@ -1,0 +1,25 @@
+[package]
+name         = "<app>-widgets"
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+description  = "<app> · widget use-case slice (example vertical slice)"
+
+[lints]
+workspace = true
+
+[features]
+default = []
+mock = ["<app>-ports/mock"]
+
+[dependencies]
+"<app>-core"  = { workspace = true }
+"<app>-ports" = { workspace = true }
+async-trait   = { workspace = true }
+tokio         = { workspace = true }
+
+# Enables `ports::mock` for test/example/bench targets only (resolver = "3"
+# keeps it out of the lib build). Tests import `MockWidgetRepository` from it.
+[dev-dependencies]
+"<app>-ports" = { workspace = true, features = ["mock"] }

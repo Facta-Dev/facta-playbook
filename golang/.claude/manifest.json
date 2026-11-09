@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "description": "Module/target matrix for the <app> template's .claude layer. modules list the canonical source dir and which runtime targets each applies to. claude + claude-project are always-on; every other target is opt-in via a target flag at install time (scripts/install-claude-runtime.sh --targets=...).",
+  "modules": {
+    "agents": {
+      "source": ".claude/agents",
+      "targets": ["claude", "claude-project", "cursor", "antigravity", "codex", "gemini", "opencode", "codebuddy", "joycode", "qwen", "zed", "hermes", "openclaw", "kimi"]
+    },
+    "skills": {
+      "source": ".claude/skills",
+      "targets": ["claude", "claude-project", "cursor", "antigravity", "codex", "gemini", "opencode", "codebuddy", "joycode", "qwen", "zed", "hermes", "openclaw", "kimi"]
+    },
+    "commands": {
+      "source": ".claude/commands",
+      "targets": ["claude", "claude-project", "cursor", "antigravity", "codex", "gemini", "opencode", "codebuddy", "joycode", "qwen", "zed", "hermes", "openclaw", "kimi"]
+    },
+    "hooks": {
+      "source": "scripts/hooks",
+      "targets": ["claude-project"],
+      "_note": "Documentary only. The installer HARDCODES install_agents/skills/commands and does not consume this modules block; install_hooks_target() in scripts/install-claude-runtime.sh is the load-bearing wiring, guarded to the claude-project target only, only-if-absent (never clobbers a user settings.json)."
+    }
+  },
+  "always_on": ["claude", "claude-project"],
+  "opt_in": ["cursor", "antigravity", "codex", "gemini", "opencode", "codebuddy", "joycode", "qwen", "zed", "hermes", "openclaw", "kimi"],
+  "runtime_config_dirs": {
+    "claude": ".claude",
+    "claude-project": ".claude",
+    "cursor": ".cursor",
+    "antigravity": ".antigravity",
+    "codex": ".codex",
+    "gemini": ".gemini",
+    "opencode": ".opencode",
+    "codebuddy": ".codebuddy",
+    "joycode": ".joycode",
+    "qwen": ".qwen",
+    "zed": ".zed",
+    "hermes": ".hermes",
+    "openclaw": ".openclaw",
+    "kimi": ".kimi"
+  },
+  "format_adapters": {
+    "codex": "toml",
+    "opencode": "json",
+    "zed": "json"
+  }
+}

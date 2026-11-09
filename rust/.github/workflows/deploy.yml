@@ -1,0 +1,101 @@
+# Continuous Deployment — pull the published image + restart the stack on the host.
+# ponytail: rename every `<app>`/`<scope>` -> your project name before dispatch.
+#
+# Manual by design (no auto-deploy on push) — trigger from the Actions tab.
+# Requires a self-hosted runner on the deploy box labelled `<app>-prod`
+# (GitHub-hosted runners cannot reach a private host). The box must have
+# docker + the repo cloned at DEPLOY_DIR.
+#
+# Secret-gated stubs: the check step fails-closed if any required secret is
+# empty. GHCR pull is authed by the auto-scoped GITHUB_TOKEN (packages: read).
+# GitHub secret names are GENERIC (JWT_SECRET, APIKEY_HMAC_SECRET, …) so they
+# stay valid both before and after rename.sh; the `<APP>_`-prefixed env VAR
+# NAMES (YAML keys below) are what docker-compose.prod.yml consumes via
+# ${VAR:?} fail-closed interpolation. Map in GitHub: create the generic
+# secrets, then this workflow forwards them under the <APP>_ prefix.
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Services to pull + restart (space-separated)"
+        default: "api nginx"
+        required: true
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  # ponytail: host path to the repo clone on the deploy box. The VALUE carries
+  # the <app> placeholder (plain YAML string); the NAME (DEPLOY_DIR) is fixed so
+  # ${{ env.DEPLOY_DIR }} stays a valid expression pre- and post-rename.
+  DEPLOY_DIR: /opt/<app>
+  COMPOSE: docker compose -f docker-compose.prod.yml
+
+jobs:
+  deploy:
+    name: pull + up (host)
+    runs-on: [self-hosted, <app>-prod]
+    steps:
+      - name: Check required secrets present (fail-closed)
+        run: |
+          [ -n "${{ secrets.GITHUB_TOKEN }}" ]        || { echo "::error::GITHUB_TOKEN not set"; exit 1; }
+          [ -n "${{ secrets.DATABASE_URL }}" ]        || { echo "::error::DATABASE_URL secret not set"; exit 1; }
+          [ -n "${{ secrets.JWT_SECRET }}" ]          || { echo "::error::JWT_SECRET secret not set"; exit 1; }
+          [ -n "${{ secrets.APIKEY_HMAC_SECRET }}" ]  || { echo "::error::APIKEY_HMAC_SECRET secret not set"; exit 1; }
+          [ -n "${{ secrets.POSTGRES_PASSWORD }}" ]   || { echo "::error::POSTGRES_PASSWORD secret not set"; exit 1; }
+
+      - name: Sync compose files (latest main)
+        id: sync
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+          echo "tag=sha-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Pull + restart selected services (:latest = newest main build)
+        working-directory: ${{ env.DEPLOY_DIR }}
+        env:
+          # <APP>_ env-var NAMES are YAML keys (renamed by rename.sh); VALUES
+          # come from generic GitHub secrets via valid ${{ secrets.X }} refs.
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          <APP>_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          <APP>_APIKEY_HMAC_SECRET: ${{ secrets.APIKEY_HMAC_SECRET }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: |
+          echo "deploying :latest (newest main build)"
+          ${{ env.COMPOSE }} --env-file .env pull ${{ github.event.inputs.services }}
+          ${{ env.COMPOSE }} --env-file .env up -d --no-build ${{ github.event.inputs.services }}
+
+      - name: Health check (wait for /api/readyz; fail if down)
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          set -e
+          echo "health check · nginx :80 -> /api/readyz"
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 5 -o /dev/null "http://127.0.0.1/api/readyz" 2>/dev/null; then
+              ok=1; echo "api ready (~$((i*4))s)"; break
+            fi
+            sleep 4
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::deploy unhealthy after ~120s (api not ready)"
+            ${{ env.COMPOSE }} ps
+            exit 1
+          fi
+          echo "deploy healthy"
+
+      - name: Docker logout
+        if: always()
+        run: docker logout ghcr.io >/dev/null 2>&1 || true

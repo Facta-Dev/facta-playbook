@@ -1,0 +1,161 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "backend-rust Runtime Lifecycle",
+    "output": "runtime-lifecycle.lifecycle.html",
+    "animation": "trace",
+    "quality_profile": "showcase"
+  },
+  "mainPath": [
+    "boot",
+    "wire",
+    "serve",
+    "ready",
+    "flow"
+  ],
+  "states": [
+    {
+      "id": "boot",
+      "type": "start",
+      "label": "config Load",
+      "sublabel": "typed env · no startup migrate",
+      "step": "01",
+      "tag": "entry"
+    },
+    {
+      "id": "wire",
+      "type": "active",
+      "label": "wire deps",
+      "sublabel": "pool · state · router",
+      "step": "02"
+    },
+    {
+      "id": "serve",
+      "type": "active",
+      "label": "http serve",
+      "sublabel": "<APP>_BIND :8080",
+      "step": "03"
+    },
+    {
+      "id": "ready",
+      "type": "decision",
+      "label": "readyz gate",
+      "sublabel": "SELECT 1",
+      "step": "04",
+      "tag": "gate"
+    },
+    {
+      "id": "flow",
+      "type": "success",
+      "label": "Request flow",
+      "sublabel": "slices · JSON envelope",
+      "step": "05",
+      "tag": "done"
+    },
+    {
+      "id": "authfail",
+      "type": "waiting",
+      "label": "403 gate",
+      "sublabel": "auth layer · gated 403s",
+      "tag": "pause"
+    },
+    {
+      "id": "drain",
+      "type": "active",
+      "label": "Drain loop",
+      "sublabel": "claim CTE · 2^n ±10%",
+      "tag": "automatic"
+    },
+    {
+      "id": "mfail",
+      "type": "failure",
+      "label": "Exit 1",
+      "sublabel": "config fail-closed",
+      "tag": "terminal"
+    },
+    {
+      "id": "degraded",
+      "type": "failure",
+      "label": "503 readyz",
+      "sublabel": "DB unreachable",
+      "tag": "terminal"
+    },
+    {
+      "id": "recovered",
+      "type": "success",
+      "label": "Sent / Recovered",
+      "sublabel": "mark_sent · janitor 1h",
+      "tag": "terminal"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t-boot-wire",
+      "from": "boot",
+      "to": "wire"
+    },
+    {
+      "id": "t-wire-serve",
+      "from": "wire",
+      "to": "serve"
+    },
+    {
+      "id": "t-serve-ready",
+      "from": "serve",
+      "to": "ready"
+    },
+    {
+      "id": "t-ready-flow",
+      "from": "ready",
+      "to": "flow"
+    },
+    {
+      "from": "serve",
+      "to": "authfail",
+      "variant": "security"
+    },
+    {
+      "from": "ready",
+      "to": "degraded",
+      "variant": "dashed",
+      "label": "DB down"
+    },
+    {
+      "from": "flow",
+      "to": "drain",
+      "variant": "security"
+    },
+    {
+      "from": "drain",
+      "to": "recovered",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Boot rail",
+      "items": [
+        "the API never migrates itself — replicas race; migrations run via the `<app>-api migrate` subcommand (sqlx::migrate! DDL embedded at compile time) or the docker migrations one-shot",
+        "sqlx naming NNNN_name.up.sql / .down.sql — 0001_init, 0002_identity_core, 0003_identity_profiles; `just migrate` drives dev"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Gates + recovery",
+      "items": [
+        "readyz runs SELECT 1 against the pool and answers 503 degraded; /metrics sits behind require_auth plus an admin action check",
+        "the loom worker claims with FOR UPDATE SKIP LOCKED (5-minute lease), polling <APP>_OUTBOX_POLL 2s with batch <APP>_OUTBOX_BATCH 10"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Explicit endings",
+      "items": [
+        "errors use {error: {code, title, detail, request_id}} — not RFC 7807; 5xx details redact to a generic message and rate limits carry Retry-After",
+        "the WS upgrade is deliberately unauthenticated at the HTTP layer; a bad ?token= closes 4001 authentication_failed"
+      ]
+    }
+  ]
+}

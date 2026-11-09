@@ -1,0 +1,41 @@
+[package]
+name         = "<app>-warden"
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+description  = "<app> · JWT warden: HS256 codec + claims + RBAC principal + axum auth middleware"
+
+[lints]
+workspace = true
+
+[features]
+default = []
+# mint ON in the api composition by default (go parity: login/refresh/oauth
+# mint). A crate building warden without it stays verify-only — the api crate
+# carries its own `mint = ["...-warden/mint", ...]` opt-out toggle.
+mint = []
+
+[dependencies]
+"<app>-core"    = { workspace = true, features = ["openapi"] }
+axum            = { workspace = true }
+jsonwebtoken    = { workspace = true }
+serde           = { workspace = true }
+serde_json      = { workspace = true }
+uuid            = { workspace = true }
+tracing         = { workspace = true }
+utoipa          = { workspace = true }
+# Identity core parity (go internal/platform/authx + oauthx):
+argon2         = { workspace = true } # password hashing (deviation: go uses bcrypt; pinned argon2id)
+hmac           = { workspace = true } # pepper pre-hash
+sha2           = "0.10"
+base64         = "0.22"
+subtle         = "2"
+getrandom      = "0.3"
+form_urlencoded = "1" # token-exchange body (reqwest 0.13 gates .form() behind a feature)
+reqwest        = { workspace = true } # google JWKS fetch + github exchange (never reached offline)
+
+[dev-dependencies]
+tokio  = { workspace = true }
+tower  = { version = "0.5", features = ["util"] }
+http   = "1"

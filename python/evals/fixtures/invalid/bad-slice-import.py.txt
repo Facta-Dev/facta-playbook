@@ -1,0 +1,11 @@
+from __future__ import annotations
+
+import fastapi
+from app.features.authsignup.domain import SignupUser
+from sqlalchemy import select
+from app.platform.db import Database
+
+
+async def load(session: object) -> None:
+    await session.execute(select(1))  # type: ignore[attr-defined]
+    print(fastapi.__version__, SignupUser, Database)

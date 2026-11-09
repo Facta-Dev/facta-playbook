@@ -1,0 +1,13 @@
+// This domain.ts deliberately violates domain purity by importing the
+// adapter layer (fastify) and persistence (pg); the evals validator must
+// reject it.
+//
+// FROZEN test data: rename.sh excludes evals/fixtures/ from its
+// substitution pass, so the paths below stay as-shipped. The .ts.txt
+// extension keeps the file out of every TypeScript build; the test reads
+// it as text.
+import { FastifyInstance } from "fastify";
+import { Pool } from "pg";
+
+export type Widget = { id: string };
+export function widgetRoute(app: FastifyInstance) {}

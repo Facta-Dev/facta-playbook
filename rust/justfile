@@ -1,0 +1,67 @@
+# justfile — local + CI task runner. `just ci` mirrors the CI gate.
+# ponytail: `just` must be installed (cargo install just).
+
+# Run the full gate: fmt-check + lint + check + test + test:contracts.
+ci: fmt-check lint check test test:contracts
+
+fmt-check:
+    cargo fmt --all -- --check
+
+lint:
+    cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+check:
+    cargo check --workspace --all-targets --all-features
+
+# Native contract evals for the .claude layer (skills/commands/agents).
+# Standalone package (NOT a workspace member), zero external deps — runs
+# offline. Mirrors the gtm valid+invalid fixture pair + regex-match-on-failure
+# pattern in the stack's native runner.
+test:contracts:
+    cargo test --manifest-path evals/Cargo.toml
+
+test:
+    cargo nextest run --workspace
+
+# Build docs (lints doc tests too).
+doc:
+    cargo doc --workspace --no-deps
+
+# Apply the migrations to the dev database (one-shot `migrate` subcommand, go
+# cmd/migrate parity; compose runs the same thing as the `migrations` service).
+# Reads <APP>_DATABASE_URL from the environment (.env or export).
+migrate:
+    cargo run -- migrate
+
+# Emit the OpenAPI spec to openapi.json. Requires a built binary (post-install).
+gen-openapi:
+    cargo run -- openapi > openapi.json
+
+# Fail if the committed openapi.json differs from what the code emits.
+gen-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cargo run -- openapi > .openapi.generated.json
+    if ! diff -q openapi.json .openapi.generated.json >/dev/null 2>&1; then
+        rm -f .openapi.generated.json
+        echo "ERROR: openapi.json is stale — run 'just gen-openapi' and commit the result" >&2
+        exit 1
+    fi
+    rm -f .openapi.generated.json
+    echo "openapi.json is up to date"
+
+# Add a paired migration: `just migrate-add create_widgets`.
+migrate-add name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    n=$(ls migrations | sort -n | tail -1 | cut -d_ -f1)
+    nn=$(printf "%04d" $((10#$n + 1)))
+    printf "-- %s_%s.up.sql\n" "$nn" "{{name}}" > "migrations/${nn}_{{name}}.up.sql"
+    printf "-- %s_%s.down.sql\n" "$nn" "{{name}}" > "migrations/${nn}_{{name}}.down.sql"
+    echo "created migrations/${nn}_{{name}}.up.sql + .down.sql"
+
+# Supply-chain side gate (optional).
+audit:
+    cargo audit
+    cargo deny check
+    cargo machete --workspace

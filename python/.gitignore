@@ -1,0 +1,28 @@
+# <app>. Local state only — the repo ships without any lockfile (INV-T3:
+# the first real uv sync happens after rename.sh, on the renamed copy).
+
+# --- python state ---------------------------------------------------------
+# Comments live on their own line: git reads # only at the start of a line.
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.import_linter_cache/
+
+# --- lockfile -------------------------------------------------------------
+uv.lock
+
+# --- local configuration --------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# --- tooling --------------------------------------------------------------
+coverage.xml
+.coverage
+htmlcov/

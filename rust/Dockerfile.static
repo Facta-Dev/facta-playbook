@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1
+# `<app>-api` — fully-STATIC (musl) image on gcr.io/distroless/static-debian12.
+# No glibc / libssl / gcc packages in the runtime image → minimal CVE surface.
+# Build context = the backend workspace root (this dir).
+#
+# ponytail: rename every `<app>` -> your project name before building. The
+# `<app>` placeholder is NOT a valid crate name, so this image will not build
+# until scripts/rename.sh has been applied (see README.md "How to apply").
+#
+# Build:
+#   docker build -f Dockerfile.static -t <app>-api:static .
+# The static binary enables Docker's HEALTHCHECK (no shell/curl needed).
+
+# ---------- builder: musl-native (Alpine) ----------
+FROM rust:1-alpine AS builder
+WORKDIR /build
+# musl-dev + cc/g++/clang + cmake/make/perl: rustls native deps (aws-lc-sys)
+# build C from source. openssl-dev + openssl-libs-static: static-link openssl
+# for any transitive native-tls consumer.
+RUN apk add --no-cache \
+        musl-dev pkgconfig perl make cmake g++ clang clang-dev \
+        openssl-dev openssl-libs-static curl
+# Old bundled CMakeLists (aws-lc) use a cmake_minimum_required CMake 4 rejects.
+ENV CMAKE_POLICY_VERSION_MINIMUM=3.5
+ENV OPENSSL_STATIC=1 OPENSSL_NO_VENDOR=1
+COPY Cargo.toml deny.toml rust-toolchain.toml ./
+COPY crates/ ./crates/
+COPY migrations/ ./migrations/
+# Runtime sqlx queries (no compile-time macros => no .sqlx cache, no DB at build).
+# Both release bins: the API server + the outbox-email worker.
+RUN cargo build --release --target x86_64-unknown-linux-musl \
+      --bin <app>-api --bin <app>-worker \
+    && strip target/x86_64-unknown-linux-musl/release/<app>-api \
+              target/x86_64-unknown-linux-musl/release/<app>-worker
+
+# ---------- runtime: distroless STATIC, Debian 12 (0 packages → minimal CVEs) ----------
+FROM gcr.io/distroless/static-debian12:nonroot AS runtime
+WORKDIR /app
+COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/<app>-api /app/server
+COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/<app>-worker /app/worker
+COPY --from=builder /build/migrations/ /app/migrations/
+# Default bind; overridable via <APP>_BIND env. nginx proxies /api/ → this port.
+ENV <APP>_BIND=0.0.0.0:8080
+EXPOSE 8080
+# Static binary → built-in TCP probe works with no shell/curl on distroless/static.
+# The `healthcheck` subcommand TCP-connects to <APP>_BIND and exits 0/1.
+HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
+    CMD ["/app/server", "healthcheck"]
+USER nonroot:nonroot
+ENTRYPOINT ["/app/server"]

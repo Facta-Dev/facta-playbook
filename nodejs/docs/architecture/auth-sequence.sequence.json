@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "backend-node Auth Sequence",
+    "quality_profile": "showcase",
+    "viewBox": [980, 856],
+    "animation": "trace",
+    "views": [
+      {
+        "id": "signup-enqueue",
+        "label": "Signup + enqueue",
+        "focus": ["client", "api", "pg"],
+        "note": "the user and code row commit, then the outbox job is enqueued on a separate pool connection"
+      },
+      {
+        "id": "deliver-code",
+        "label": "Deliver code",
+        "focus": ["worker", "mail", "pg"],
+        "note": "the outbox worker claims due email_jobs and ships the 6-digit code"
+      },
+      {
+        "id": "verify-login",
+        "label": "Verify + login",
+        "focus": ["client", "api", "pg"],
+        "note": "code check, then gates and token mint with rotating refresh"
+      }
+    ],
+    "output": "auth-sequence.sequence.html"
+  },
+  "participants": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Client",
+      "sublabel": "SPA · SDK"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "<app> API",
+      "sublabel": "Fastify · authx"
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "Postgres",
+      "sublabel": "pg Pool"
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "outbox worker",
+      "sublabel": "outbox · janitor"
+    },
+    {
+      "id": "mail",
+      "type": "external",
+      "label": "Mail vendor",
+      "sublabel": "SMTP · console"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 292,
+      "label": "Signup + enqueue"
+    },
+    {
+      "from": 308,
+      "to": 494,
+      "label": "Deliver code"
+    },
+    {
+      "from": 508,
+      "to": 722,
+      "label": "Verify + login"
+    }
+  ],
+  "messages": [
+    {
+      "from": "client",
+      "to": "api",
+      "y": 168,
+      "label": "POST /auth/signup",
+      "variant": "emphasis"
+    },
+    {
+      "from": "api",
+      "to": "pg",
+      "y": 206,
+      "label": "INSERT users + email_verifications"
+    },
+    {
+      "from": "api",
+      "to": "pg",
+      "y": 244,
+      "label": "INSERT email_jobs (after write)"
+    },
+    {
+      "from": "api",
+      "to": "client",
+      "y": 282,
+      "label": "201 · code queued",
+      "variant": "return"
+    },
+    {
+      "from": "worker",
+      "to": "pg",
+      "y": 324,
+      "label": "claim email_jobs (SKIP LOCKED)"
+    },
+    {
+      "from": "pg",
+      "to": "worker",
+      "y": 362,
+      "label": "due rows · sending lease",
+      "variant": "return"
+    },
+    {
+      "from": "worker",
+      "to": "mail",
+      "y": 400,
+      "label": "render verify_email → send"
+    },
+    {
+      "from": "mail",
+      "to": "client",
+      "y": 438,
+      "label": "email · 6-digit code"
+    },
+    {
+      "from": "worker",
+      "to": "pg",
+      "y": 476,
+      "label": "mark_sent"
+    },
+    {
+      "from": "client",
+      "to": "api",
+      "y": 516,
+      "label": "POST /auth/verify {code}"
+    },
+    {
+      "from": "api",
+      "to": "pg",
+      "y": 554,
+      "label": "check attempts · TTL · consume"
+    },
+    {
+      "from": "pg",
+      "to": "api",
+      "y": 592,
+      "label": "is_verified",
+      "variant": "return"
+    },
+    {
+      "from": "client",
+      "to": "api",
+      "y": 632,
+      "label": "POST /auth/login"
+    },
+    {
+      "from": "api",
+      "to": "pg",
+      "y": 670,
+      "label": "bcrypt · gates · rotate refresh"
+    },
+    {
+      "from": "api",
+      "to": "client",
+      "y": 708,
+      "label": "access 15m · refresh 720h",
+      "variant": "emphasis"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 162,
+      "to": 714,
+      "type": "backend"
+    },
+    {
+      "participant": "pg",
+      "from": 200,
+      "to": 250,
+      "type": "database"
+    },
+    {
+      "participant": "worker",
+      "from": 318,
+      "to": 482,
+      "type": "backend"
+    },
+    {
+      "participant": "mail",
+      "from": 394,
+      "to": 444,
+      "type": "external"
+    },
+    {
+      "participant": "pg",
+      "from": 548,
+      "to": 598,
+      "type": "database"
+    },
+    {
+      "participant": "pg",
+      "from": 664,
+      "to": 714,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Signup flow",
+      "items": [
+        "signup writes the user and the email_verifications row, then enqueues the email_jobs job on a separate pool connection — not one transaction",
+        "the worker claims with FOR UPDATE SKIP LOCKED; a 5-minute sending lease recovers crashed workers"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Code lifecycle",
+      "items": [
+        "codes expire in 24h, cap at 5 wrong guesses and are consumed on verify",
+        "resend never reveals whether the account exists; verified email answers 409"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Login + tokens",
+      "items": [
+        "password first — one constant 401; then blocked → inactive → unverified, each a stable 403",
+        "access JWT 15m; refresh is a 128-char opaque token rotated in place (replay misses the CAS → 401)"
+      ]
+    }
+  ]
+}

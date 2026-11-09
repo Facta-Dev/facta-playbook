@@ -1,0 +1,7 @@
+# oapi-codegen config (models only). `make generate` runs from the repo root:
+#   go tool oapi-codegen -config specs/api.gen.yaml specs/openapi.yaml
+# The output path is CWD-relative, hence no ../ prefix.
+package: api
+output: internal/gen/api/gen.go
+generate:
+  models: true

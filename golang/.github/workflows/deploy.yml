@@ -1,0 +1,28 @@
+name: deploy
+on:
+  workflow_run:
+    workflows: [docker-publish]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: pull + roll the compose stack
+        uses: appleboy/ssh-action@v1
+        with:
+          # generic GitHub secrets → <APP>-prefixed env names only on the env side
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /srv/<app>
+            git pull --ff-only
+            # migrations are a release step, never a boot step
+            docker compose -f docker-compose.prod.yml --profile tools run --rm migrations
+            docker compose -f docker-compose.prod.yml pull api
+            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml ps --status running | grep api

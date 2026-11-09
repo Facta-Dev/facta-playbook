@@ -1,0 +1,2478 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "<app> API",
+    "description": "<app> · example vertical slice (widget CRUD + auth seam).",
+    "license": {
+      "name": "Proprietary",
+      "identifier": "Proprietary"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/admin/auth-session/anomalies": {
+      "get": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "Admin session-hygiene report (`?window_minutes=`, default 60; the range\nis `(0, 43200]` — go 422 → [`Error::Invalid`], 400).",
+        "operationId": "admin_anomalies",
+        "parameters": [
+          {
+            "name": "window_minutes",
+            "in": "query",
+            "description": "Scan window in minutes; 60 by default",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Anomaly report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AnomalyItem"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "window_minutes out of range",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an admin caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/auth-session/users/{id}/revoke-all": {
+      "post": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "Admin: revoke every active session of one target user. A non-UUID id\nrevokes nothing (go lenient NULL behavior).",
+        "operationId": "admin_revoke_all_sessions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Target user id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revoked count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionRevokedCount"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an admin caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/auth-session/users/{id}/sessions": {
+      "get": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "Admin: one target user's sessions (`?active_only=`, default true). A\nnon-UUID target id reads as an empty list (go lenient NULL behavior).",
+        "operationId": "admin_list_sessions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Target user id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "description": "Only active rows (default true)",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Target session list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionItem"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an admin caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "tags": [
+          "adminusers"
+        ],
+        "summary": "List users: `?limit=&offset=` (go `QueryPage` semantics).",
+        "operationId": "list_users",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Page size, 1..100 (default 20)",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Page offset (default 0)",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Out-of-range limit/offset",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an admin caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}": {
+      "get": {
+        "tags": [
+          "adminusers"
+        ],
+        "summary": "Fetch one user by id (go `uuidPtr` semantics: unknown or non-uuid → 404\nfrom the service's parse gate).",
+        "operationId": "get_user",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Target user id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The user row",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUser"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an admin caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "adminusers"
+        ],
+        "summary": "Update one user's flags/role (rank-gated + audited in the service).",
+        "operationId": "update_user",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Target user id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUpdateUser"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated row",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUser"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty or invalid patch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Below the target's rank",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "tags": [
+          "authpassword"
+        ],
+        "summary": "Authed change: the current password is re-verified and every OTHER\nactive session is revoked — the caller's own survives via\n`jti == sessions.id` (the verified token is re-read for its `jti`).",
+        "operationId": "change_password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "New password too short",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong current password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "authpassword"
+        ],
+        "summary": "Request a reset code (rate-limited per email; unknown addresses read as\nsuccess — no existence leak).",
+        "operationId": "forgot_password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Code sent when the account exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many codes requested",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/github/callback": {
+      "get": {
+        "tags": [
+          "authoauth"
+        ],
+        "summary": "GET the github callback: link flow (`state=link:<jwt>`) or login flow;\nEVERY outcome is a 302 (tokens in the fragment on success). A\ndisabled/unconfigured provider answers the 403 envelope instead.",
+        "operationId": "github_callback",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "GitHub authorization code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Login passthrough or link:<jwt>",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "description": "GitHub consent error code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error_description",
+            "in": "query",
+            "description": "Consent error detail",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the frontend (success fragment or ?error= pairs)"
+          },
+          "403": {
+            "description": "Github sign-in not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/github/connect-url": {
+      "get": {
+        "tags": [
+          "authoauth"
+        ],
+        "summary": "Bearer-protected `{url}` whose state carries the link JWT (the\nauthenticated github connect flow).",
+        "operationId": "github_connect_url",
+        "responses": {
+          "200": {
+            "description": "The authorize URL carrying the link state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GithubConnectURLResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Github sign-in not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/github/login": {
+      "get": {
+        "tags": [
+          "authoauth"
+        ],
+        "summary": "GET the github authorize URL when the provider is enabled (302); a\ndisabled/unconfigured provider answers the 403 envelope (operator\nproblem, not a redirect).",
+        "operationId": "github_login",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Opaque passthrough state",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects to the github authorize URL"
+          },
+          "403": {
+            "description": "Github sign-in not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/google": {
+      "post": {
+        "tags": [
+          "authoauth"
+        ],
+        "summary": "Google One-Tap credential in, token pair out (cookie-mode cookie\nincluded). Unconfigured provider answers 401 \"google sign-in is not\nconfigured\".",
+        "operationId": "google",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleAuthRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Token pair",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokens"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Google sign-in unconfigured or token refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "Login: retry-lock + state gates; 200 with the token pair (and the\naccess-token cookie when cookie mode is on).",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Token pair",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokens"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unknown user or wrong password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account blocked, inactive, unverified or retry-locked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "Logout: revoke the given refresh token (idempotent) + clear the cookie.",
+        "operationId": "logout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "The caller's profile row.",
+        "operationId": "auth_me",
+        "responses": {
+          "200": {
+            "description": "Profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "Partial profile update; returns the fresh row.",
+        "operationId": "auth_update_me",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "Refresh: CAS rotation of the opaque token, fresh access token.",
+        "operationId": "refresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Fresh token pair",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokens"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or replayed refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account blocked, inactive or unverified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "tags": [
+          "authpassword"
+        ],
+        "summary": "Consume the code + set the new password (auto-verify + optional\nrevoke-all).",
+        "operationId": "reset_password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Code or new password refused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "get": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "The caller's sessions, newest activity first.",
+        "operationId": "list_sessions",
+        "parameters": [
+          {
+            "name": "active_only",
+            "in": "query",
+            "description": "Only active rows (default true)",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionItem"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sessions/current": {
+      "get": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "The caller's most recent active session — `null` body when none.",
+        "operationId": "current_session",
+        "responses": {
+          "200": {
+            "description": "Current session or null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SessionItem"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sessions/revoke-all": {
+      "post": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "Revoke every active session of the caller.",
+        "operationId": "revoke_all_sessions",
+        "responses": {
+          "200": {
+            "description": "Revoked count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionRevokedCount"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sessions/revoke-current": {
+      "post": {
+        "tags": [
+          "authsession"
+        ],
+        "summary": "Revoke the caller's CURRENT session: the access token's `jti` is the\nsession id (go parity), so the verified token is re-read for its `jti`\n([`crate::auth::resolve_current_claims`]).",
+        "operationId": "revoke_current_session",
+        "responses": {
+          "200": {
+            "description": "Revoke outcome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionRevoked"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/signup": {
+      "post": {
+        "tags": [
+          "authsignup"
+        ],
+        "summary": "Register an account: unverified + a 6-digit code in the outbox. A\nre-signup of an unverified address re-issues the code (201); a verified\naddress conflicts (409).",
+        "operationId": "signup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Signup accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid email/password/user type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/upgrade-to-admin": {
+      "post": {
+        "tags": [
+          "adminusers"
+        ],
+        "summary": "Unauthenticated bootstrap: a whitelisted email promotes its own account\nto ADMIN. The empty whitelist disables the route entirely (403).",
+        "operationId": "upgrade_to_admin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Upgrade outcome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUpgradeResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email not whitelisted or the route disabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Whitelisted but unknown email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/validate-code": {
+      "post": {
+        "tags": [
+          "authpassword"
+        ],
+        "summary": "Check a code WITHOUT consuming it (go `Validate`).",
+        "operationId": "validate_code",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateCodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Code accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Code invalid, used, expired or exhausted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify": {
+      "post": {
+        "tags": [
+          "authsignup"
+        ],
+        "summary": "Consume the 6-digit code: flips `is_verified`.",
+        "operationId": "verify",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Code invalid, used or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/verify/resend": {
+      "post": {
+        "tags": [
+          "authsignup"
+        ],
+        "summary": "Re-issue a fresh code (unknown + verified addresses read as success —\nno existence leak).",
+        "operationId": "resend",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "A fresh code was sent (when the account exists)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/widgets/events": {
+      "get": {
+        "tags": [
+          "widgets"
+        ],
+        "summary": "SSE fan-out of the caller's private realtime room (go `widgets/events`\nhandler parity: `Subscribe(realtime.RoomUser(owner))`). Authenticated\n(cookie) because browsers consume SSE via `EventSource`, which cannot set\nheaders. Yields an initial `retry: 2000`, then each hub frame as\n`event: <type>`/`data: <json>` (`{\"type\",\"payload\"}` with `payload`\nomitted when null). Hub publishes never block (full buffer = drop), and a\ndisconnect is a normal exit — the dropped stream unsubscribes.",
+        "operationId": "event_stream",
+        "responses": {
+          "200": {
+            "description": "text/event-stream of the caller's room events; disconnect = unsubscribe"
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ws": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "The `/ws` upgrade — handler inputs are passed through verbatim to\n[`serve_ws`] (the shared JWT codec + the hub). Async by contract: axum\n0.8 implements `Handler` only for future-returning fns — no awaits here.",
+        "operationId": "ws",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Access token (query-raw; verified after the upgrade)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Upgrade accepted — the pump streams hub events (or closes 4001)"
+          },
+          "400": {
+            "description": "Not a websocket-upgrade request (axum extractor rejection)"
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Liveness — always succeeds, never touches the pool. Cheap for orchestrators\n(k8s liveness probe) hammering it every few seconds.",
+        "operationId": "healthz",
+        "responses": {
+          "200": {
+            "description": "Process is live",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Authenticated identity — returns the caller's id and roles. Protected by\n`require_auth`; the `Principal` is set by the middleware from the verified\nJWT. ponytail: a full security scheme (`bearer_auth`) should be registered on\nthis path when the login flow is built.",
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "Caller identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Readiness — actually probes the database (`SELECT 1`). Returns `200` when\nthe pool can serve, `503` with `status: \"degraded\"` when it cannot. This is\nthe probe that gates traffic: a failing DB means we are not ready.",
+        "operationId": "readyz",
+        "responses": {
+          "200": {
+            "description": "Database reachable — ready for traffic",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unreachable — not ready"
+          }
+        }
+      }
+    },
+    "/widgets": {
+      "get": {
+        "tags": [
+          "widgets"
+        ],
+        "summary": "List all widgets.",
+        "operationId": "list_widgets",
+        "responses": {
+          "200": {
+            "description": "List of all widgets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Widget"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "widgets"
+        ],
+        "summary": "Create a new widget.",
+        "operationId": "create_widget",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWidgetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Widget created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Widget"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input (blank name, unknown kind)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/widgets/{id}": {
+      "get": {
+        "tags": [
+          "widgets"
+        ],
+        "summary": "Fetch a single widget by id.",
+        "operationId": "get_widget",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Widget id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Widget found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Widget"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No widget with that id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "widgets"
+        ],
+        "summary": "Update an existing widget's mutable fields. `404` if the id does not exist\n(update is NOT an upsert — it never creates a row).",
+        "operationId": "update_widget",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Widget id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWidgetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Widget updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Widget"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input (blank name, unknown kind)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No widget with that id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "widgets"
+        ],
+        "summary": "Delete a widget by id. Idempotent — `404` only if the id never existed.",
+        "operationId": "delete_widget",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Widget id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Widget deleted (or already absent)"
+          },
+          "401": {
+            "description": "Missing or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Authenticated but not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No widget with that id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AdminUpdateUser": {
+        "type": "object",
+        "description": "go `api.AdminUpdateUser` parity — every field optional; an all-empty\npatch is the go \"invalid request\".",
+        "properties": {
+          "is_active": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "is_blocked": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "role": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "DB role string; `\"\"`/absent leaves the role untouched (go `\"\"`)."
+          }
+        }
+      },
+      "AdminUser": {
+        "type": "object",
+        "description": "go `api.AdminUser` parity (slice-local mapping, DB strings for enums).",
+        "required": [
+          "id",
+          "email",
+          "first_name",
+          "last_name",
+          "role",
+          "user_type",
+          "is_active",
+          "is_blocked",
+          "is_verified",
+          "retry_count",
+          "language",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "email": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "is_blocked": {
+            "type": "boolean"
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "language": {
+            "type": "string"
+          },
+          "last_login": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "retry_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "role": {
+            "type": "string",
+            "description": "DB role string (`ADMIN|MODERATOR|USER`)."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user_type": {
+            "type": "string",
+            "description": "DB user-type string (`ADMIN|COMPANY|USER`)."
+          }
+        }
+      },
+      "AdminUserList": {
+        "type": "object",
+        "description": "go `api.AdminUserList` parity.",
+        "required": [
+          "items",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUser"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AnomalyItem": {
+        "type": "object",
+        "description": "go `anomalyItem` parity (admin session-hygiene report).",
+        "required": [
+          "anomaly_type",
+          "count",
+          "details"
+        ],
+        "properties": {
+          "anomaly_type": {
+            "type": "string",
+            "description": "go field `Type` (wire `anomaly_type`)."
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      },
+      "AuthLoginRequest": {
+        "type": "object",
+        "description": "go `api.AuthLoginRequest` parity.",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthRefreshRequest": {
+        "type": "object",
+        "description": "go `api.AuthRefreshRequest` parity — the logout body carries the opaque\ntoken too (go reuses the refresh shape).",
+        "required": [
+          "refresh_token"
+        ],
+        "properties": {
+          "refresh_token": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthTokens": {
+        "type": "object",
+        "description": "go `api.AuthTokens` parity — the login/refresh/oauth token pair.",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "token_type",
+          "expires_in"
+        ],
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "expires_in": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Access TTL seconds at mint (go `accessTTL.Seconds()`)."
+          },
+          "refresh_token": {
+            "type": "string"
+          },
+          "token_type": {
+            "type": "string",
+            "description": "Fixed wire value `bearer` (go `api.Bearer`)."
+          }
+        }
+      },
+      "AuthUpgradeResponse": {
+        "type": "object",
+        "description": "go `api.AuthUpgradeResponse` parity.",
+        "required": [
+          "email",
+          "message",
+          "upgraded"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "upgraded": {
+            "type": "boolean",
+            "description": "`false` reads as \"the account already was an admin\"."
+          }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "description": "go `api.ChangePasswordRequest` parity.",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "properties": {
+          "current_password": {
+            "type": "string"
+          },
+          "new_password": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateWidgetRequest": {
+        "type": "object",
+        "description": "Request body for `POST /widgets`.",
+        "required": [
+          "name",
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/WidgetKind",
+            "description": "Widget category. One of `sprocket`, `cog`, `flange`."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name. Must not be blank."
+          }
+        }
+      },
+      "EmailRequest": {
+        "type": "object",
+        "description": "go `api.EmailRequest` parity — verify/resend, forgot-password and the\nupgrade-to-admin bootstrap all take just an address.",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorBody": {
+        "type": "object",
+        "required": [
+          "code",
+          "title",
+          "detail"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "extra": {},
+          "request_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "description": "The JSON envelope returned to clients.",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "description": "go `api.ForgotPasswordRequest` parity.",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "GithubConnectURLResponse": {
+        "type": "object",
+        "description": "go `api.GithubConnectURLResponse` parity.",
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "GoogleAuthRequest": {
+        "type": "object",
+        "description": "go `api.GoogleAuthRequest` parity.",
+        "required": [
+          "credential"
+        ],
+        "properties": {
+          "credential": {
+            "type": "string"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "description": "Typed health payload.",
+        "required": [
+          "status",
+          "service",
+          "version"
+        ],
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "MeProfileResponse": {
+        "type": "object",
+        "description": "`GET /api/v1/auth/me` body — go `api.MeResponse` parity (slice-local\nname: the router's legacy `/me` already owns `MeResponse`).\n`phone_number`/`subscription` are NOT carried: the landed `core::User`\nrow has no such columns (see the route-parity deviations).",
+        "required": [
+          "id",
+          "email",
+          "first_name",
+          "last_name",
+          "role",
+          "user_type",
+          "is_active",
+          "is_blocked",
+          "is_verified",
+          "retry_count",
+          "language",
+          "github_connected",
+          "created_at"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "email": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "github_connected": {
+            "type": "boolean",
+            "description": "go `GithubLinked` parity: linked ⇔ a non-empty github id."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "is_blocked": {
+            "type": "boolean"
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "language": {
+            "type": "string"
+          },
+          "last_login": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "profile_picture": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "retry_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "role": {
+            "type": "string",
+            "description": "DB role string (`ADMIN|MODERATOR|USER`)."
+          },
+          "user_type": {
+            "type": "string",
+            "description": "DB user-type string (`ADMIN|COMPANY|USER`)."
+          }
+        }
+      },
+      "MeResponse": {
+        "type": "object",
+        "description": "Authenticated caller identity returned by `GET /me`.",
+        "required": [
+          "id",
+          "roles"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            }
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "description": "go `api.MessageResponse` parity — the uniform acknowledgement body.",
+        "required": [
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "description": "go `api.ResetPasswordRequest` parity.",
+        "required": [
+          "email",
+          "code",
+          "new_password"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "new_password": {
+            "type": "string"
+          }
+        }
+      },
+      "Role": {
+        "type": "string",
+        "description": "A caller's role. Drives every `can()` decision.",
+        "enum": [
+          "viewer",
+          "editor",
+          "admin",
+          "owner"
+        ]
+      },
+      "SessionItem": {
+        "type": "object",
+        "description": "go `sessionItem` parity — one session row without its refresh token.",
+        "required": [
+          "id",
+          "user_id",
+          "created_at",
+          "last_activity",
+          "expires_at",
+          "is_active"
+        ],
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string"
+          },
+          "ip_address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "last_activity": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user_agent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user_id": {
+            "type": "string"
+          }
+        }
+      },
+      "SessionRevoked": {
+        "type": "object",
+        "description": "go `revokeResponse` parity (`POST …/revoke-current`).",
+        "required": [
+          "revoked"
+        ],
+        "properties": {
+          "revoked": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SessionRevokedCount": {
+        "type": "object",
+        "description": "go `revokeCountResponse` parity (`POST …/revoke-all`).",
+        "required": [
+          "revoked_count"
+        ],
+        "properties": {
+          "revoked_count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SignupRequest": {
+        "type": "object",
+        "description": "go `api.SignupRequest` parity — optional fields default to the empty\nstring, exactly as the go pointer-model decodes them (`user_type` is\npassed through verbatim; the service normalizes it case-insensitively).",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "user_type": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateMeRequest": {
+        "type": "object",
+        "description": "go `api.UpdateMeRequest` parity — every field optional; maps 1:1 onto the\nports' [`UpdateMeInput`] under the go wire names.",
+        "properties": {
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "first_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "language": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "phone_number": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "postal_code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profile_picture": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "UpdateWidgetRequest": {
+        "type": "object",
+        "description": "Request body for `PUT /widgets/{id}`.",
+        "required": [
+          "name",
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/WidgetKind",
+            "description": "Widget category. One of `sprocket`, `cog`, `flange`."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name. Must not be blank."
+          }
+        }
+      },
+      "ValidateCodeRequest": {
+        "type": "object",
+        "description": "go `api.ValidateCodeRequest` parity.",
+        "required": [
+          "email",
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "VerifyEmailRequest": {
+        "type": "object",
+        "description": "go `api.VerifyEmailRequest` parity.",
+        "required": [
+          "email",
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "Widget": {
+        "type": "object",
+        "description": "A domain entity — plain data, no behavior that needs the outside world.",
+        "required": [
+          "id",
+          "name",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/WidgetId"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/WidgetKind"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "WidgetId": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Strongly-typed id. A newtype around UUID prevents passing a `WidgetId`\nwhere another id is expected — the compiler enforces it."
+      },
+      "WidgetKind": {
+        "type": "string",
+        "description": "A closed vocabulary. Mirror your DB enum here so the two never drift.",
+        "enum": [
+          "sprocket",
+          "cog",
+          "flange"
+        ]
+      }
+    }
+  }
+}

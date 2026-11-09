@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "backend-rust Container Architecture",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "request-path",
+        "label": "Request path",
+        "focus": [
+          "sdk-clients",
+          "edge-proxy",
+          "app-api",
+          "app-db"
+        ],
+        "note": "HTTP in through nginx, axum app, durable state in Postgres."
+      },
+      {
+        "id": "identity",
+        "label": "Identity seam",
+        "focus": [
+          "oidc-provider",
+          "app-api"
+        ],
+        "note": "OAuth2 through the warden guard crate."
+      },
+      {
+        "id": "outbound",
+        "label": "Outbound ports",
+        "focus": [
+          "app-api",
+          "email-vendor",
+          "otel-collector"
+        ],
+        "note": "Mail and tracing leave through port traits."
+      }
+    ],
+    "output": "c4-containers.html"
+  },
+  "components": [
+    {
+      "id": "sdk-clients",
+      "type": "external",
+      "label": "SDK Clients",
+      "sublabel": "OpenAPI 3.1 · utoipa",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "edge-proxy",
+      "type": "cloud",
+      "label": "Edge nginx",
+      "sublabel": "upstream :80",
+      "pos": [
+        260,
+        300
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "app-api",
+      "type": "backend",
+      "label": "App API",
+      "sublabel": "axum, composition root",
+      "pos": [
+        480,
+        300
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "app-db",
+      "type": "database",
+      "label": "PostgreSQL 17",
+      "sublabel": "sqlx pool",
+      "pos": [
+        480,
+        150
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "oidc-provider",
+      "type": "security",
+      "label": "OIDC Provider",
+      "sublabel": "warden guard",
+      "pos": [
+        40,
+        110
+      ],
+      "size": [
+        130,
+        64
+      ]
+    },
+    {
+      "id": "email-vendor",
+      "type": "external",
+      "label": "Mail Vendor",
+      "sublabel": "mailer crate",
+      "pos": [
+        700,
+        440
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "otel-collector",
+      "type": "external",
+      "label": "OTLP Collector",
+      "sublabel": "tracing",
+      "pos": [
+        920,
+        440
+      ],
+      "size": [
+        130,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Private compose network",
+      "wraps": [
+        "edge-proxy",
+        "app-api",
+        "app-db"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "External vendors",
+      "wraps": [
+        "email-vendor",
+        "otel-collector"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "oidc-to-api",
+      "from": "oidc-provider",
+      "to": "app-api",
+      "label": "OAuth2 callback",
+      "variant": "security",
+      "fromSide": "right",
+      "toSide": "top",
+      "via": [
+        [
+          620,
+          142
+        ],
+        [
+          620,
+          246
+        ],
+        [
+          545,
+          246
+        ]
+      ],
+      "labelAt": [
+        620,
+        224
+      ]
+    },
+    {
+      "id": "sdk-to-edge",
+      "from": "sdk-clients",
+      "to": "edge-proxy",
+      "label": "HTTP",
+      "variant": "emphasis"
+    },
+    {
+      "id": "edge-to-api",
+      "from": "edge-proxy",
+      "to": "app-api",
+      "label": "route /api"
+    },
+    {
+      "id": "api-to-db",
+      "from": "app-api",
+      "to": "app-db",
+      "label": "sqlx queries",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -68
+    },
+    {
+      "id": "api-to-mail",
+      "from": "app-api",
+      "to": "email-vendor",
+      "label": "send mail",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 58
+    },
+    {
+      "id": "api-to-otel",
+      "from": "app-api",
+      "to": "otel-collector",
+      "label": "OTLP spans",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDx": 44,
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Build",
+      "items": [
+        "cargo workspace: core · ports · warden · loom · mailer · api · sdk · cli",
+        "Dockerfile.static → single binary shipped to GHCR",
+        "compose-dev.yml and compose-prod.yml both ship"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Run",
+      "items": [
+        "dev compose runs api + db; prod adds edge-proxy",
+        "migrations run at boot from AppState::from_env",
+        "/healthz and /readyz gate every deploy"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Quality gates",
+      "items": [
+        "just ci = fmt + clippy pedantic -D warnings + nextest",
+        ".sqlx/ offline SQL cache — CI needs no database",
+        "unsafe_code = forbid, cargo-deny on supply chain"
+      ]
+    }
+  ]
+}

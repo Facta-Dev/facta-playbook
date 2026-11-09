@@ -1,0 +1,29 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# The template ships without a lockfile (INV-T3): pnpm/action-setup reads the
+# version from package.json -> packageManager (pnpm@10); installs resolve
+# latest-for-range until a lockfile exists post-rename. Lane = go's, tuned:
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: make ci (fmt + vet + lint + gen-check + test)
+        run: make ci
+      - name: unit + acceptance
+        run: |
+          make test
+          make accept
+      - name: audit
+        run: pnpm audit --audit-level=high
+      - name: actionlint
+        uses: raven-actions/actionlint@v1

@@ -1,0 +1,33 @@
+# evals — native contract tests for the template's .claude layer.
+#
+# Standalone Cargo package (NOT a workspace member): the workspace `members`
+# list names only crates/<app>-*, so this package is built/tested in isolation
+# via `cargo test --manifest-path evals/Cargo.toml` (the `test:contracts` recipe).
+# Zero external dependencies — the frontmatter parser and body-section checker
+# are hand-rolled on std only, so `cargo test` runs offline with no network.
+#
+# The package name is FIXED (no <app> placeholder): the validator's leak
+# detector greps for the literal <app>/<APP>/<scope> tokens, which must NOT be
+# rewritten by rename.sh. Using a placeholder-free crate name decouples the
+# evals code from the rename pass — only evals/Cargo.toml + evals/src +
+# evals/tests need this property; evals/fixtures is already excluded from rename.
+[package]
+name = "claude-layer-evals"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+name = "claude_layer_evals"
+path = "src/lib.rs"
+
+[[test]]
+name = "contracts"
+path = "tests/contracts.rs"
+
+# Empty [workspace] table marks this package as its own workspace root so
+# `cargo test --manifest-path evals/Cargo.toml` does NOT get auto-absorbed into
+# the parent workspace (cargo walks up and finds the skeleton's Cargo.toml
+# otherwise). This keeps evals a standalone, zero-dep package isolated from
+# the workspace's crate graph and toolchain (sqlx, axum, etc.).
+[workspace]

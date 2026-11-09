@@ -1,0 +1,121 @@
+# CI gate mirrors `just ci` (fmt-check + lint + check + test) + the supply-chain
+# `audit` recipe. ponytail: rename every `<app>` -> your project name before this
+# workflow runs.
+#
+# Toolchain: dtolnay/rust-toolchain@stable installs a toolchain, then `rustup
+# show` materializes the channel pinned by rust-toolchain.toml (1.93.1) so
+# Swatinem/rust-cache@v2 keys on it. rust-toolchain.toml is the single source of
+# truth — no `toolchain:` input is set on any job (the old `1.85` pins are STALE:
+# MSRV is 1.88, channel is 1.93.1, rollout PR #10).
+#
+# Lockfile policy: the skeleton ships no Cargo.lock (placeholders make it
+# impossible until scripts/rename.sh substitutes real names), so build/clippy/
+# nextest run WITHOUT --frozen/--locked — cargo auto-generates Cargo.lock. After
+# scripts/rename.sh <app> <scope>, run `cargo build` locally and commit
+# Cargo.lock to your product repo for reproducible CI; never commit it inside the
+# skeleton (INV-T3). Once committed you may add --locked to cargo build/clippy/
+# nextest for stricter drift detection. (`cargo install cargo-machete --locked`
+# is a TOOL install — the --locked pins machete's own manifest, not the project.)
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # Materialize the rust-toolchain.toml channel so the cache key is stable.
+      - run: rustup show
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo check --workspace --all-targets --all-features
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: <app>
+          POSTGRES_PASSWORD: <app>
+          POSTGRES_DB: <app>
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U <app>"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      <APP>_DATABASE_URL: postgres://<app>:<app>@localhost:5432/<app>
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      # One-shot schema runner (go cmd/migrate parity): the DDL rides inside
+      # the binary (embedded sqlx::migrate!), no sqlx-cli install.
+      - name: run migrations
+        run: cargo run --quiet --bin <app>-api -- migrate
+      - name: install nextest
+        uses: taiki-e/install-action@nextest
+      - run: cargo nextest run --workspace --all-features
+
+  audit:
+    name: audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          arguments: --workspace
+      - name: cargo-audit
+        uses: rustsec/audit-check@v2.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: cargo-machete
+        run: |
+          cargo install cargo-machete --locked
+          cargo machete --workspace
+
+  # Native contract evals for the .claude layer (skills/commands/agents).
+  # Uses the stack's existing cargo runner — NO new test-runner dependency.
+  # evals/Cargo.toml is a standalone package (NOT a workspace member) with zero
+  # external deps, so this lane runs offline with no network and no Postgres.
+  eval:
+    name: eval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # Materialize the rust-toolchain.toml channel so the cache key is stable.
+      - run: rustup show
+      - uses: Swatinem/rust-cache@v2
+      - name: test:contracts
+        run: cargo test --manifest-path evals/Cargo.toml

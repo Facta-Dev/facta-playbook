@@ -1,0 +1,70 @@
+# Local dev: postgres + migrations + the API (+ the janitor worker).
+# `docker compose up -d` after scripts/rename.sh is the whole boot path —
+# the migrations service applies the schema, the API starts after it.
+# <APP>_OFFLINE=true (from .env.example) keeps the mailer on the console
+# sender by default.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: <app>
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # One-shot schema runner: the API never migrates itself (replicas race), so
+  # the boot path goes through this service — the node-pg-migrate CLI from
+  # node_modules, against ./migrations mounted read-only.
+  migrations:
+    build: .
+    entrypoint: ["node_modules/.bin/node-pg-migrate", "-m", "/migrations", "up"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/<app>?sslmode=disable
+    volumes:
+      - ./migrations:/migrations:ro
+
+  api:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    env_file: .env.example
+    environment:
+      <APP>_DATABASE_URL: postgres://postgres:postgres@postgres:5432/<app>?sslmode=disable
+      # dev-only secret: config.Load rejects the .env.example placeholder.
+      <APP>_JWT_SECRET: dev-compose-secret-32-bytes-min!
+      <APP>_BIND: ":8080"
+    ports:
+      - "8080:8080"
+
+  # Janitor worker (expired sessions, stale verification/reset codes): same
+  # image, different entrypoint. Drop this service if you run bin/worker.ts
+  # another way.
+  worker:
+    build: .
+    entrypoint: ["node", "dist/bin/worker.js"]
+    restart: unless-stopped
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    env_file: .env.example
+    environment:
+      <APP>_DATABASE_URL: postgres://postgres:postgres@postgres:5432/<app>?sslmode=disable
+      <APP>_JWT_SECRET: dev-compose-secret-32-bytes-min!
+
+volumes:
+  pgdata: {}

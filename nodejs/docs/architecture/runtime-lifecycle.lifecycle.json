@@ -1,0 +1,155 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "backend-node Runtime Lifecycle",
+    "output": "runtime-lifecycle.lifecycle.html",
+    "animation": "trace",
+    "quality_profile": "showcase"
+  },
+  "mainPath": ["boot", "wire", "serve", "ready", "flow"],
+  "states": [
+    {
+      "id": "boot",
+      "type": "start",
+      "label": "config.Load",
+      "sublabel": "typed env",
+      "step": "01",
+      "tag": "entry"
+    },
+    {
+      "id": "wire",
+      "type": "active",
+      "label": "wire deps",
+      "sublabel": "pg Pool · slices · Fastify",
+      "step": "02"
+    },
+    {
+      "id": "serve",
+      "type": "active",
+      "label": "http serve",
+      "sublabel": "<APP>_BIND :8080",
+      "step": "03"
+    },
+    {
+      "id": "ready",
+      "type": "decision",
+      "label": "readyz gate",
+      "sublabel": "pool.Ping 2s",
+      "step": "04",
+      "tag": "gate"
+    },
+    {
+      "id": "flow",
+      "type": "success",
+      "label": "Request flow",
+      "sublabel": "slices · JSON envelope",
+      "step": "05",
+      "tag": "done"
+    },
+    {
+      "id": "authfail",
+      "type": "waiting",
+      "label": "403 gate",
+      "sublabel": "RequireAuth · RequireRole",
+      "tag": "pause"
+    },
+    {
+      "id": "drain",
+      "type": "active",
+      "label": "Drain loop",
+      "sublabel": "claim CTE · 2^n ±20%",
+      "tag": "automatic"
+    },
+    {
+      "id": "mfail",
+      "type": "failure",
+      "label": "Exit 1",
+      "sublabel": "config · dial fail-closed",
+      "tag": "terminal"
+    },
+    {
+      "id": "degraded",
+      "type": "failure",
+      "label": "503 readyz",
+      "sublabel": "DB unreachable",
+      "tag": "terminal"
+    },
+    {
+      "id": "recovered",
+      "type": "success",
+      "label": "Sent / Recovered",
+      "sublabel": "mark_sent · janitor 1h",
+      "tag": "terminal"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "t-boot-wire",
+      "from": "boot",
+      "to": "wire"
+    },
+    {
+      "id": "t-wire-serve",
+      "from": "wire",
+      "to": "serve"
+    },
+    {
+      "id": "t-serve-ready",
+      "from": "serve",
+      "to": "ready"
+    },
+    {
+      "id": "t-ready-flow",
+      "from": "ready",
+      "to": "flow"
+    },
+    {
+      "from": "serve",
+      "to": "authfail",
+      "variant": "security"
+    },
+    {
+      "from": "ready",
+      "to": "degraded",
+      "variant": "dashed",
+      "label": "DB down"
+    },
+    {
+      "from": "flow",
+      "to": "drain",
+      "variant": "security"
+    },
+    {
+      "from": "drain",
+      "to": "recovered",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Boot rail",
+      "items": [
+        "src/bin/api.ts never migrates — replicas would race; the compose migrations service is the one-shot node-pg-migrate CLI runner",
+        "migrations are single-file pairs with node-pg-migrate up/down pair exports; the API boots config → pg Pool → slices → Fastify"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Gates + recovery",
+      "items": [
+        "RequireAuth answers 401 envelopes, RequireRole answers 403 insufficient role; /healthz and /readyz sit outside the middleware",
+        "the worker claims with FOR UPDATE SKIP LOCKED (5-minute lease), polling <APP>_OUTBOX_POLL 2s with batch <APP>_OUTBOX_BATCH 10"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Explicit endings",
+      "items": [
+        "readyz pings the pool with a 2s timeout and answers a 503 envelope when it fails",
+        "WS auth happens after upgrade — a bad ?token= closes 4001 authentication_failed; shutdown drains 10s, then cancels baseCtx to free SSE/WS"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+version: "2"
+sql:
+  - engine: postgresql
+    # Migrations are the schema source; each vertical slice owns its queries.
+    # Adding a slice: create internal/features/<slice>/queries.sql and add the
+    # path below. Query names must stay unique across slices.
+    schema: migrations
+    queries:
+      - internal/features/authsignup/queries.sql
+      - internal/features/authsession/queries.sql
+      - internal/features/authpassword/queries.sql
+      - internal/features/authoauth/queries.sql
+      - internal/features/adminusers/queries.sql
+      - internal/features/widgets/queries.sql
+    gen:
+      go:
+        package: db
+        out: internal/gen/db
+        sql_package: pgx/v5
+        emit_json_tags: false
+        output_db_file_name: db.go
+        query_parameter_limit: 1

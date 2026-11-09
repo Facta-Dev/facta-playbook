@@ -1,0 +1,17 @@
+[package]
+name         = "<app>-cli"
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+description  = "<app> · CLI on top of the SDK"
+
+[lints]
+workspace = true
+
+[dependencies]
+"<app>-core" = { workspace = true }
+"<app>-sdk"  = { workspace = true }
+anyhow       = { workspace = true }
+clap         = { workspace = true }
+tokio        = { workspace = true }

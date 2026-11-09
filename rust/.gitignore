@@ -1,0 +1,57 @@
+# Build artifacts
+/target
+**/target/
+**/*.rs.bk
+*.pdb
+
+# Env — never commit a real .env (only .env.example with placeholders).
+# The .env lives on disk per environment (dev/CI/prod); it is gitignored.
+.env
+.env.local
+.env.*.local
+
+# Credentials / secrets — never version control.
+credentials/
+*.key
+*.pem
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# SQLx offline cache — committed on purpose so the workspace builds without a
+# live Postgres (SQLX_OFFLINE=true). Refresh with `just sqlx-prepare` after SQL
+# changes. Do NOT ignore .sqlx/.
+
+# Coverage
+lcov.info
+tarpaulin-report.html
+*.profraw
+
+# Local data
+data/
+*.dump
+
+# Build artifacts
+dist/
+*.tar.gz
+
+# Backups (may contain secrets) — never version control.
+*.bak
+.env.bak
+
+# OpenAPI gen-check temp file (cleaned up by the script, ignored as safety net).
+.openapi.generated.json
+# Eval package lockfile — evals is a standalone zero-dep package; the skeleton
+# ships no Cargo.lock by design (rename.sh runs before the first lockfile
+# generate). Do NOT commit evals/Cargo.lock.
+evals/Cargo.lock

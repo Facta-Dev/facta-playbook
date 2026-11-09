@@ -1,0 +1,33 @@
+[package]
+name         = "<app>-auth"
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+description  = "<app> · identity service: auth use-cases"
+
+[dependencies]
+<app>-core   = { workspace = true }
+<app>-ports  = { workspace = true }
+<app>-warden = { workspace = true }
+chrono       = { workspace = true }
+serde_json   = { workspace = true }
+uuid         = { workspace = true }
+
+[dev-dependencies]
+tokio       = { workspace = true }
+async-trait = { workspace = true }
+# The auth services' mint methods (login/refresh/oauth, go parity) call the
+# warden's `mint_identity` — mint must be ON for this crate's regular build.
+# A dependency's cfg(test) is invisible here; only a real feature flip is.
+"<app>-warden" = { workspace = true, features = ["mint"] }
+
+# Mirror of the warden's mint gate: `SessionService::{login, refresh}` and
+# `OAuthService::{google, github_login, start_session}` call the warden's
+# `mint_identity`. Default-off here; the api crate turns it on (its
+# `default = ["mint"]` enables it across the workspace graph).
+[features]
+mint = ["<app>-warden/mint"]
+
+[lints]
+workspace = true

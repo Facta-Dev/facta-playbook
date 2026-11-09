@@ -66,6 +66,20 @@ never duplicate a baseline plugin in a project file.
 | `PLAYBOOK_REA.md` | REA setup: register the reverse-engineering MCP + skill with every agent on the machine | Analyzing binaries, bundles or captured traffic |
 | `CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md` | Model tiers (`opus`/`sonnet`/`haiku`), `advisor` agent, settings, verification, gotchas, rollback | Setting up a new machine or a new repo |
 
+### 3.1 Per-language kits
+
+Each language directory ships the backend playbooks specialized to that
+language's implementation, plus the matching `.claude/` kit:
+
+| Directory | Content | Status |
+| --- | --- | --- |
+| `golang/` | Runnable Go template (slices, auth core, worker, realtime) + `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents, 9 skills/commands, kit linters | Ready |
+| `rust/` | Runnable Rust workspace (11 crates, axum 0.8, sqlx 0.8, sessions, outbox, realtime) + `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents (incl. `unsafe-reviewer`), 9 skills/commands, contract evals | Ready |
+| `nodejs/` | Runnable Node 24 + TypeScript template (Fastify 5, Kysely, full auth core, outbox worker, WebSocket + SSE) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents, 9 skills/commands, 14 kit contract evals | Ready |
+| `python/` | Runnable Python 3.12 + uv template (FastAPI, pydantic v2, SQLAlchemy 2 async, Alembic, full auth core, outbox worker, WebSocket + SSE) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents, 9 skills/commands, 14 kit contract evals | Ready |
+
+The Go directory is the reference implementation for the rest.
+
 ## 4. Repository map
 
 Orgs: **Facta-Dev** (products, tooling), **contextzero** (NEST / CTX0),

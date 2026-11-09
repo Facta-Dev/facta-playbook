@@ -1,0 +1,29 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: fmt + vet
+        run: |
+          test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+          go vet ./...
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+      - name: unit + acceptance
+        run: go test ./internal/... ./cmd/... ./test/...
+      - name: integration (testcontainers)
+        run: go test -tags=integration ./internal/... ./test/...
+      - name: govulncheck
+        run: go tool govulncheck ./...
+      - name: actionlint
+        uses: raven-actions/actionlint@v1

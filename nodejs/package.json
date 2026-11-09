@@ -1,0 +1,57 @@
+{
+  "name": "<app>",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "<app> backend — Node 24 + TypeScript, Fastify + Postgres, vertical slices.",
+  "packageManager": "pnpm@10.34.7",
+  "engines": {
+    "node": ">=24"
+  },
+  "imports": {
+    "#shared/*": "./src/shared/*",
+    "#platform/*": "./src/platform/*",
+    "#features/*": "./src/features/*",
+    "#gen/*": "./src/gen/*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "accept": "tsx node_modules/@cucumber/cucumber/bin/cucumber.js specs/features --import \"test/acceptance/**/*.ts\"",
+    "gen": "openapi-typescript specs/openapi.yaml -o src/gen/api/schema.d.ts",
+    "start": "node dist/bin/api.js",
+    "worker": "node dist/bin/worker.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.3",
+    "bcryptjs": "^3.0.3",
+    "fastify": "^5.12.7",
+    "jose": "^6.2.12",
+    "kysely": "^0.29.6",
+    "node-pg-migrate": "^9.0.0",
+    "nodemailer": "^10.1.1",
+    "pg": "^8.23.1",
+    "zod": "^4.6.7",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.3.0",
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^24.19.2",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.23.1",
+    "eslint": "^9.39.5",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^5.0.5",
+    "@types/ws": "^8.18.1"
+  }
+}

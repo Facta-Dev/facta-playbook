@@ -1,0 +1,13 @@
+// <app> — test-program typecheck (vitest units + acceptance steps). Extends
+// the build tsconfig; noEmit, src+test in one program so both layers check
+// each other.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": ["src", "test"],
+  "exclude": ["dist", "node_modules"]
+}

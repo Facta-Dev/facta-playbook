@@ -1,0 +1,1 @@
+"""Widget example slice."""

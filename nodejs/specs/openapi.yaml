@@ -1,0 +1,605 @@
+# <app> API contract — source of truth for src/gen/api (openapi-typescript).
+# The contract is tool-neutral and shared verbatim across the backend family;
+# `make generate` writes the TypeScript models, `make gen-check` enforces
+# that the committed src/gen/api is in sync with this file.
+openapi: "3.0.3"
+info:
+  title: <app> API
+  version: "1.0.0"
+paths:
+  /healthz:
+    get:
+      operationId: healthz
+      responses: { "200": { description: liveness } }
+  /readyz:
+    get:
+      operationId: readyz
+      responses:
+        "200": { description: ready }
+        "503": { description: degraded }
+  /api/v1/auth/signup:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/SignupRequest" }
+      responses:
+        "201": { $ref: "#/components/responses/Message" }
+        "409": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/verify:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/VerifyEmailRequest" }
+      responses:
+        {
+          "200": { $ref: "#/components/responses/Message" },
+          "400": { $ref: "#/components/responses/Envelope" },
+        }
+  /api/v1/auth/verify/resend:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/EmailRequest" }
+      responses: { "200": { $ref: "#/components/responses/Message" } }
+  /api/v1/auth/login:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/AuthLoginRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/AuthTokens" }
+        "401": { $ref: "#/components/responses/Envelope" }
+        "403": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/refresh:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/AuthRefreshRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/AuthTokens" }
+        "401": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/logout:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/AuthRefreshRequest" }
+      responses: { "200": { $ref: "#/components/responses/Message" } }
+  /api/v1/auth/sessions:
+    get:
+      description: Own sessions, newest activity first; active_only defaults to true. Rotation replaces the refresh token in place (one row per login; expires_at never slides). Bare array — no envelope object.
+      parameters:
+        - { name: active_only, in: query, schema: { type: boolean, default: true } }
+      responses:
+        "200": { $ref: "#/components/responses/SessionList" }
+        "401": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/sessions/current:
+    get:
+      description: The caller's most recent active session (the reference's session_id hint is unused); JSON null when no active session remains.
+      responses:
+        "200": { $ref: "#/components/responses/AuthSession" }
+        "401": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/sessions/revoke-current:
+    post:
+      description: Deactivate the session the bearer belongs to.
+      responses:
+        "200": { $ref: "#/components/responses/SessionRevoked" }
+        "401": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/sessions/revoke-all:
+    post:
+      description: Deactivate every active session of the caller.
+      responses:
+        "200": { $ref: "#/components/responses/SessionRevokedCount" }
+        "401": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/me:
+    get:
+      responses:
+        {
+          "200": { $ref: "#/components/responses/Me" },
+          "401": { $ref: "#/components/responses/Envelope" },
+        }
+    put:
+      description: >
+        Partial profile update: absent fields are left unchanged (the SQL
+        coalesces each parameter against the current value); an empty
+        phone_number/profile_picture clears to the empty string, not null.
+      requestBody: { $ref: "#/components/requestBodies/UpdateMeRequest" }
+      responses:
+        {
+          "200": { $ref: "#/components/responses/Me" },
+          "401": { $ref: "#/components/responses/Envelope" },
+        }
+  /api/v1/auth/google:
+    post:
+      description: >
+        Google One Tap. The browser's RS256 ID token is verified against
+        Google's JWKS (aud = <app>_GOOGLE_CLIENT_ID, iss = accounts.google.com,
+        email_verified). Linked by google_id, else by email, else provisions an
+        auto-verified user (default user_type COMPANY). Response is the login
+        shape; the envelope carries verification failures.
+      requestBody: { $ref: "#/components/requestBodies/GoogleAuthRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/AuthTokens" }
+        "401": { $ref: "#/components/responses/Envelope" }
+        "403": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/github/login:
+    get:
+      description: >
+        302 redirect to GitHub's authorize URL (client_id, redirect_uri from
+        <app>_AUTH_GITHUB_CALLBACK_URL, scope "user:email", state passthrough);
+        a disabled/unconfigured provider answers 403.
+      responses:
+        "302": { description: redirect to github }
+        "403": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/github/callback:
+    get:
+      description: >
+        Exchange the code and redirect (never JSON): state = link:<jwt-payload>
+        links the GitHub identity, otherwise login — link by github_id, else by
+        email, else provision. 302 to <app>_AUTH_FRONTEND_SUCCESS#access_token=…&refresh_token=…
+        on success, ?error=…&error_description=… on any failure.
+      parameters:
+        - { name: code, in: query, schema: { type: string } }
+        - { name: state, in: query, schema: { type: string } }
+        - { name: error, in: query, schema: { type: string } }
+        - { name: error_description, in: query, schema: { type: string } }
+      responses:
+        "302": { description: redirect to frontend }
+        "403": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/github/connect-url:
+    get:
+      description: >
+        Bearer-protected GET returning {url}: GitHub's authorize URL carrying
+        state=link:<jwt> (reference /account/github/connect-url parity), so the
+        callback links instead of logging in. A disabled/unconfigured provider
+        answers 403.
+      responses:
+        {
+          "200": { $ref: "#/components/responses/GithubConnectURL" },
+          "403": { $ref: "#/components/responses/Envelope" },
+        }
+  /api/v1/auth/forgot-password:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/EmailRequest" }
+      responses: { "200": { $ref: "#/components/responses/Message" } }
+  /api/v1/auth/validate-code:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/ValidateCodeRequest" }
+      responses:
+        {
+          "200": { $ref: "#/components/responses/Message" },
+          "400": { $ref: "#/components/responses/Envelope" },
+        }
+  /api/v1/auth/reset-password:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/ResetPasswordRequest" }
+      responses:
+        {
+          "200": { $ref: "#/components/responses/Message" },
+          "400": { $ref: "#/components/responses/Envelope" },
+        }
+  /api/v1/auth/upgrade-to-admin:
+    post:
+      description: >
+        Unauthenticated bootstrap (reference upgrade_to_admin parity): an email
+        listed in <app>_ALLOWED_ADMIN_EMAILS promotes its own account to
+        role+user_type ADMIN. The whitelist is checked before any user lookup,
+        so a non-whitelisted caller cannot probe for account existence; an
+        empty whitelist denies everything. Remove the variable once an admin
+        exists in production.
+      requestBody: { $ref: "#/components/requestBodies/EmailRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/AuthUpgrade" }
+        "403": { $ref: "#/components/responses/Envelope" }
+        "404": { $ref: "#/components/responses/Envelope" }
+  /api/v1/auth/change-password:
+    post:
+      requestBody: { $ref: "#/components/requestBodies/ChangePasswordRequest" }
+      responses:
+        {
+          "200": { $ref: "#/components/responses/Message" },
+          "401": { $ref: "#/components/responses/Envelope" },
+        }
+  /api/v1/admin/users:
+    get:
+      responses: { "200": { $ref: "#/components/responses/AdminUsers" } }
+  /api/v1/admin/users/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      responses:
+        {
+          "200": { $ref: "#/components/responses/AdminUser" },
+          "404": { $ref: "#/components/responses/Envelope" },
+        }
+    put:
+      requestBody: { $ref: "#/components/requestBodies/AdminUpdateUser" }
+      responses:
+        {
+          "200": { $ref: "#/components/responses/AdminUser" },
+          "403": { $ref: "#/components/responses/Envelope" },
+          "404": { $ref: "#/components/responses/Envelope" },
+          "422": { $ref: "#/components/responses/Envelope" },
+        }
+  /api/v1/admin/auth-session/users/{id}/sessions:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: active_only, in: query, schema: { type: boolean, default: true } }
+    get:
+      description: Bare array of the target user's sessions.
+      responses:
+        "200": { $ref: "#/components/responses/SessionList" }
+        "403": { $ref: "#/components/responses/Envelope" }
+  /api/v1/admin/auth-session/users/{id}/revoke-all:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      description: >
+        Deactivates every ACTIVE row (count reports those) and keeps the
+        session history — deviation from the reference, which deletes every
+        row including inactive ones; deliberate: history survives audits.
+      responses:
+        "200": { $ref: "#/components/responses/SessionRevokedCount" }
+        "403": { $ref: "#/components/responses/Envelope" }
+  /api/v1/admin/auth-session/anomalies:
+    get:
+      description: >
+        Session anomaly report as a bare array of {anomaly_type, count,
+        details} rows — two detectors: expired_but_active (active rows past
+        their expires_at, reported as a session count) and multi_ip_sessions
+        (reference parity: users whose active sessions within the window span
+        more than 3 distinct IPs, reported with their user ids). window_minutes
+        defaults to 60 and must be 1..43200 (30 days).
+      parameters:
+        - {
+            name: window_minutes,
+            in: query,
+            schema: { type: integer, default: 60, minimum: 1, maximum: 43200 },
+          }
+      responses:
+        "200": { $ref: "#/components/responses/AnomalyList" }
+        "422": { $ref: "#/components/responses/Envelope" }
+        "403": { $ref: "#/components/responses/Envelope" }
+  /api/v1/widgets:
+    get:
+      responses: { "200": { $ref: "#/components/responses/Widgets" } }
+    post:
+      requestBody: { $ref: "#/components/requestBodies/WidgetCreate" }
+      responses: { "201": { $ref: "#/components/responses/Widget" } }
+  /api/v1/widgets/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      responses:
+        {
+          "200": { $ref: "#/components/responses/Widget" },
+          "404": { $ref: "#/components/responses/Envelope" },
+        }
+    put:
+      requestBody: { $ref: "#/components/requestBodies/WidgetCreate" }
+      responses: { "200": { $ref: "#/components/responses/Widget" } }
+    delete:
+      responses: { "204": { description: deleted } }
+  /api/v1/widgets/events:
+    get:
+      description: SSE — text/event-stream of widget lifecycle events (auth required)
+      responses: { "200": { description: stream } }
+  /api/v1/ws:
+    get:
+      description: WebSocket — token in query, identity room; close 4001 on auth failure
+      responses: { "101": { description: upgrade } }
+
+components:
+  requestBodies:
+    SignupRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/SignupRequest" }
+    VerifyEmailRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/VerifyEmailRequest" }
+    EmailRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/EmailRequest" }
+    UpdateMeRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/UpdateMeRequest" }
+    AuthLoginRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/AuthLoginRequest" }
+    AuthRefreshRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/AuthRefreshRequest" }
+    ValidateCodeRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ValidateCodeRequest" }
+    ResetPasswordRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ResetPasswordRequest" }
+    ChangePasswordRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ChangePasswordRequest" }
+    AdminUpdateUser:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/AdminUpdateUser" }
+    GoogleAuthRequest:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/GoogleAuthRequest" }
+    WidgetCreate:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/WidgetCreate" }
+
+  responses:
+    Message:
+      description: accepted
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/MessageResponse" }
+    Envelope:
+      description: error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Envelope" }
+    AuthTokens:
+      description: new tokens
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/AuthTokens" }
+    AuthUpgrade:
+      description: bootstrap whitelist outcome
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/AuthUpgradeResponse" }
+    Me:
+      description: current user
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/MeResponse" }
+    AdminUser:
+      description: user record
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/AdminUser" }
+    AdminUsers:
+      description: paginated users
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/AdminUserList" }
+    AuthSession:
+      description: one session row (refresh token never exposed), or JSON null when none is active
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/SessionItem" }
+    SessionList:
+      description: bare array of session rows
+      content:
+        application/json:
+          schema: { type: array, items: { $ref: "#/components/schemas/SessionItem" } }
+    SessionRevoked:
+      description: revoke result
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/SessionRevoked" }
+    SessionRevokedCount:
+      description: bulk revoke result
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/SessionRevokedCount" }
+    GithubConnectURL:
+      description: GitHub authorize URL carrying the link state
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/GithubConnectURLResponse" }
+    AnomalyList:
+      description: bare array of anomaly rows
+      content:
+        application/json:
+          schema: { type: array, items: { $ref: "#/components/schemas/AnomalyItem" } }
+    Widget:
+      description: widget record
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Widget" }
+    Widgets:
+      description: paginated widgets
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/WidgetList" }
+
+  schemas:
+    Envelope: &Envelope # DO NOT generate — defined once, see below
+      required: [detail, code]
+      properties:
+        detail: { type: string }
+        code: { type: string }
+    MessageResponse:
+      properties:
+        message: { type: string }
+    AuthTokens:
+      required: [access_token, refresh_token, token_type, expires_in]
+      properties:
+        access_token: { type: string, format: jwt }
+        refresh_token: { type: string }
+        token_type: { type: string, enum: [bearer] }
+        expires_in: { type: integer, description: access TTL seconds }
+    SignupRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        first_name: { type: string, maxLength: 100 }
+        last_name: { type: string, maxLength: 100 }
+        language: { type: string, maxLength: 10, default: en }
+        user_type: { type: string, enum: [ADMIN, COMPANY, USER], default: COMPANY }
+    VerifyEmailRequest:
+      type: object
+      required: [email, code]
+      properties:
+        email: { type: string, format: email }
+        code: { type: string, pattern: "^[0-9]{6}$", maxLength: 8 }
+    EmailRequest:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    AuthUpgradeResponse:
+      description: bootstrap outcome; upgraded=false reads as "already an admin".
+      required: [message, upgraded]
+      properties:
+        email: { type: string, format: email }
+        message: { type: string }
+        upgraded: { type: boolean }
+    AuthLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    AuthRefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token: { type: string }
+    MeResponse:
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        first_name: { type: string }
+        last_name: { type: string }
+        role: { type: string, enum: [ADMIN, MODERATOR, USER, GUEST] }
+        user_type: { type: string, enum: [ADMIN, COMPANY, USER] }
+        is_active: { type: boolean }
+        is_blocked: { type: boolean }
+        is_verified: { type: boolean }
+        retry_count: { type: integer }
+        language: { type: string }
+        created_at: { type: string, format: date-time }
+        phone_number: { type: string, maxLength: 20 }
+        profile_picture: { type: string, maxLength: 255 }
+        subscription: { type: string, maxLength: 50 }
+        last_login: { type: string, format: date-time, nullable: true }
+        github_connected: { type: boolean }
+    UpdateMeRequest:
+      type: object
+      properties:
+        first_name: { type: string, maxLength: 100 }
+        last_name: { type: string, maxLength: 100 }
+        phone_number: { type: string, maxLength: 20 }
+        profile_picture: { type: string, maxLength: 255 }
+        language: { type: string, maxLength: 10 }
+        address: { type: string }
+        postal_code: { type: string, maxLength: 20 }
+    ValidateCodeRequest:
+      type: object
+      required: [email, code]
+      properties:
+        email: { type: string, format: email }
+        code: { type: string, pattern: "^[0-9]{6}$", maxLength: 8 }
+    ForgotPasswordRequest:
+      type: object # kept for parity with ctx0; same wire as EmailRequest
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+    ResetPasswordRequest:
+      type: object
+      required: [email, code, new_password]
+      properties:
+        email: { type: string, format: email }
+        code: { type: string, pattern: "^[0-9]{6}$", maxLength: 8 }
+        new_password: { type: string, minLength: 8 }
+    ChangePasswordRequest:
+      type: object
+      required: [current_password, new_password]
+      properties:
+        current_password: { type: string }
+        new_password: { type: string, minLength: 8 }
+    AdminUser:
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        first_name: { type: string }
+        last_name: { type: string }
+        role: { type: string, enum: [ADMIN, MODERATOR, USER, GUEST] }
+        user_type: { type: string, enum: [ADMIN, COMPANY, USER] }
+        is_active: { type: boolean }
+        is_blocked: { type: boolean }
+        is_verified: { type: boolean }
+        retry_count: { type: integer }
+        language: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        last_login: { type: string, format: date-time, nullable: true }
+    AdminUpdateUser:
+      type: object
+      properties:
+        is_active: { type: boolean, nullable: true }
+        is_blocked: { type: boolean, nullable: true }
+        role: { type: string, enum: [ADMIN, MODERATOR, USER, GUEST], nullable: true }
+    AdminUserList:
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/AdminUser" } }
+        total: { type: integer }
+    Widget:
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        kind: { type: string, enum: [sprocket, cog, flange] }
+        owner_user_id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+    WidgetCreate:
+      type: object
+      required: [name, kind]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        kind: { type: string, enum: [sprocket, cog, flange] }
+    WidgetList:
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Widget" } }
+        total: { type: integer }
+    GoogleAuthRequest:
+      type: object
+      required: [credential]
+      properties:
+        credential: { type: string, description: Google ID token (JWT) minted by One Tap }
+    SessionItem:
+      required: [id, user_id, created_at, last_activity, expires_at, is_active]
+      properties:
+        id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid }
+        ip_address: { type: string }
+        user_agent: { type: string }
+        created_at: { type: string, format: date-time }
+        last_activity: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        is_active: { type: boolean }
+    SessionRevoked:
+      type: object
+      required: [revoked]
+      properties:
+        revoked: { type: boolean }
+    SessionRevokedCount:
+      type: object
+      required: [revoked_count]
+      properties:
+        revoked_count: { type: integer }
+    GithubConnectURLResponse:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, format: uri }
+    AnomalyItem:
+      properties:
+        anomaly_type: { type: string, example: multi_ip_sessions }
+        count: { type: integer }
+        details: { type: object, additionalProperties: true }

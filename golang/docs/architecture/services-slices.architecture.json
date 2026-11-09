@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "backend-go Services — Feature Slices",
+    "quality_profile": "showcase",
+    "output": "services-slices.architecture.html"
+  },
+  "components": [
+    {
+      "id": "composition",
+      "type": "backend",
+      "label": "cmd/api",
+      "sublabel": "config · pgxpool · mux",
+      "pos": [
+        40,
+        96
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "backend",
+      "label": "auth slices",
+      "sublabel": "signup · session · password",
+      "pos": [
+        290,
+        96
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "widgets",
+      "type": "backend",
+      "label": "widgets · realtime",
+      "sublabel": "CRUD · ws · SSE",
+      "pos": [
+        540,
+        96
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "platform",
+      "type": "backend",
+      "label": "platform",
+      "sublabel": "authx · httpx · oauthx",
+      "pos": [
+        40,
+        240
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "sqlc",
+      "type": "backend",
+      "label": "gen/db",
+      "sublabel": "sqlc · pgx/v5",
+      "pos": [
+        290,
+        240
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "loom",
+      "type": "backend",
+      "label": "platform/email",
+      "sublabel": "outbox · senders",
+      "pos": [
+        540,
+        240
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "hub",
+      "type": "backend",
+      "label": "platform/realtime",
+      "sublabel": "hub rooms user:<id>",
+      "pos": [
+        770,
+        240
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "shared",
+      "type": "backend",
+      "label": "shared",
+      "sublabel": "apperr · rolex · idgen",
+      "pos": [
+        40,
+        384
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "email_jobs",
+      "type": "database",
+      "label": "email_jobs",
+      "sublabel": "outbox · SKIP LOCKED",
+      "pos": [
+        540,
+        384
+      ],
+      "size": [
+        130,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Composition root",
+      "wraps": [
+        "composition"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Feature slices",
+      "wraps": [
+        "auth",
+        "widgets"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Platform",
+      "wraps": [
+        "platform",
+        "sqlc",
+        "loom",
+        "hub"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "State",
+      "wraps": [
+        "shared",
+        "email_jobs"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "c1",
+      "from": "composition",
+      "to": "auth",
+      "label": "mux handlers",
+      "labelAt": [
+        230,
+        172
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "composition",
+      "to": "platform",
+      "label": "deps wiring",
+      "labelAt": [
+        105,
+        200
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "auth",
+      "to": "sqlc",
+      "label": "queries.sql",
+      "labelAt": [
+        355,
+        200
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "widgets",
+      "to": "loom",
+      "label": "enqueue · publish",
+      "labelAt": [
+        605,
+        200
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "loom",
+      "to": "email_jobs",
+      "label": "drain",
+      "labelAt": [
+        605,
+        344
+      ]
+    },
+    {
+      "id": "c6",
+      "from": "loom",
+      "to": "hub",
+      "label": "ws hub",
+      "labelAt": [
+        720,
+        254
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "platform",
+      "to": "shared",
+      "label": "apperr · rolex",
+      "labelAt": [
+        105,
+        344
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Vertical slices",
+      "items": [
+        "internal/features/{authsignup, authsession, authpassword, authoauth, adminusers, widgets, realtime} each ship http.go · usecase.go · ports.go · postgres.go · queries.sql · domain.go · module.go",
+        "everything is wired from the cmd/api/main.go composition root: config → pgxpool → slices → mux → server"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Platform + sqlc",
+      "items": [
+        "platform/authx mints HS256 JWTs and hashes bcrypt cost 10 with an optional pepper pre-hash",
+        "sqlc generates pgx/v5 code into internal/gen/db from each slice's queries.sql (schema source = migrations/)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Realtime + email",
+      "items": [
+        "platform/realtime keeps in-process rooms user:<id> and publishes never-block, drop-on-full",
+        "platform/email owns the email_jobs outbox queue (queue.go, deliberately sqlc-free) plus templates and Console/SMTP senders"
+      ]
+    }
+  ]
+}

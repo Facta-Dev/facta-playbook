@@ -1,0 +1,18 @@
+[package]
+name         = "<app>-sdk"
+version      = { workspace = true }
+edition      = { workspace = true }
+rust-version = { workspace = true }
+license      = { workspace = true }
+description  = "<app> · typed client library over the HTTP API"
+
+[lints]
+workspace = true
+
+[dependencies]
+"<app>-core" = { workspace = true }
+reqwest      = { workspace = true }
+serde        = { workspace = true }
+serde_json   = { workspace = true }
+thiserror    = { workspace = true }
+tokio        = { workspace = true }

@@ -1,0 +1,1521 @@
+components:
+  schemas:
+    AccountResponse:
+      properties:
+        email:
+          title: Email
+          type: string
+        first_name:
+          title: First Name
+          type: string
+        id:
+          title: Id
+          type: string
+        language:
+          title: Language
+          type: string
+        last_login:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Last Login
+        last_name:
+          title: Last Name
+          type: string
+        role:
+          title: Role
+          type: string
+      required:
+      - id
+      - email
+      - role
+      - first_name
+      - last_name
+      - language
+      - last_login
+      title: AccountResponse
+      type: object
+    AdminUserListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AdminUserResponse'
+          title: Items
+          type: array
+        total:
+          title: Total
+          type: integer
+      required:
+      - items
+      - total
+      title: AdminUserListResponse
+      type: object
+    AdminUserResponse:
+      properties:
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        email:
+          title: Email
+          type: string
+        first_name:
+          title: First Name
+          type: string
+        id:
+          title: Id
+          type: string
+        is_active:
+          title: Is Active
+          type: boolean
+        is_blocked:
+          title: Is Blocked
+          type: boolean
+        is_verified:
+          title: Is Verified
+          type: boolean
+        language:
+          title: Language
+          type: string
+        last_login:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Last Login
+        last_name:
+          title: Last Name
+          type: string
+        role:
+          title: Role
+          type: string
+      required:
+      - id
+      - email
+      - first_name
+      - last_name
+      - role
+      - is_active
+      - is_blocked
+      - is_verified
+      - language
+      - created_at
+      - last_login
+      title: AdminUserResponse
+      type: object
+    AnomalyResponse:
+      properties:
+        distinct_ips:
+          title: Distinct Ips
+          type: integer
+        email:
+          title: Email
+          type: string
+        sessions:
+          title: Sessions
+          type: integer
+        user_id:
+          title: User Id
+          type: string
+      required:
+      - user_id
+      - email
+      - distinct_ips
+      - sessions
+      title: AnomalyResponse
+      type: object
+    ChangeRequest:
+      properties:
+        current_password:
+          maxLength: 128
+          minLength: 1
+          title: Current Password
+          type: string
+        new_password:
+          maxLength: 128
+          minLength: 8
+          title: New Password
+          type: string
+      required:
+      - current_password
+      - new_password
+      title: ChangeRequest
+      type: object
+    ChangeResponse:
+      properties:
+        changed:
+          title: Changed
+          type: boolean
+      required:
+      - changed
+      title: ChangeResponse
+      type: object
+    ConnectResponse:
+      properties:
+        url:
+          title: Url
+          type: string
+      required:
+      - url
+      title: ConnectResponse
+      type: object
+    ForgotRequest:
+      properties:
+        email:
+          maxLength: 254
+          minLength: 3
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          type: string
+      required:
+      - email
+      title: ForgotRequest
+      type: object
+    ForgotResponse:
+      properties:
+        queued:
+          title: Queued
+          type: boolean
+      required:
+      - queued
+      title: ForgotResponse
+      type: object
+    GoogleRequest:
+      properties:
+        credential:
+          maxLength: 8192
+          minLength: 1
+          title: Credential
+          type: string
+      required:
+      - credential
+      title: GoogleRequest
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    LoginRequest:
+      properties:
+        email:
+          maxLength: 254
+          minLength: 3
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          type: string
+        password:
+          maxLength: 128
+          minLength: 8
+          title: Password
+          type: string
+      required:
+      - email
+      - password
+      title: LoginRequest
+      type: object
+    LogoutRequest:
+      properties:
+        refresh_token:
+          maxLength: 256
+          minLength: 32
+          title: Refresh Token
+          type: string
+      required:
+      - refresh_token
+      title: LogoutRequest
+      type: object
+    RefreshRequest:
+      properties:
+        refresh_token:
+          maxLength: 256
+          minLength: 32
+          title: Refresh Token
+          type: string
+      required:
+      - refresh_token
+      title: RefreshRequest
+      type: object
+    ResendRequest:
+      properties:
+        email:
+          maxLength: 254
+          minLength: 3
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          type: string
+      required:
+      - email
+      title: ResendRequest
+      type: object
+    ResendResponse:
+      properties:
+        queued:
+          title: Queued
+          type: boolean
+      required:
+      - queued
+      title: ResendResponse
+      type: object
+    ResetRequest:
+      properties:
+        code:
+          maxLength: 6
+          minLength: 6
+          title: Code
+          type: string
+        email:
+          maxLength: 254
+          minLength: 3
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          type: string
+        new_password:
+          maxLength: 128
+          minLength: 8
+          title: New Password
+          type: string
+      required:
+      - email
+      - code
+      - new_password
+      title: ResetRequest
+      type: object
+    ResetResponse:
+      properties:
+        reset:
+          title: Reset
+          type: boolean
+      required:
+      - reset
+      title: ResetResponse
+      type: object
+    RevokeResponse:
+      properties:
+        revoked:
+          title: Revoked
+          type: integer
+      required:
+      - revoked
+      title: RevokeResponse
+      type: object
+    Role:
+      description: Account roles, lowest privilege first.
+      enum:
+      - guest
+      - user
+      - moderator
+      - admin
+      title: Role
+      type: string
+    SessionResponse:
+      properties:
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        current:
+          title: Current
+          type: boolean
+        expires_at:
+          format: date-time
+          title: Expires At
+          type: string
+        id:
+          title: Id
+          type: string
+        ip:
+          title: Ip
+          type: string
+        user_agent:
+          title: User Agent
+          type: string
+      required:
+      - id
+      - ip
+      - user_agent
+      - created_at
+      - expires_at
+      - current
+      title: SessionResponse
+      type: object
+    SignupRequest:
+      properties:
+        email:
+          maxLength: 254
+          minLength: 3
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          type: string
+        first_name:
+          default: ''
+          maxLength: 100
+          title: First Name
+          type: string
+        language:
+          default: en
+          maxLength: 10
+          title: Language
+          type: string
+        last_name:
+          default: ''
+          maxLength: 100
+          title: Last Name
+          type: string
+        password:
+          maxLength: 128
+          minLength: 8
+          title: Password
+          type: string
+      required:
+      - email
+      - password
+      title: SignupRequest
+      type: object
+    SignupResponse:
+      properties:
+        code_queued:
+          title: Code Queued
+          type: boolean
+        user_id:
+          title: User Id
+          type: string
+      required:
+      - user_id
+      - code_queued
+      title: SignupResponse
+      type: object
+    TokenResponse:
+      properties:
+        access_token:
+          title: Access Token
+          type: string
+        refresh_token:
+          title: Refresh Token
+          type: string
+      required:
+      - access_token
+      - refresh_token
+      title: TokenResponse
+      type: object
+    UpdateMeRequest:
+      properties:
+        first_name:
+          anyOf:
+          - maxLength: 100
+            type: string
+          - type: 'null'
+          title: First Name
+        language:
+          anyOf:
+          - maxLength: 10
+            type: string
+          - type: 'null'
+          title: Language
+        last_name:
+          anyOf:
+          - maxLength: 100
+            type: string
+          - type: 'null'
+          title: Last Name
+      title: UpdateMeRequest
+      type: object
+    UpdateRequest:
+      properties:
+        is_active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Active
+        is_blocked:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Blocked
+        role:
+          anyOf:
+          - $ref: '#/components/schemas/Role'
+          - type: 'null'
+      title: UpdateRequest
+      type: object
+    UpgradeRequest:
+      properties:
+        email:
+          maxLength: 254
+          minLength: 3
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          type: string
+      required:
+      - email
+      title: UpgradeRequest
+      type: object
+    UpgradeResponse:
+      properties:
+        email:
+          title: Email
+          type: string
+        message:
+          title: Message
+          type: string
+        upgraded:
+          title: Upgraded
+          type: boolean
+      required:
+      - email
+      - message
+      - upgraded
+      title: UpgradeResponse
+      type: object
+    ValidateRequest:
+      properties:
+        code:
+          maxLength: 6
+          minLength: 6
+          title: Code
+          type: string
+        email:
+          maxLength: 254
+          minLength: 3
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          type: string
+      required:
+      - email
+      - code
+      title: ValidateRequest
+      type: object
+    ValidateResponse:
+      properties:
+        valid:
+          title: Valid
+          type: boolean
+      required:
+      - valid
+      title: ValidateResponse
+      type: object
+    ValidationError:
+      properties:
+        ctx:
+          title: Context
+          type: object
+        input:
+          title: Input
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+    VerifyRequest:
+      properties:
+        code:
+          maxLength: 6
+          minLength: 6
+          title: Code
+          type: string
+        email:
+          maxLength: 254
+          minLength: 3
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          type: string
+      required:
+      - email
+      - code
+      title: VerifyRequest
+      type: object
+    VerifyResponse:
+      properties:
+        verified:
+          title: Verified
+          type: boolean
+      required:
+      - verified
+      title: VerifyResponse
+      type: object
+    WidgetListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/WidgetResponse'
+          title: Items
+          type: array
+      required:
+      - items
+      title: WidgetListResponse
+      type: object
+    WidgetRequest:
+      properties:
+        kind:
+          maxLength: 32
+          minLength: 1
+          title: Kind
+          type: string
+        name:
+          maxLength: 120
+          minLength: 1
+          title: Name
+          type: string
+      required:
+      - name
+      - kind
+      title: WidgetRequest
+      type: object
+    WidgetResponse:
+      properties:
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        id:
+          title: Id
+          type: string
+        kind:
+          title: Kind
+          type: string
+        name:
+          title: Name
+          type: string
+        owner_user_id:
+          title: Owner User Id
+          type: string
+      required:
+      - id
+      - name
+      - kind
+      - owner_user_id
+      - created_at
+      title: WidgetResponse
+      type: object
+  securitySchemes:
+    HTTPBearer:
+      scheme: bearer
+      type: http
+info:
+  title: <app>
+  version: 0.1.0
+openapi: 3.1.0
+paths:
+  /api/v1/admin/auth-session/anomalies:
+    get:
+      operationId: anomalies_api_v1_admin_auth_session_anomalies_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/AnomalyResponse'
+                title: Response Anomalies Api V1 Admin Auth Session Anomalies Get
+                type: array
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Anomalies
+      tags:
+      - auth
+  /api/v1/admin/auth-session/users/{user_id}/revoke-all:
+    post:
+      operationId: admin_revoke_all_api_v1_admin_auth_session_users__user_id__revoke_all_post
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Admin Revoke All
+      tags:
+      - auth
+  /api/v1/admin/auth-session/users/{user_id}/sessions:
+    get:
+      operationId: admin_sessions_api_v1_admin_auth_session_users__user_id__sessions_get
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/SessionResponse'
+                title: Response Admin Sessions Api V1 Admin Auth Session Users  User
+                  Id  Sessions Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Admin Sessions
+      tags:
+      - auth
+  /api/v1/admin/users:
+    get:
+      operationId: list_users_api_v1_admin_users_get
+      parameters:
+      - in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          title: Page
+          type: integer
+      - in: query
+        name: page_size
+        required: false
+        schema:
+          default: 20
+          maximum: 100
+          minimum: 1
+          title: Page Size
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserListResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: List Users
+      tags:
+      - admin
+  /api/v1/admin/users/{user_id}:
+    get:
+      operationId: get_user_api_v1_admin_users__user_id__get
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get User
+      tags:
+      - admin
+    patch:
+      operationId: update_user_api_v1_admin_users__user_id__patch
+      parameters:
+      - in: path
+        name: user_id
+        required: true
+        schema:
+          title: User Id
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Update User
+      tags:
+      - admin
+  /api/v1/auth/change-password:
+    post:
+      operationId: change_api_v1_auth_change_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Change
+      tags:
+      - auth
+  /api/v1/auth/forgot-password:
+    post:
+      operationId: forgot_api_v1_auth_forgot_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotRequest'
+        required: true
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgotResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Forgot
+      tags:
+      - auth
+  /api/v1/auth/github/callback:
+    get:
+      operationId: github_callback_api_v1_auth_github_callback_get
+      parameters:
+      - in: query
+        name: code
+        required: false
+        schema:
+          default: ''
+          maxLength: 512
+          title: Code
+          type: string
+      - in: query
+        name: state
+        required: false
+        schema:
+          default: ''
+          maxLength: 4096
+          title: State
+          type: string
+      - in: query
+        name: error
+        required: false
+        schema:
+          default: ''
+          maxLength: 200
+          title: Error
+          type: string
+      - in: query
+        name: error_description
+        required: false
+        schema:
+          default: ''
+          maxLength: 500
+          title: Error Description
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Github Callback
+      tags:
+      - auth
+  /api/v1/auth/github/connect-url:
+    get:
+      operationId: github_connect_url_api_v1_auth_github_connect_url_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectResponse'
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Github Connect Url
+      tags:
+      - auth
+  /api/v1/auth/github/login:
+    get:
+      operationId: github_login_api_v1_auth_github_login_get
+      parameters:
+      - in: query
+        name: state
+        required: false
+        schema:
+          default: ''
+          maxLength: 512
+          title: State
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Github Login
+      tags:
+      - auth
+  /api/v1/auth/google:
+    post:
+      operationId: google_api_v1_auth_google_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Google
+      tags:
+      - auth
+  /api/v1/auth/login:
+    post:
+      operationId: login_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Login
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      operationId: logout_api_v1_auth_logout_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Logout
+      tags:
+      - auth
+  /api/v1/auth/me:
+    get:
+      operationId: me_api_v1_auth_me_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Me
+      tags:
+      - auth
+    patch:
+      operationId: update_me_api_v1_auth_me_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Update Me
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      operationId: refresh_api_v1_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Refresh
+      tags:
+      - auth
+  /api/v1/auth/reset-password:
+    post:
+      operationId: reset_api_v1_auth_reset_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Reset
+      tags:
+      - auth
+  /api/v1/auth/sessions:
+    get:
+      operationId: sessions_api_v1_auth_sessions_get
+      parameters:
+      - in: query
+        name: refresh_token
+        required: false
+        schema:
+          default: ''
+          maxLength: 256
+          title: Refresh Token
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/SessionResponse'
+                title: Response Sessions Api V1 Auth Sessions Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Sessions
+      tags:
+      - auth
+  /api/v1/auth/sessions/current:
+    get:
+      operationId: current_session_api_v1_auth_sessions_current_get
+      parameters:
+      - in: query
+        name: refresh_token
+        required: false
+        schema:
+          default: ''
+          maxLength: 256
+          title: Refresh Token
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/SessionResponse'
+                - type: 'null'
+                title: Response Current Session Api V1 Auth Sessions Current Get
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Current Session
+      tags:
+      - auth
+  /api/v1/auth/sessions/revoke-all:
+    post:
+      operationId: revoke_all_api_v1_auth_sessions_revoke_all_post
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeResponse'
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Revoke All
+      tags:
+      - auth
+  /api/v1/auth/sessions/revoke-current:
+    post:
+      operationId: revoke_current_api_v1_auth_sessions_revoke_current_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Revoke Current
+      tags:
+      - auth
+  /api/v1/auth/signup:
+    post:
+      operationId: signup_api_v1_auth_signup_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Signup
+      tags:
+      - auth
+  /api/v1/auth/upgrade-to-admin:
+    post:
+      operationId: upgrade_to_admin_api_v1_auth_upgrade_to_admin_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpgradeRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpgradeResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Upgrade To Admin
+      tags:
+      - admin
+  /api/v1/auth/validate-code:
+    post:
+      operationId: validate_api_v1_auth_validate_code_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Validate
+      tags:
+      - auth
+  /api/v1/auth/verify:
+    post:
+      operationId: verify_api_v1_auth_verify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Verify
+      tags:
+      - auth
+  /api/v1/auth/verify/resend:
+    post:
+      operationId: resend_api_v1_auth_verify_resend_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendRequest'
+        required: true
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResendResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Resend
+      tags:
+      - auth
+  /api/v1/widgets:
+    get:
+      operationId: list_widgets_api_v1_widgets_get
+      parameters:
+      - in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          title: Page
+          type: integer
+      - in: query
+        name: page_size
+        required: false
+        schema:
+          default: 20
+          maximum: 100
+          minimum: 1
+          title: Page Size
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WidgetListResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: List Widgets
+      tags:
+      - widgets
+    post:
+      operationId: create_widget_api_v1_widgets_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WidgetRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WidgetResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Create Widget
+      tags:
+      - widgets
+  /api/v1/widgets/events:
+    get:
+      operationId: widget_events_api_v1_widgets_events_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      security:
+      - HTTPBearer: []
+      summary: Widget Events
+      tags:
+      - widgets
+  /api/v1/widgets/{widget_id}:
+    delete:
+      operationId: delete_widget_api_v1_widgets__widget_id__delete
+      parameters:
+      - in: path
+        name: widget_id
+        required: true
+        schema:
+          title: Widget Id
+          type: string
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Delete Widget
+      tags:
+      - widgets
+    get:
+      operationId: get_widget_api_v1_widgets__widget_id__get
+      parameters:
+      - in: path
+        name: widget_id
+        required: true
+        schema:
+          title: Widget Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WidgetResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get Widget
+      tags:
+      - widgets
+    put:
+      operationId: update_widget_api_v1_widgets__widget_id__put
+      parameters:
+      - in: path
+        name: widget_id
+        required: true
+        schema:
+          title: Widget Id
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WidgetRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WidgetResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Update Widget
+      tags:
+      - widgets
+  /healthz:
+    get:
+      operationId: healthz_healthz_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                title: Response Healthz Healthz Get
+                type: object
+          description: Successful Response
+      summary: Healthz
+  /readyz:
+    get:
+      operationId: readyz_readyz_get
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                title: Response Readyz Readyz Get
+          description: Successful Response
+      summary: Readyz

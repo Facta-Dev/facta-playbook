@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "backend-rust Auth Algorithm",
+    "quality_profile": "showcase",
+    "output": "auth-algorithm.workflow.html"
+  },
+  "lanes": [
+    {
+      "id": "client",
+      "label": "Client"
+    },
+    {
+      "id": "codes",
+      "label": "Codes"
+    },
+    {
+      "id": "gates",
+      "label": "Gates"
+    },
+    {
+      "id": "tokens",
+      "label": "Tokens"
+    },
+    {
+      "id": "ledger",
+      "label": "Ledger"
+    },
+    {
+      "id": "mail",
+      "label": "Mail"
+    }
+  ],
+  "phases": [
+    {
+      "id": "signup",
+      "label": "Signup",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "check",
+      "label": "Verify + gates",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "mint",
+      "label": "Tokens + ledger",
+      "fromCol": 4,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "signup",
+    "issue",
+    "checkv",
+    "gates",
+    "tokens",
+    "ledger"
+  ],
+  "nodes": [
+    {
+      "id": "signup",
+      "lane": "client",
+      "col": 0,
+      "type": "frontend",
+      "label": "Signup",
+      "sublabel": "POST /auth/signup"
+    },
+    {
+      "id": "issue",
+      "lane": "codes",
+      "col": 1,
+      "type": "backend",
+      "label": "Issue code",
+      "sublabel": "6-digit · 24h · 5 tries"
+    },
+    {
+      "id": "mailer",
+      "lane": "mail",
+      "col": 1,
+      "type": "cloud",
+      "label": "Mail",
+      "sublabel": "email_jobs outbox",
+      "width": 100
+    },
+    {
+      "id": "checkv",
+      "lane": "gates",
+      "col": 2,
+      "type": "backend",
+      "label": "Verify",
+      "sublabel": "POST /auth/verify"
+    },
+    {
+      "id": "gates",
+      "lane": "gates",
+      "col": 3,
+      "type": "security",
+      "label": "Login gates",
+      "sublabel": "5 tries · lockout"
+    },
+    {
+      "id": "tokens",
+      "lane": "tokens",
+      "col": 4,
+      "type": "backend",
+      "label": "Mint tokens",
+      "sublabel": "JWT 15m · refresh 720h"
+    },
+    {
+      "id": "sessions",
+      "lane": "tokens",
+      "col": 5,
+      "type": "database",
+      "label": "sessions",
+      "sublabel": "rotate in place"
+    },
+    {
+      "id": "ledger",
+      "lane": "ledger",
+      "col": 5,
+      "type": "database",
+      "label": "audit_logs",
+      "sublabel": "login · sessions"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "signup",
+      "to": "issue",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e2",
+      "from": "issue",
+      "to": "mailer",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "enqueue",
+      "labelSegment": 1,
+      "labelDy": 12
+    },
+    {
+      "id": "e3",
+      "from": "issue",
+      "to": "checkv",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e4",
+      "from": "checkv",
+      "to": "gates",
+      "label": "codes checked",
+      "labelAt": [
+        365,
+        407
+      ]
+    },
+    {
+      "id": "e5",
+      "from": "gates",
+      "to": "tokens",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "e6",
+      "from": "tokens",
+      "to": "sessions",
+      "label": "rotate",
+      "labelAt": [
+        563,
+        461
+      ]
+    },
+    {
+      "id": "e7",
+      "from": "sessions",
+      "to": "tokens",
+      "route": "return-left",
+      "fromSide": "left",
+      "toSide": "left",
+      "label": "replayed → CAS fail",
+      "labelSegment": 1,
+      "labelAt": [
+        426,
+        531
+      ]
+    },
+    {
+      "id": "e8",
+      "from": "tokens",
+      "to": "ledger",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "login · revoke",
+      "labelSegment": 1,
+      "labelDy": 12
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Codes never in JWTs",
+      "items": [
+        "6-digit codes are single-use, capped at 5 wrong guesses (MAX_CODE_ATTEMPTS), and expire in <APP>_VERIFY_CODE_TTL (24h); resets run <APP>_RESET_CODE_TTL (30m) with <APP>_RESET_RATE_LIMIT 3 per 5 min",
+        "re-signup of an unverified email re-issues a code; verified email answers 409; /auth/validate-code lets the frontend pre-check a reset code",
+        "password_resets auto-verify the account and <APP>_LOGOUT_ALL_ON_RESET revokes all sessions"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Gates",
+      "items": [
+        "password verifies first — one constant 401; after_failed_login counts into lockout at <APP>_MAX_LOGIN_RETRIES (5) → 403 account is blocked",
+        "state gates run only after the password verifies (anti-enumeration): blocked → inactive → unverified, each a stable 403",
+        "argon2id (Params::DEFAULT) over an HMAC-SHA256 pepper pre-hash (<APP>_PASSWORD_PEPPER), verified in constant time"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Tokens",
+      "items": [
+        "access JWT HS256 15m with jti == sessions.id — revoking the session revokes the token",
+        "refresh is a 64-char opaque token (48 random bytes) rotated in place; replay misses the CAS → 401"
+      ]
+    }
+  ]
+}
