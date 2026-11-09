@@ -25,7 +25,8 @@ is shell only; the model is consulted later, for judgment calls only.
    clones the working set, then
    `bash ~/facta-playbook/scripts/claude-kit/configure-repo.sh ~/work/<repo> --kit=<lang>`
    wires each one. Use `--group=core|products|tools|clients|reference` to clone
-   only part of it.
+   only part of it. Skill packs and the cost tracker ship their own installers —
+   see [PLAYBOOK_INSTALL.md §4.1](PLAYBOOK_INSTALL.md#41-repositories-that-install-something).
 
 Flags, groups, verification and rollback: [PLAYBOOK_INSTALL.md](PLAYBOOK_INSTALL.md).
 
