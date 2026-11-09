@@ -1305,6 +1305,7 @@ ownership files before generalizing.
 - [ ] `install-user-kit.sh` ran; `kit_check.py` exits 0, or 1 with known warnings.
 - [ ] `settings.json` is `chmod 600` and holds no plaintext secret.
 - [ ] The working set was cloned by group (`clone-repos.sh --group=...`).
+- [ ] Skill packs were registered and installed (`install-skill-packs.sh`), and the cost tracker's `install.sh` ran.
 - [ ] Every active repo passes `configure-repo.sh --check`.
 
 ---
@@ -1328,15 +1329,17 @@ list — merged into `settings.json`, never a replacement for it).
 |---|---|
 | `install-user-kit.sh` | Installs `kit/` into `~/.claude`; skips user-owned files unless `--force`, backs up every overwrite, merges the settings fragment |
 | `clone-repos.sh` | Clones the working set by group (`core`, `products`, `tools`, `clients`, `reference`, or `all` — the default); `--dry-run` prints the plan |
+| `install-skill-packs.sh` | Registers each skill-pack marketplace and installs its plugins into user scope; shell only, idempotent, `--dry-run` plans, `--self-test` checks the table against the clones |
 | `configure-repo.sh` | Wires one repo: routing block, `.claude/README.md`, deny list, `.gitignore`, optional language kit; `--check` verifies without writing |
 | `kit_check.py` | Read-only validator: agents, skills, rules, `CLAUDE.md`, settings, command collisions |
 | `dedupe_plugins.py` | Moves user copies of plugin components aside (dry run by default, `--restore` puts them back) |
 
-**A new machine runs three commands:**
+**A new machine runs four commands:**
 
 ```bash
-bash scripts/claude-kit/install-user-kit.sh     # user scope
+bash scripts/claude-kit/install-user-kit.sh       # user scope
 bash scripts/claude-kit/clone-repos.sh --group=all --dir ~/work
+bash scripts/claude-kit/install-skill-packs.sh --dir ~/work
 bash scripts/claude-kit/configure-repo.sh ~/work/<repo> --kit=<lang>
 ```
 
@@ -1581,6 +1584,20 @@ gh repo clone Facta-Dev/ui-ux-pro-max-skill
 gh repo clone Facta-Dev/superpowers
 gh repo clone Facta-Dev/awesome-claude-skills
 ```
+
+Cloning is not installing. Register each pack's marketplace and install its
+plugins into user scope with one shell-only, idempotent command:
+
+```bash
+bash scripts/claude-kit/install-skill-packs.sh --dir ~/work
+```
+
+It covers `beautifulpython`, `beautifulrust`, `beautifulgo`,
+`beautifulnodejs`, `skills`, `claude-skill`, `garden-skills` (six plugins),
+`ui-ux-pro-max-skill` and `superpowers`; the exact marketplace and plugin
+names are listed in [PLAYBOOK_INSTALL.md §4.1](PLAYBOOK_INSTALL.md#41-repositories-that-install-something).
+`awesome-claude-skills` ships no plugin manifest (clone and read it), and
+`ponytail` stays on the baseline upstream marketplace `ponytail@ponytail`.
 
 | Repository | Content | Upstream (fork) |
 |---|---|---|

@@ -7,6 +7,7 @@ python3 and the standard shell. Every script takes `--flag=value` or `--flag val
 | --- | --- | --- |
 | `install-user-kit.sh` | `--dry-run`, `--force`, `--no-settings`, `--dest=DIR` | 0 ok, 1 error |
 | `clone-repos.sh` | `--group=core\|products\|tools\|clients\|reference\|all`, `--dir=DIR`, `--depth=N`, `--dry-run` | 0 cloned/skipped, 1 a clone failed |
+| `install-skill-packs.sh` | `--dir=DIR`, `--remote`, `--only=NAME[,NAME]`, `--dry-run`, `--self-test` | 0 installed/skipped, 1 an install failed |
 | `configure-repo.sh` | `<repo-path>`, `--kit=golang\|nodejs\|python\|rust`, `--check`, `--dry-run` | 0 ok, 1 drift or error |
 | `kit_check.py` | `--root=DIR`, `--json`, `--self-test` | 0 clean, 1 warnings, 2 errors |
 | `dedupe_plugins.py` | `--root=DIR`, `--backup-dir=DIR`, `--apply`, `--restore`, `--rebuild-manifest` | 0 always; failures are reported in the output |
@@ -21,5 +22,8 @@ python3 and the standard shell. Every script takes `--flag=value` or `--flag val
   `.claude/backups/configure-<YYYY-MM-DD>/` (repo scope).
 - **Idempotent.** A second run reports "skipped" and changes nothing.
 - **No `@-imports`.** `CLAUDE.md` links the playbooks by path or URL.
+- **Plugins are registered, never copied.** `install-skill-packs.sh` adds each
+  marketplace and installs its plugins through `claude plugin`; nothing lands
+  in `~/.claude/skills/`.
 
 See [PLAYBOOK_INSTALL.md](../../PLAYBOOK_INSTALL.md) for the full bootstrap.

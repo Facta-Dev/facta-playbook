@@ -18,6 +18,7 @@ the install path only; it does not restate the playbooks.
 | --- | --- | --- |
 | Clone the playbook and the working set | shell (`clone-repos.sh`) | 0 |
 | Install the user-scope kit | shell (`install-user-kit.sh`) | 0 |
+| Install the skill packs and the cost tracker | shell (`install-skill-packs.sh`, `install.sh`) | 0 |
 | Configure each repository | shell (`configure-repo.sh`) | 0 |
 | Validate and probe | shell (`kit_check.py`) + one cheap-tier probe | 0 + ≤1 cheap probe |
 | Judgment calls (which kit, which group, when to escalate) | model | charged to the tier that makes them |
@@ -174,36 +175,59 @@ Cloning is not installing. A few working-set repos ship tooling that must be
 installed once per machine, after `clone-repos.sh` and before you rely on it.
 Everything here is idempotent.
 
-| Repo | What to run | What it does |
-| --- | --- | --- |
-| `claude-code-cli-cost-tracker` | `bash ~/work/claude-code-cli-cost-tracker/install.sh` | Runs its test suite, copies `cccost/`, `statusline.py`, `cccost.py`, `prices.json`, `commands/cccost.md` and `hooks/session_status.py` into `$CLAUDE_CONFIG_DIR` (default `~/.claude`), then prints the `statusLine` and per-event hook JSON to merge into `settings.json`. It never edits your settings. On Linux it also installs `ccpanel` to `~/.local/bin` and registers the Terminator layout |
-| `Facta-Dev/skills` | `/plugin marketplace add Facta-Dev/skills` → `/plugin install mattpocock-skills@mattpocock` | Engineering skill pack: grilling, spec/ticket flows, TDD, review |
-| `Facta-Dev/beautifulgo` | `/plugin marketplace add Facta-Dev/beautifulgo` → `/plugin install beautiful-go@beautiful-go` | Idiomatic-Go skills |
-| `Facta-Dev/beautifulnodejs` | `/plugin marketplace add Facta-Dev/beautifulnodejs` → `/plugin install beautiful-nodejs@beautiful-nodejs` | Idiomatic Node/TS skills |
-| `Facta-Dev/beautifulpython` | `/plugin marketplace add Facta-Dev/beautifulpython` → `/plugin install beautiful-python@beautiful-python` | Idiomatic-Python skills |
-| `Facta-Dev/beautifulrust` | `/plugin marketplace add Facta-Dev/beautifulrust` → `/plugin install beautiful-rust@beautiful-rust` | Idiomatic-Rust skills |
-| `Facta-Dev/garden-skills` | `/plugin marketplace add Facta-Dev/garden-skills` → `/plugin install <plugin>@garden-skills` | Six plugins: `presentation-skills`, `web-design-skills`, `knowledge-base-skills`, `image-generation-skills`, `motion-showreel-skills`, `beautiful-article-skills` |
-| `Facta-Dev/superpowers` | `/plugin marketplace add Facta-Dev/superpowers` → `/plugin install superpowers@superpowers-dev` | Vendored skill collection |
-| `Facta-Dev/archify`, other packs | same two-step pattern when the clone has `.claude-plugin/marketplace.json` | Plugin registration; no copy into `~/.claude/skills` |
+```bash
+bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dry-run    # plan
+bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh              # install
+bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dir ~/work --remote
+bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --self-test
+```
 
-The marketplace name comes from the repo's `.claude-plugin/marketplace.json`,
-not from the repository name (`Facta-Dev/beautifulgo` → `beautiful-go`);
-`/plugin marketplace add` prints the name it registered.
+It is shell only (zero model tokens), registers each repo's marketplace and
+installs its plugins into **user scope**. An installed plugin is skipped. When
+the clone exists under `--dir` (default `~/work`) the marketplace resolves
+from that clone, so `git pull` updates the plugin; `--remote` always registers
+`Facta-Dev/<repo>` instead.
+
+| Repo | Marketplace | Plugins |
+| --- | --- | --- |
+| `beautifulpython` | `beautiful-python` | `beautiful-python` |
+| `beautifulrust` | `beautiful-rust` | `beautiful-rust` |
+| `beautifulgo` | `beautiful-go` | `beautiful-go` |
+| `beautifulnodejs` | `beautiful-nodejs` | `beautiful-nodejs` |
+| `skills` | `mattpocock` | `mattpocock-skills` |
+| `claude-skill` | `motionsites` | `motionsites-web-builder` |
+| `garden-skills` | `garden-skills` | `presentation-skills`, `web-design-skills`, `knowledge-base-skills`, `image-generation-skills`, `motion-showreel-skills`, `beautiful-article-skills` |
+| `ui-ux-pro-max-skill` | `ui-ux-pro-max-skill` | `ui-ux-pro-max` |
+| `superpowers` | `superpowers-dev` | `superpowers` |
+| `claude-code-cli-cost-tracker` | — (`install.sh`) | `bash ~/work/claude-code-cli-cost-tracker/install.sh` |
+
+`install.sh` runs the tracker's test suite, copies `cccost/`, `statusline.py`,
+`cccost.py`, `prices.json`, `commands/cccost.md` and `hooks/session_status.py`
+into `$CLAUDE_CONFIG_DIR` (default `~/.claude`), then prints the `statusLine`
+and per-event hook JSON to merge into `settings.json` by hand. It never edits
+your settings. On Linux it also installs `ccpanel` to `~/.local/bin`.
 
 Rules:
 
 - **Plugins are registered, never copied.** `~/.claude/skills/<pack>/` would
   shadow a namespaced plugin skill and bill its description every turn; the
   marketplace entry plus `enabledPlugins` is the only install path.
-- The non-interactive equivalent of the two slash commands is the pair
+- The marketplace name comes from the repo's `.claude-plugin/marketplace.json`,
+  not from the repository name (`beautifulgo` → `beautiful-go`, `skills` →
+  `mattpocock`). `--self-test` fails when the table drifts from the clones.
+- Equivalent manual path, per plugin: `/plugin marketplace add <org>/<repo>`
+  then `/plugin install <plugin>@<marketplace>`. The settings form is
   `extraKnownMarketplaces.<name>.source = {"source": "github", "repo": "<org>/<repo>"}`
-  and `enabledPlugins["<plugin>@<marketplace>"] = true` in `~/.claude/settings.json`
-  (the shape already used for `ecc@ecc` and `ponytail@ponytail`). Keep the
-  edits human: `settings.json` is the control plane.
+  plus `enabledPlugins["<plugin>@<marketplace>"] = true`; keep those edits human.
+- `ponytail` is not installed by the script: the baseline already enables
+  `ponytail@ponytail` from upstream `DietrichGebert/ponytail`, and the
+  Facta-Dev fork shares the marketplace name. `awesome-claude-skills` has no
+  marketplace manifest — clone and read it.
 - A repo without an `install.sh` and without `.claude-plugin/` is consumed as
-  source: clone, `configure-repo.sh`, done. That is the default for products.
-- After installing tooling, re-run `kit_check.py` (it reports user skills and
-  command collisions) and `/cccost` to confirm the tracker is wired.
+  source: clone, `configure-repo.sh`, done. That is the default for products
+  and for forks you only inspect.
+- After installing tooling, re-run `kit_check.py` and `/cccost` to confirm the
+  tracker is wired.
 
 ---
 

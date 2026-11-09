@@ -27,6 +27,9 @@ is shell only; the model is consulted later, for judgment calls only.
    wires each one. Use `--group=core|products|tools|clients|reference` to clone
    only part of it. Skill packs and the cost tracker ship their own installers —
    see [PLAYBOOK_INSTALL.md §4.1](PLAYBOOK_INSTALL.md#41-repositories-that-install-something).
+4. **Install tooling**: `bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dir ~/work`
+   registers the skill-pack marketplaces and installs their plugins; the cost
+   tracker installs with `bash ~/work/claude-code-cli-cost-tracker/install.sh`.
 
 Flags, groups, verification and rollback: [PLAYBOOK_INSTALL.md](PLAYBOOK_INSTALL.md).
 
@@ -69,6 +72,12 @@ Plugin components are namespaced (`/ecc:*` commands, `ecc:*` agents). Never copy
 a plugin component into `~/.claude`: it shadows the plugin agent by name and
 bills its description every turn.
 
+Stack and craft skill packs install on top of the baseline through
+`scripts/claude-kit/install-skill-packs.sh`: `beautiful-go`,
+`beautiful-nodejs`, `beautiful-python`, `beautiful-rust`, `mattpocock-skills`,
+`motionsites-web-builder`, the six `garden-skills` plugins, `ui-ux-pro-max`
+and `superpowers`. `ponytail` stays on the baseline upstream marketplace.
+
 Project-level extras live in the project's `.claude/settings.json` — the
 frontend/site repo (`facta_frontend`) is the current example: `ei2`, `pb`,
 the ten `voltagent-*` agent packs, `claude-seo@agricidaniel-claude-seo` and
@@ -104,7 +113,7 @@ machine is one command away; `scripts/claude-kit/` is the install layer.
 | `kit/skills/` | The 8 SDD + audit skills: `spec-new`, `spec-clarify`, `spec-plan`, `spec-tasks`, `tdd-cycle`, `spec-verify`, `retro`, `kit-audit` |
 | `kit/templates/sdd/` | Spec, plan, tasks and lessons templates |
 | `kit/settings.fragment.json` | Model-routing env (local Ollama endpoint plus the fixed literal token `ollama`), default model and the deny list — no real credentials |
-| `scripts/claude-kit/` | `install-user-kit.sh` (kit into `~/.claude`), `clone-repos.sh` (working set by group), `configure-repo.sh` (wire one repo, `--check` to verify), `kit_check.py` (read-only validator), `dedupe_plugins.py` (move user copies of plugin components aside) — flags and the no-delete contract: [scripts/claude-kit/README.md](scripts/claude-kit/README.md) |
+| `scripts/claude-kit/` | `install-user-kit.sh` (kit into `~/.claude`), `clone-repos.sh` (working set by group), `install-skill-packs.sh` (register + install the skill-pack plugins), `configure-repo.sh` (wire one repo, `--check` to verify), `kit_check.py` (read-only validator), `dedupe_plugins.py` (move user copies of plugin components aside) — flags and the no-delete contract: [scripts/claude-kit/README.md](scripts/claude-kit/README.md) |
 | `install/repos.txt` | The working-set inventory — one `group\|org/repo\|why` per line, mirrored from §4. Single source of truth for `clone-repos.sh` |
 
 The installers never delete and never overwrite without `--force`; see
