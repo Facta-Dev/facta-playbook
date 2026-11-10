@@ -90,10 +90,14 @@ The token is the fixed literal `ollama` accepted by the local proxy, not a
 secret. Verified on this machine: a bare `claude` then resolves
 `glm-5.3-flash:cloud` with the Ollama endpoint env removed from the shell.
 
-`kit/settings.fragment.json` in the playbook repo ships these two keys, and
-`scripts/claude-kit/install-user-kit.sh` merges them into `~/.claude/settings.json`
-on a fresh machine — so a manual edit is only needed for a hand-built
-`settings.json`.
+`kit/settings.ollama.json` in the playbook repo ships these two keys (the tier
+aliases, and the endpoint env — one fragment per provider), and
+`scripts/claude-kit/install-user-kit.sh` merges it with the base
+`kit/settings.fragment.json` into `~/.claude/settings.json` on a fresh machine,
+choosing the Ollama fragment when a local endpoint answers (`--provider=`
+overrides). On an Anthropic machine the base fragment alone is merged, so the
+settings carry no endpoint pinning — a manual edit is only needed for a
+hand-built `settings.json`.
 
 Never store API keys in this file; it is plain text.
 

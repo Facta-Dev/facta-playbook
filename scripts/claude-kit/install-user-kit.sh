@@ -10,10 +10,15 @@
 #
 # Usage:
 #   bash scripts/claude-kit/install-user-kit.sh [--dry-run] [--force]
-#        [--no-settings] [--dest=DIR]
+#        [--no-settings] [--provider=ollama|anthropic|auto] [--dest=DIR]
 #     --dry-run      print the actions, change nothing
 #     --force        overwrite existing destination files (backed up)
-#     --no-settings  do not merge kit/settings.fragment.json
+#     --no-settings  do not merge the settings fragments
+#     --provider=    which settings env to merge:
+#                      auto       detect a local Ollama endpoint (default)
+#                      ollama     merge fragment.json + ollama.json (tier
+#                                 aliases, endpoint, subagent model)
+#                      anthropic  merge fragment.json only (no env pinning)
 #     --dest=DIR     destination root (default: $HOME/.claude)
 #
 # Both `--flag=value` and `--flag value` are accepted.
@@ -29,12 +34,15 @@ DEST="${HOME}/.claude"
 DRY_RUN=0
 FORCE=0
 MERGE_SETTINGS=1
+PROVIDER="auto"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --dry-run)     DRY_RUN=1; shift;;
     --force)       FORCE=1; shift;;
     --no-settings) MERGE_SETTINGS=0; shift;;
+    --provider=*)  PROVIDER="${1#--provider=}"; shift;;
+    --provider)    PROVIDER="${2:-}"; shift 2;;
     --dest=*)      DEST="${1#--dest=}"; shift;;
     --dest)        DEST="${2:-}"; shift 2;;
     -h|--help)
@@ -43,6 +51,30 @@ while [[ $# -gt 0 ]]; do
     *) echo "install-user-kit: unknown arg '$1'" >&2; exit 1;;
   esac
 done
+
+# The provider decides which env keys are merged into settings.json. A local
+# Ollama endpoint gets the tier aliases plus the endpoint env; an Anthropic
+# (or gateway) machine gets the base fragment only, so its settings carry no
+# endpoint pinning that would break its own traffic.
+detect_ollama() {
+  command -v curl >/dev/null 2>&1 || return 1
+  curl -fsS --max-time 2 http://127.0.0.1:11434/api/version >/dev/null 2>&1
+}
+
+if [[ "$MERGE_SETTINGS" -eq 1 ]]; then
+  case "$PROVIDER" in
+    auto)
+      if detect_ollama; then
+        PROVIDER="ollama"
+      else
+        PROVIDER="anthropic"
+      fi;;
+    ollama|anthropic) ;;
+    *) echo "install-user-kit: unknown provider '$PROVIDER' (ollama|anthropic|auto)" >&2; exit 1;;
+  esac
+  say() { echo "install-user-kit: $*"; }
+  say "provider: $PROVIDER"
+fi
 
 if [[ ! -d "$KIT_DIR" ]]; then
   echo "install-user-kit: ERROR — kit directory $KIT_DIR not found" >&2
@@ -126,33 +158,32 @@ for f in "$KIT_DIR"/templates/sdd/*.md; do
   install_file "$f" "templates/sdd/$(basename "$f")"
 done
 
-# --- merge settings.fragment.json into settings.json --------------------------
+# --- merge the settings fragments into settings.json --------------------------
 if [[ "$MERGE_SETTINGS" -eq 1 ]]; then
-  FRAGMENT="$KIT_DIR/settings.fragment.json"
-  if [[ ! -f "$FRAGMENT" ]]; then
-    echo "install-user-kit: ERROR — $FRAGMENT not found" >&2
-    exit 1
+  FRAGMENTS=("$KIT_DIR/settings.fragment.json")
+  if [[ "$PROVIDER" == "ollama" ]]; then
+    FRAGMENTS+=("$KIT_DIR/settings.ollama.json")
   fi
+  for fragment in "${FRAGMENTS[@]}"; do
+    if [[ ! -f "$fragment" ]]; then
+      echo "install-user-kit: ERROR — $fragment not found" >&2
+      exit 1
+    fi
+  done
   if ! command -v python3 >/dev/null 2>&1; then
     echo "install-user-kit: ERROR — python3 is required for the settings merge" >&2
     exit 1
   fi
   TARGET="$DEST/settings.json"
   if [[ "$DRY_RUN" -eq 1 ]]; then
-    say "merge $FRAGMENT -> $TARGET"
+    say "merge ${FRAGMENTS[*]} -> $TARGET"
   else
     mkdir -p "$DEST"
     RENDERED="$(mktemp)"
-    python3 - "$FRAGMENT" "$TARGET" "$RENDERED" <<'PY'
+    python3 - "$TARGET" "$RENDERED" "${FRAGMENTS[@]}" <<'PY'
 import json, sys
 
-fragment_path, target_path, out_path = sys.argv[1], sys.argv[2], sys.argv[3]
-
-try:
-    with open(fragment_path) as fh:
-        fragment = json.load(fh)
-except (OSError, ValueError) as exc:
-    sys.exit("install-user-kit: ERROR — invalid fragment JSON: %s" % exc)
+target_path, out_path, fragment_paths = sys.argv[1], sys.argv[2], sys.argv[3:]
 
 try:
     with open(target_path) as fh:
@@ -183,16 +214,25 @@ def merge(base, frag):
                     base[k].append(rule)
 
 
-merge(target, fragment)
+# The last fragment that names a model wins; the base fragment always carries
+# it. Existing values win, so a mismatch warns instead of forcing.
+expected_model = None
+for fragment_path in fragment_paths:
+    try:
+        with open(fragment_path) as fh:
+            fragment = json.load(fh)
+    except (OSError, ValueError) as exc:
+        sys.exit("install-user-kit: ERROR — invalid fragment JSON in %s: %s"
+                 % (fragment_path, exc))
+    if "model" in fragment:
+        expected_model = fragment["model"]
+    merge(target, fragment)
 
-# The bare `claude` default model is the cost trap of the routing runbook
-# (section 10): without an explicit "sonnet" every session runs the
-# escalation model. Existing values win, so warn instead of forcing.
-if target.get("model") != fragment.get("model"):
+if expected_model is not None and target.get("model") != expected_model:
     sys.stderr.write(
         "install-user-kit: WARN — settings.json model is %r, expected %r; "
         "a bare `claude` runs the escalation model until it is set\n"
-        % (target.get("model"), fragment.get("model")))
+        % (target.get("model"), expected_model))
 
 with open(out_path, "w") as fh:
     json.dump(target, fh, indent=2, sort_keys=False)

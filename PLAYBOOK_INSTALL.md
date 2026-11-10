@@ -4,11 +4,19 @@ This is the runbook for a new machine (or a re-provisioned one) and for a fresh
 checkout of the working set: clone the playbook, install the user-scope kit,
 clone the repositories, configure each one, verify. Every step is a shell
 command, so the whole bootstrap costs zero model tokens; the model is only
-asked to make judgment calls. Companions:
+asked to make judgment calls.
+
+**Entry point: `bash scripts/claude-kit/bootstrap.sh`** walks the decision
+tree — OS (Linux / macOS / WSL2, with native Windows stopped at the gate) and
+provider (a reachable local Ollama endpoint picks the Ollama path; anything
+else the Anthropic path) — then chains the steps below with the matching
+settings merge. `--dry-run` prints the plan. The steps remain runnable by
+hand; this file is the install path only.
+
+Companions:
 [PLAYBOOK_CLAUDE_CODE.md](PLAYBOOK_CLAUDE_CODE.md) (what the kit must
 contain) and [CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md](CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md)
-(model tiers, `~/.claude/settings.json`, verification, rollback). This file is
-the install path only; it does not restate the playbooks.
+(model tiers, `~/.claude/settings.json`, verification, rollback).
 
 ---
 
@@ -76,11 +84,12 @@ cloning anything private; `gh auth login` when it does not.
    bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh             # install
    bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh --force      # overwrite installer-owned files
    bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh --no-settings # leave settings.json untouched
+   bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh --provider=anthropic  # no Ollama env
    ```
 
    It installs `kit/CLAUDE.md`, `kit/agents`, `kit/skills` and `kit/templates/sdd` into `~/.claude/`, and **never overwrites user-owned files**: an existing destination is skipped, not replaced. Backups land in `~/.claude/backups/install-<UTC timestamp>/`.
 
-   It also merges `kit/settings.fragment.json` into `~/.claude/settings.json`: the model-tier `env` (including the Ollama endpoint), the `"model": "sonnet"` default and the `permissions.deny` list. Existing keys win; the installer warns when `model` is not `sonnet`, because a bare `claude` then runs the escalation model. `--no-settings` skips the merge entirely.
+   It also merges the settings fragments into `~/.claude/settings.json`. By default it detects a local Ollama endpoint: reachable, it merges `kit/settings.fragment.json` plus `kit/settings.ollama.json` (tier env + endpoint); not reachable, only the base fragment (no endpoint pinning, `--provider=anthropic` does the same by hand). Both merge the `model: sonnet` default and the `permissions.deny` list. Existing keys win; the installer warns when `model` is not `sonnet`, because a bare `claude` then runs the escalation model. `--no-settings` skips the merge entirely.
 
 3. Validate the user scope:
 

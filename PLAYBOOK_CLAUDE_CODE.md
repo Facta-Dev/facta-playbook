@@ -90,7 +90,7 @@ acceptance checklist).
 | 21 | Managed settings / managed CLAUDE.md (organizations) | Optional (org level) | 14.5 |
 | 22 | Output styles, status line | Optional | 6.7 |
 | 23 | `kit/CLAUDE.md` — user-scope instructions (installed at `~/.claude/CLAUDE.md`) | Required (user scope) | 20 |
-| 24 | `kit/settings.fragment.json` — model-routing env, default model and the deny list, merged into `~/.claude/settings.json` | Required (user scope) | 20 |
+| 24 | `kit/settings.fragment.json` + `kit/settings.ollama.json` — base fragment (default model + deny list) merged everywhere; Ollama-only fragment (tier env + endpoint) merged when Ollama is the provider — into `~/.claude/settings.json` | Required (user scope) | 20 |
 
 ---
 
@@ -1319,15 +1319,16 @@ only for judgment calls.
 
 **`kit/` ships the user-scope layer** — the files installed into `~/.claude`:
 `kit/CLAUDE.md` (instructions), `kit/agents/` (`advisor`, `kit-curator`),
-`kit/skills/` (the SDD and audit skills), `kit/templates/sdd/` and
-`kit/settings.fragment.json` (model-routing env, default model and the deny
-list — merged into `settings.json`, never a replacement for it).
+`kit/skills/` (the SDD and audit skills), `kit/templates/sdd/` and the settings
+fragments (`kit/settings.fragment.json` — default model and the deny list;
+`kit/settings.ollama.json` — the Ollama tier env, merged only when Ollama is
+the provider; both merged into `settings.json`, never a replacement for it).
 
 **`scripts/claude-kit/` ships the install scripts:**
 
 | Script | Role |
 |---|---|
-| `install-user-kit.sh` | Installs `kit/` into `~/.claude`; skips user-owned files unless `--force`, backs up every overwrite, merges the settings fragment |
+| `install-user-kit.sh` | Installs `kit/` into `~/.claude`; skips user-owned files unless `--force`, backs up every overwrite, merges the settings fragments by provider (auto-detects Ollama) |
 | `clone-repos.sh` | Clones the working set by group (`selected` — the default install set — `core`, `products`, `tools`, `clients`, `reference`, or `all`); `--dry-run` prints the plan |
 | `install-skill-packs.sh` | Registers each skill-pack marketplace and installs its plugins into user scope; shell only, idempotent, `--dry-run` plans, `--self-test` checks the table against the clones |
 | `configure-repo.sh` | Wires one repo: routing block, `.claude/README.md`, deny list, `.gitignore`, optional language kit; `--check` verifies without writing |

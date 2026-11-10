@@ -11,29 +11,52 @@ adapting the stack profiles, not the rules.
 
 ---
 
-## 0. Start here
+## 0. Start here — the install decision tree
 
-A new machine is three shell steps. The install spends **no model tokens** — it
-is shell only; the model is consulted later, for judgment calls only.
+One command reads the machine and walks the tree (shell only, zero model
+tokens; `--dry-run` previews the plan without touching anything):
 
-1. **Clone** the playbook:
-   `git clone --depth 1 https://github.com/Facta-Dev/facta-playbook.git ~/facta-playbook`
-2. **Bootstrap** the user-scope kit (`~/.claude`):
-   `bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh` (`--dry-run` to preview)
-3. **Configure** the repos you need:
-   `bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --dir ~/work`
-   clones the install set (`selected`: the four language skill packs, the cost
-   tracker and the skill packs), then
-   `bash ~/facta-playbook/scripts/claude-kit/configure-repo.sh ~/work/<repo> --kit=<lang>`
-   wires each one. `--group=selected|core|products|tools|clients|reference|all`
-   narrows or widens the set (`all` is the whole map in §4). Skill packs and the
-   cost tracker ship their own installers —
-   see [PLAYBOOK_INSTALL.md §4.1](PLAYBOOK_INSTALL.md#41-repositories-that-install-something).
-4. **Install tooling**: `bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dir ~/work`
-   registers the skill-pack marketplaces and installs their plugins; the cost
-   tracker installs with `bash ~/work/claude-code-cli-cost-tracker/install.sh`.
+```bash
+bash ~/facta-playbook/scripts/claude-kit/bootstrap.sh --dry-run   # preview
+bash ~/facta-playbook/scripts/claude-kit/bootstrap.sh             # install
+```
+
+```text
+              PRECONDITIONS: git · python3 ≥ 3.9 · claude ≥ 2.1.251 · gh auth
+                       │
+                  OS?
+             ├─ Linux / macOS / WSL2 ──────► continue
+             └─ native Windows ─► use WSL2 first, re-run inside it
+                       │
+              PROVIDER?
+             ├─ Ollama answers at 127.0.0.1:11434 ──► OLLAMA path
+             │    settings env = tier aliases (opus/sonnet/haiku → Ollama
+             │    cloud models) + endpoint + literal token `ollama` + cheap
+             │    subagent routing.  Verify: §9 probes of the routing runbook.
+             └─ otherwise (Anthropic login / gateway) ─► ANTHROPIC path
+                  settings env = none (no endpoint pinning); `model: sonnet`
+                  still applies; native --advisor available (runbook §7)
+                       │
+              SCOPE — the same shell steps on both paths
+             ├─ user kit      install-user-kit.sh [--provider=ollama|anthropic|auto]
+             ├─ kit check     kit_check.py            (0 errors required)
+             ├─ working set   clone-repos.sh --group=selected --dir ~/work
+             ├─ skill packs   install-skill-packs.sh --dir ~/work
+             ├─ cost tracker  ~/work/claude-code-cli-cost-tracker/install.sh
+             └─ each repo     configure-repo.sh <repo> --kit=<golang|nodejs|python|rust>
+
+VERIFY: kit_check.py · deny probe (PLAYBOOK_INSTALL §5) · routing probes (§9)
+        · /context · /doctor
+```
+
+The provider branch changes only which settings env lands in
+`~/.claude/settings.json`; everything downstream is identical shell work.
+`bootstrap.sh` runs the four chain steps and prints the two judgment-call
+steps it does not automate (per-repo wiring and the tracker's own installer).
 
 Flags, groups, verification and rollback: [PLAYBOOK_INSTALL.md](PLAYBOOK_INSTALL.md).
+`install-skill-packs.sh` registers the marketplaces from GitHub by default
+(`--local` resolves them from the clones instead).
 
 ## 1. Working model
 
@@ -114,8 +137,9 @@ machine is one command away; `scripts/claude-kit/` is the install layer.
 | `kit/agents/` | `advisor` (read-only decision advisor) and `kit-curator` (kit maintenance) |
 | `kit/skills/` | The 8 SDD + audit skills: `spec-new`, `spec-clarify`, `spec-plan`, `spec-tasks`, `tdd-cycle`, `spec-verify`, `retro`, `kit-audit` |
 | `kit/templates/sdd/` | Spec, plan, tasks and lessons templates |
-| `kit/settings.fragment.json` | Model-routing env (local Ollama endpoint plus the fixed literal token `ollama`), default model and the deny list — no real credentials |
-| `scripts/claude-kit/` | `install-user-kit.sh` (kit into `~/.claude`), `clone-repos.sh` (working set by group), `install-skill-packs.sh` (register + install the skill-pack plugins), `configure-repo.sh` (wire one repo, `--check` to verify), `kit_check.py` (read-only validator), `dedupe_plugins.py` (move user copies of plugin components aside) — flags and the no-delete contract: [scripts/claude-kit/README.md](scripts/claude-kit/README.md) |
+| `kit/settings.fragment.json` | Base settings fragment merged into `~/.claude/settings.json` on every machine: default model (`sonnet` — the cost lever) and the deny list. Provider-agnostic |
+| `kit/settings.ollama.json` | Ollama-only fragment, merged on top when Ollama is the provider: tier aliases (`opus`/`sonnet`/`haiku` → Ollama cloud models), local endpoint and the fixed literal token `ollama`, cheap subagent routing |
+| `scripts/claude-kit/` | `bootstrap.sh` (decision tree: OS + Ollama/Claude detection, chains the installers), `install-user-kit.sh` (kit into `~/.claude`, `--provider` picks the settings env), `clone-repos.sh` (working set by group), `install-skill-packs.sh` (register + install the skill-pack plugins), `configure-repo.sh` (wire one repo, `--check` to verify), `kit_check.py` (read-only validator), `dedupe_plugins.py` (move user copies of plugin components aside) — flags and the no-delete contract: [scripts/claude-kit/README.md](scripts/claude-kit/README.md) |
 | `install/repos.txt` | The working-set inventory — one `group\|org/repo\|why` per line, mirrored from §4. Single source of truth for `clone-repos.sh` |
 
 The installers never delete and never overwrite without `--force`; see
