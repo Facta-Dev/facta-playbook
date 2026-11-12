@@ -74,17 +74,17 @@ cloning anything private; `gh auth login` when it does not.
 1. Shallow clone the playbook:
 
    ```bash
-   git clone --depth 1 --single-branch https://github.com/Facta-Dev/facta-playbook.git ~/facta-playbook
+   git clone --depth 1 --single-branch https://github.com/Facta-Dev/ai-coding-playbook.git ~/ai-coding-playbook
    ```
 
 2. Install the user-scope kit:
 
    ```bash
-   bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh --dry-run   # preview
-   bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh             # install
-   bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh --force      # overwrite installer-owned files
-   bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh --no-settings # leave settings.json untouched
-   bash ~/facta-playbook/scripts/claude-kit/install-user-kit.sh --provider=anthropic  # no Ollama env
+   bash ~/ai-coding-playbook/scripts/claude-kit/install-user-kit.sh --dry-run   # preview
+   bash ~/ai-coding-playbook/scripts/claude-kit/install-user-kit.sh             # install
+   bash ~/ai-coding-playbook/scripts/claude-kit/install-user-kit.sh --force      # overwrite installer-owned files
+   bash ~/ai-coding-playbook/scripts/claude-kit/install-user-kit.sh --no-settings # leave settings.json untouched
+   bash ~/ai-coding-playbook/scripts/claude-kit/install-user-kit.sh --provider=anthropic  # no Ollama env
    ```
 
    It installs `kit/CLAUDE.md`, `kit/agents`, `kit/skills` and `kit/templates/sdd` into `~/.claude/`, and **never overwrites user-owned files**: an existing destination is skipped, not replaced. Backups land in `~/.claude/backups/install-<UTC timestamp>/`.
@@ -94,7 +94,7 @@ cloning anything private; `gh auth login` when it does not.
 3. Validate the user scope:
 
    ```bash
-   python3 ~/facta-playbook/scripts/claude-kit/kit_check.py   # 0 clean, 1 warnings, 2 errors
+   python3 ~/ai-coding-playbook/scripts/claude-kit/kit_check.py   # 0 clean, 1 warnings, 2 errors
    ```
 
    The text report ends with `agents= skills= rules= always_loaded= claude_md=
@@ -111,8 +111,8 @@ cloning anything private; `gh auth login` when it does not.
 5. Optional dedupe (remove user copies of plugin components):
 
    ```bash
-   python3 ~/facta-playbook/scripts/claude-kit/dedupe_plugins.py            # dry run
-   python3 ~/facta-playbook/scripts/claude-kit/dedupe_plugins.py --apply
+   python3 ~/ai-coding-playbook/scripts/claude-kit/dedupe_plugins.py            # dry run
+   python3 ~/ai-coding-playbook/scripts/claude-kit/dedupe_plugins.py --apply
    ```
 
    The dry run lists what would move into `~/.claude/backups/dedupe-<UTC timestamp>/`.
@@ -123,7 +123,7 @@ cloning anything private; `gh auth login` when it does not.
 ## 3. Clone the working set
 
 ```bash
-bash ~/facta-playbook/scripts/claude-kit/clone-repos.sh --group=selected \
+bash ~/ai-coding-playbook/scripts/claude-kit/clone-repos.sh --group=selected \
   --dir ~/work --depth 1 --dry-run
 ```
 
@@ -145,7 +145,7 @@ group (`selected` repeats the install-set entries from `reference` and
 | Group | Repos (README §4) |
 | --- | --- |
 | `selected` (default) | The install set: `beautifulpython`, `beautifulrust`, `beautifulgo`, `beautifulnodejs`, `claude-code-cli-cost-tracker`, `skills`, `claude-skill`, `garden-skills`, `ponytail`, `ui-ux-pro-max-skill`, `superpowers`, `awesome-claude-skills` |
-| `core` | `facta-playbook` (this repo) |
+| `core` | `ai-coding-playbook` (this repo) |
 | `products` | §4.1 + §4.2: `talos`, `deino`, `staxis`, `v0ss`, `enyo-platform`, `heimdall-platform`, `trustanova`, `ReachPilot`, `ReachPilotPro`, `package_builder`, `ei2`, the `zypho-*` suite, `nest`, `ctx0`, `facta_archetype`, `facta_frontend`, `blog-templates`, `3d-landings-pro`, `claude-skill`, `ai-job-search`, `agents-office`, `synthia_frontend` |
 | `tools` | `aws-ec2-setup`, `claude-code-cli-cost-tracker`, `terrain`, `OmniRoute`, `repomix` |
 | `clients` | `everythink_platform`, `everythiink_arxiv`, `everythink_android`, `everythink_ios`, `everythink_backend`, `transportation-bank`, `technorides_eu`, `technorides_web`, `technorides_web_premium`, `trustanova-platform` |
@@ -189,9 +189,9 @@ registered and installed (§4.1) and the cost tracker's `install.sh` run.
 ## 4. Configure a repository
 
 ```bash
-bash ~/facta-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos \
+bash ~/ai-coding-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos \
   --kit=golang --dry-run
-bash ~/facta-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos --kit=golang
+bash ~/ai-coding-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos --kit=golang
 ```
 
 `--kit=` is one of `golang`, `nodejs`, `python`, `rust`.
@@ -215,10 +215,10 @@ installed once per machine, after `clone-repos.sh` and before you rely on it.
 Everything here is idempotent.
 
 ```bash
-bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dry-run    # plan
-bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh              # install
-bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --dir ~/work --local
-bash ~/facta-playbook/scripts/claude-kit/install-skill-packs.sh --self-test
+bash ~/ai-coding-playbook/scripts/claude-kit/install-skill-packs.sh --dry-run    # plan
+bash ~/ai-coding-playbook/scripts/claude-kit/install-skill-packs.sh              # install
+bash ~/ai-coding-playbook/scripts/claude-kit/install-skill-packs.sh --dir ~/work --local
+bash ~/ai-coding-playbook/scripts/claude-kit/install-skill-packs.sh --self-test
 ```
 
 It is shell only (zero model tokens), registers each repo's marketplace and
@@ -276,10 +276,10 @@ All zero-token, except one cheap-tier probe.
 
 ```bash
 # 1. user scope: 0 clean / 1 warnings / 2 errors
-python3 ~/facta-playbook/scripts/claude-kit/kit_check.py; echo "exit=$?"
+python3 ~/ai-coding-playbook/scripts/claude-kit/kit_check.py; echo "exit=$?"
 
 # 2. per repo: nothing to write, nothing missing
-bash ~/facta-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos --check
+bash ~/ai-coding-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos --check
 
 # 3. always-loaded bytes, inside a session
 #    /context        -> reports the always-loaded footprint
@@ -333,8 +333,8 @@ Accepted gap: the deny list covers `Read`, so `cat .env` through Bash is **not**
 | Action | Command |
 | --- | --- |
 | Restore the user scope | `~/.claude/backups/install-<UTC timestamp>/` holds the pre-install `settings.json` and kit files — copy back what you need |
-| Undo a dedupe | `python3 ~/facta-playbook/scripts/claude-kit/dedupe_plugins.py --restore` |
-| Undo a repo configuration | `bash ~/facta-playbook/scripts/claude-kit/configure-repo.sh <path> --dry-run` to review before writing; the routing block is marker-guarded, so remove the `<!-- model-routing:ollama -->` section by hand |
+| Undo a dedupe | `python3 ~/ai-coding-playbook/scripts/claude-kit/dedupe_plugins.py --restore` |
+| Undo a repo configuration | `bash ~/ai-coding-playbook/scripts/claude-kit/configure-repo.sh <path> --dry-run` to review before writing; the routing block is marker-guarded, so remove the `<!-- model-routing:ollama -->` section by hand |
 | Drop a clone | `rm -rf ~/work/<repo>` — shallow clones hold no local work |
 
 `install-user-kit.sh` never deletes: it skips user-owned destinations and

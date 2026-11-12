@@ -17,8 +17,8 @@ One command reads the machine and walks the tree (shell only, zero model
 tokens; `--dry-run` previews the plan without touching anything):
 
 ```bash
-bash ~/facta-playbook/scripts/claude-kit/bootstrap.sh --dry-run   # preview
-bash ~/facta-playbook/scripts/claude-kit/bootstrap.sh             # install
+bash ~/ai-coding-playbook/scripts/claude-kit/bootstrap.sh --dry-run   # preview
+bash ~/ai-coding-playbook/scripts/claude-kit/bootstrap.sh             # install
 ```
 
 ```text
@@ -119,6 +119,8 @@ never duplicate a baseline plugin in a project file.
 | `PLAYBOOK_CLAUDE_CODE.md` | The Claude Code implementation kit: files, agents, skills, rules, hooks, permissions, memory, collaboration protocol, parallel sessions, SDD + TDD loop | Starting a repo, or auditing whether a repo is agent-ready |
 | `PLAYBOOK_BACKEND.md` | Backend architecture: hexagonal + vertical slices, language-agnostic folder and dependency rules | Any backend service, any language |
 | `PLAYBOOK_FRONTEND.md` | Frontend: React SPA, React Native, Chrome MV3, MVVM + shared SDK | Any client |
+| `PLAYBOOK_CHROME_EXTENSION.md` | Chrome MV3 extension: service worker, messaging, permissions, store review | Any extension |
+| `PLAYBOOK_DESKTOP_QT.md` | Desktop client on Qt/QML: layering, threading, packaging and updates | Desktop clients |
 | `PLAYBOOK_URLS.md` | Route/URL contract for API and SPA routes; the user-type segment never authorizes | Designing endpoints or permissions |
 | `PLAYBOOK_TESTS.md` | Testing contract, slice-aligned, doubling as audit evidence | Every implementation |
 | `PLAYBOOK_SECURITY.md` | Security contract with per-language profiles (Node, Python, Go, Rust) | Every backend, before release |
@@ -146,10 +148,10 @@ The installers never delete and never overwrite without `--force`; see
 `PLAYBOOK_INSTALL.md` for the full bootstrap (clone, install, configure,
 verify) and `kit/README.md` for the ownership rules.
 
-### 3.2 Per-language kits
+### 3.2 Per-stack kits
 
-Each language directory ships the backend playbooks specialized to that
-language's implementation, plus the matching `.claude/` kit:
+Each kit directory ships a runnable template for its stack, the playbooks
+specialized to it, and the matching `.claude/` plane:
 
 | Directory | Content | Status |
 | --- | --- | --- |
@@ -157,8 +159,26 @@ language's implementation, plus the matching `.claude/` kit:
 | `rust/` | Runnable Rust workspace (11 crates, axum 0.8, sqlx 0.8, sessions, outbox, realtime) + `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents (incl. `unsafe-reviewer`), 9 skills/commands, contract evals | Ready |
 | `nodejs/` | Runnable Node 24 + TypeScript template (Fastify 5, Kysely, full auth core, outbox worker, WebSocket + SSE) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents, 9 skills/commands, 14 kit contract evals | Ready |
 | `python/` | Runnable Python 3.12 + uv template (FastAPI, pydantic v2, SQLAlchemy 2 async, Alembic, full auth core, outbox worker, WebSocket + SSE) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents, 9 skills/commands, 14 kit contract evals | Ready |
+| `extension/` | Runnable Chrome MV3 template (Vite 7, React 19 side panel, classic service worker, zod message protocol with sender validation, versioned storage, managed policy, zero host permissions) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, node contract evals | Ready |
+| `desktop/` | Runnable Qt 6 Widgets template (C++20, CMake presets, one static library per layer with link-time rules, MVVM notes slice, SQLite, managed policy, headless Qt Test) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, C++ contract evals | Ready |
 
-The Go directory is the reference implementation for the rest.
+The Go directory is the reference implementation for the backend kits; the
+extension kit is the reference for the client kits.
+
+### 3.3 Client families and the instruction budget
+
+Each client family gets its own playbook and its own path-scoped rule
+(`frontend.md`, `desktop.md`, `mobile.md`, `extension.md`), and **none is
+`@`-imported**. The harness keeps the first 40,000 chars of an instruction
+file and caps the always-on set (CLAUDE.md/AGENTS.md + imports + path-less
+rules) at 120,000 chars; importing a playbook set is how a repo silently loses
+half its contract while warning every session.
+
+`scripts/instruction-budget.sh` ships in every kit and runs from
+`verify-template.sh`; it fails when a file would be truncated or the set is
+over budget. To adopt a playbook, add the rule that names it — not an import.
+When a playbook passes ~40k chars it stops working as one instruction file:
+split it by concern.
 
 ## 4. Repository map
 
@@ -225,7 +245,7 @@ forked skill packs vendored for use, not authored here.
 
 | Repo | What it is |
 | --- | --- |
-| `Facta-Dev/facta-playbook` | This repo: working model, plugins, playbooks |
+| `Facta-Dev/ai-coding-playbook` | This repo: working model, plugins, playbooks |
 | `Facta-Dev/aws-ec2-setup` | Declarative Ubuntu infrastructure stack (PostgreSQL 17 + pgvector) |
 | `Facta-Dev/claude-code-cli-cost-tracker` | Cost tracking for the `claude` CLI |
 | `matiasbaglieri/terrain` | Agent tooling: RTK-style read/grep, skills and codegraph wiring |
@@ -253,7 +273,7 @@ A repo belongs here when it is actively worked on. To add one:
    marker; see `CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md §6`).
 3. Enable only the project-level plugins the baseline does not cover.
 4. Point the repo's `CLAUDE.md` at the playbooks in §3 instead of restating
-   them.
+   them — through a path-scoped rule, never an `@`-import (§3.3).
 5. Configure it with `scripts/claude-kit/configure-repo.sh <repo> --kit=<lang>`
    and confirm with `--check`; then run `kit_check.py` and confirm the repo
    carries no user-scope duplicate of a plugin command or agent.

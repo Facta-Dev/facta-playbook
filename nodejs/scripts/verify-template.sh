@@ -107,6 +107,9 @@ for s in lint-agents lint-skills lint-commands; do
   [[ -f "$TMP/scripts/$s.sh" ]] && bash "$TMP/scripts/$s.sh" || true
 done
 [[ -f "$TMP/scripts/leak-guard.sh" ]] && bash "$TMP/scripts/leak-guard.sh" || true
+# The always-on instruction set (CLAUDE.md + @imports + path-less rules) must
+# stay under the harness budget; a playbook belongs behind a path-scoped rule.
+(cd "$TMP" && bash scripts/instruction-budget.sh) || exit 1
 if [[ -f "$TMP/.claude/settings.json" ]]; then
   grep -q 'PreToolUse' "$TMP/.claude/settings.json" \
     || { echo "verify-template: FAIL — .claude/settings.json does not wire PreToolUse" >&2; exit 1; }

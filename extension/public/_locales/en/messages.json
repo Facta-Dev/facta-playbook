@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "<app>",
+    "description": "Name shown in the Chrome toolbar and the extension list."
+  },
+  "extensionDescription": {
+    "message": "<app> — Chrome extension.",
+    "description": "Description shown in the Chrome extension list."
+  }
+}

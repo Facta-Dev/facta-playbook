@@ -1,0 +1,19 @@
+{
+  "name": "@<scope>/<app>-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "<app> — typed client of the extension message protocol (no React, no chrome).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "node selfcheck.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -24,7 +24,7 @@ selected|Facta-Dev/superpowers|Agentic skills framework
 selected|Facta-Dev/awesome-claude-skills|Curated index of Claude skills and tools
 
 # --- core -----------------------------------------------------------------
-core|Facta-Dev/facta-playbook|Operating contract: playbooks, routing, install runbook
+core|Facta-Dev/ai-coding-playbook|Operating contract: playbooks, routing, install runbook
 
 # --- products (§4.1) ------------------------------------------------------
 products|Facta-Dev/talos|TALOS: organizational AI infrastructure (Cortex, Billing, Conductor)

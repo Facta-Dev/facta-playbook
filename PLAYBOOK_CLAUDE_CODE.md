@@ -226,8 +226,14 @@ Required sections (skeleton in Appendix A):
    hot files.
 7. **Memory and learning rules**: when to invoke `/learn`, never store secrets.
 8. **Never list**: ≤ 10 hard prohibitions (also encoded as controls).
-9. **Pointers** to deeper docs (playbooks, ADRs) *without* `@`-importing them
-   (imports load fully and do not save context).
+9. **Pointers** to deeper docs (playbooks, ADRs) *without* `@`-importing them.
+   An import loads the whole file on every turn and saves nothing. Measured
+   failure mode (enyo, 2026-11-11): the harness keeps the first **40,000 chars**
+   of a file and caps the whole always-on set at **120,000 chars**; importing
+   the seven playbooks reached 283k, silently truncated the two largest and
+   warned on every session. Load a playbook through a path-scoped rule that
+   names it; `@`-import only a small digest when a conformance gate must hold
+   in every session. `scripts/instruction-budget.sh` enforces this.
 
 Writing rules: concrete and verifiable ("run `make test-slice SLICE=x` before
 committing"), no duplicated or contradictory instructions across files, no
@@ -264,13 +270,25 @@ Audit with `/doctor prompt-audit` (v2.1.283+) and `/doctor`'s CLAUDE.md checks.
 | `specs.md` | `specs/**` | Spec format, IDs, status machine, "no code in specs" |
 | `security.md` | source roots, infra | Authz in the use case, input validation, secrets |
 | `api-contracts.md` | API/adapter dirs | Route naming, versioning, error envelope |
-| `frontend.md` | UI roots | View/ViewModel/SDK boundaries |
+| `frontend.md` | web UI roots | View/ViewModel/SDK boundaries |
+| `desktop.md` | desktop UI roots | Qt/QML structure, threading, packaging and updates |
+| `mobile.md` | mobile app roots | Navigation and deep links, offline and secure storage |
 | `migrations.md` | migration dirs | Expand/contract, one slice owns its schema |
 | `kit-governance.md` | `.claude/**`, `scripts/**` | How to change the kit (proposals, evals) |
 
 * Keep each rule short (tens of lines). A rule that is a procedure belongs in a
-  skill. Rules for on-demand loading have a per-file size cap (characters; 40,000
-  for a 200K context window) after which Claude only receives the start.
+  skill. Always-on files (a root `CLAUDE.md`, its `@` imports, path-less rules)
+  have a per-file size cap — 40,000 chars for a 200K context window — after
+  which Claude only receives the start. Path-scoped rules and the playbooks
+  they name are read on demand and take the whole file.
+* **One playbook per client family** (`frontend`, `desktop`, `mobile`,
+  extension), each behind its own path-scoped rule. `PLAYBOOK_FRONTEND.md` is
+  the shared client document; split a family out — as
+  `PLAYBOOK_DESKTOP_QT.md` and `PLAYBOOK_CHROME_EXTENSION.md` do — once it
+  outgrows the budget or starts diverging. Never `@`-import the set: a family's
+  playbook loads only for the files its rule governs. A playbook that passes
+  ~40k chars stops working as one instruction file — split it by concern and
+  keep the rule that names it short.
 
 ### 4.4 Nested `CLAUDE.md` per slice/package
 
@@ -1164,6 +1182,10 @@ and a managed `CLAUDE.md` for company-wide guidance. Verify with `/status`
    changed only by the integrator.
 6. **Control-plane review**: CODEOWNERS enforced on protected paths.
 7. **Evals**: changes to agent/skill descriptions run the trigger evals.
+8. **Instruction budget**: `scripts/instruction-budget.sh` fails when the
+   always-on set (CLAUDE.md or AGENTS.md, resolved `@` imports, path-less
+   rules) exceeds 120,000 chars or one file exceeds 40,000; an `@PLAYBOOK_`
+   import warns.
 
 ### 15.2 Using Claude Code in CI
 

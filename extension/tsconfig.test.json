@@ -1,0 +1,12 @@
+// <app> — test-program typecheck (vitest units + platform suites). Extends
+// the build tsconfig; src and tests are checked as one program so the tests
+// see the same types the extension ships.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["chrome", "vite/client", "node"]
+  },
+  "include": ["src", "entrypoints", "tests"],
+  "exclude": ["dist", "node_modules"]
+}

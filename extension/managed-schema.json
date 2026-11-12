@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "AllowedHosts": {
+      "title": "Allowed sites",
+      "description": "Chrome match patterns of the sites the extension is allowed to run on.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "BlockedHosts": {
+      "title": "Blocked sites",
+      "description": "Chrome match patterns of the sites the extension must never run on.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "FeatureFlags": {
+      "title": "Feature flags",
+      "description": "Features the administrator turns on or off.",
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "KillSwitch": {
+      "title": "Disable the extension",
+      "description": "Turns the extension off without uninstalling it.",
+      "type": "boolean"
+    },
+    "AllowUserSettings": {
+      "title": "Allow user settings",
+      "description": "When false, the user may not change any setting.",
+      "type": "boolean"
+    }
+  }
+}

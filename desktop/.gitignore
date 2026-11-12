@@ -1,0 +1,13 @@
+# Build trees
+build/
+build-*/
+
+# CMake tooling
+compile_commands.json
+
+# IDE
+*.user
+.cache/
+
+# Local secrets: never committed (.env.example is the tracked template)
+.env

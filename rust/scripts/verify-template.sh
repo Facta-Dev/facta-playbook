@@ -185,6 +185,10 @@ echo "verify-template: leak-guard (post-rename)"
   exit 1
 }
 
+# The always-on instruction set (CLAUDE.md + @imports + path-less rules) must
+# stay under the harness budget; a playbook belongs behind a path-scoped rule.
+( cd "$TMP" && bash scripts/instruction-budget.sh ) || exit 1
+
 echo "verify-template: cargo generate-lockfile (fresh resolve)"
 ( cd "$TMP" && cargo generate-lockfile )
 

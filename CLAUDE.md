@@ -1,9 +1,9 @@
-# facta-playbook — agent instructions
+# ai-coding-playbook — agent instructions
 
 <!-- model-routing:ollama -->
 ## Model routing (Claude Code + Ollama)
 
-Runbook: `facta-playbook/CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md`.
+Runbook: `ai-coding-playbook/CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md`.
 
 - Tier aliases resolve through `~/.claude/settings.json`: `opus` = escalation
   (`deepseek-v4-pro:cloud`), `sonnet` = workhorse (`glm-5.3-flash:cloud`),
