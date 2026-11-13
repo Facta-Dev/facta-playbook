@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The slice owns its own strings: :feature:notes:ui is an Android library
+         and cannot read the :app resources. -->
+    <string name="notes_loading">Loading...</string>
+    <string name="notes_empty">No notes yet</string>
+    <string name="notes_offline">You are offline</string>
+    <string name="notes_forbidden">You do not have access</string>
+    <string name="notes_not_found">Not found</string>
+    <string name="notes_policy_blocked">Blocked by policy</string>
+    <string name="notes_error">Something went wrong (%1$s)</string>
+    <string name="notes_unknown_correlation_id">no id</string>
+    <string name="note_detail_not_found">Note not found</string>
+</resources>

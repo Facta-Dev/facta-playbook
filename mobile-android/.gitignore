@@ -1,0 +1,15 @@
+# Gradle
+.gradle/
+build/
+.kotlin/
+
+# Machine-local SDK path: resolved from ANDROID_HOME, never committed
+local.properties
+
+# IDE
+.idea/
+*.iml
+.cache/
+
+# Local secrets: never committed (.env.example is the tracked template)
+.env

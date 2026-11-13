@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+dist/
+coverage/
+pnpm-lock.yaml
+package-lock.json
+
+# Repository docs and the Claude Code kit are not template sources.
+/PLAYBOOK_*.md
+/.claude/

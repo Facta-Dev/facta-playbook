@@ -1,0 +1,37 @@
+// <app> — the build program.
+//
+// One program covers the packages, the app and the configs, so the app sees
+// exactly the types the packages ship. The workspace packages resolve by
+// their published name (@<scope>/core …); the paths below point at the
+// TypeScript sources, so no build step sits between a change and a type
+// error.
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "types": ["node"],
+
+    "paths": {
+      "@<scope>/core": ["./packages/core/src/index.ts"],
+      "@<scope>/contracts": ["./packages/contracts/src/index.ts"],
+      "@<scope>/feature-notes": ["./packages/feature-notes/src/index.ts"]
+    },
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["packages/*/src", "app", "vitest.config.mts"],
+  "exclude": ["node_modules", "dist", ".expo"]
+}

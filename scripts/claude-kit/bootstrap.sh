@@ -168,6 +168,6 @@ say "next steps (manual or per-repo):"
 if [[ -d "$TRACKER" ]]; then
   echo "  1. cost tracker:  bash $TRACKER/install.sh"
 fi
-echo "  2. wire repos:    bash $SCRIPT_DIR/configure-repo.sh ~/work/<repo> --kit=<golang|nodejs|python|rust>"
+echo "  2. wire repos:    bash $SCRIPT_DIR/configure-repo.sh ~/work/<repo> --kit=<golang|nodejs|python|rust|extension|desktop|frontend-mobile|mobile-android>"
 echo "  3. verify:        python3 $SCRIPT_DIR/kit_check.py; claude -p probes per the routing runbook §9"
 echo "  4. in-session:    /context and /doctor"

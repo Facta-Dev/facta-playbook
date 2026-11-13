@@ -43,7 +43,7 @@ bash ~/ai-coding-playbook/scripts/claude-kit/bootstrap.sh             # install
              ├─ working set   clone-repos.sh --group=selected --dir ~/work
              ├─ skill packs   install-skill-packs.sh --dir ~/work
              ├─ cost tracker  ~/work/claude-code-cli-cost-tracker/install.sh
-             └─ each repo     configure-repo.sh <repo> --kit=<golang|nodejs|python|rust>
+             └─ each repo     configure-repo.sh <repo> --kit=<golang|nodejs|python|rust|extension|desktop|frontend-mobile|mobile-android>
 
 VERIFY: kit_check.py · deny probe (PLAYBOOK_INSTALL §5) · routing probes (§9)
         · /context · /doctor
@@ -118,9 +118,12 @@ never duplicate a baseline plugin in a project file.
 | `PLAYBOOK_INSTALL.md` | Installation and bootstrap: clone order, idempotent kit configuration, user-scope validation, minimal-token install path | Preparing a new machine or re-provisioning one |
 | `PLAYBOOK_CLAUDE_CODE.md` | The Claude Code implementation kit: files, agents, skills, rules, hooks, permissions, memory, collaboration protocol, parallel sessions, SDD + TDD loop | Starting a repo, or auditing whether a repo is agent-ready |
 | `PLAYBOOK_BACKEND.md` | Backend architecture: hexagonal + vertical slices, language-agnostic folder and dependency rules | Any backend service, any language |
-| `PLAYBOOK_FRONTEND.md` | Frontend: React SPA, React Native, Chrome MV3, MVVM + shared SDK | Any client |
+| `PLAYBOOK_FRONTEND.md` | Frontend on React: SPA, MVVM + shared SDK (the client playbooks specialize it) | Any web client |
 | `PLAYBOOK_CHROME_EXTENSION.md` | Chrome MV3 extension: service worker, messaging, permissions, store review | Any extension |
 | `PLAYBOOK_DESKTOP_QT.md` | Desktop client on Qt/QML: layering, threading, packaging and updates | Desktop clients |
+| `PLAYBOOK_FRONTEND_MOBILE.md` | Mobile frontend on React Native + Expo: variants, device classes, quality governor, scene engines, push | Any RN/Expo app |
+| `PLAYBOOK_MOBILE_ANDROID_KOTLIN.md` | Native Android on Kotlin + Compose: Gradle module graph, UDF, Navigation 3, FCM, ARCore | Any native Android app |
+| `PLAYBOOK_MOBILE_IOS_SWIFT.md` | Native iOS on Swift 6 + SwiftUI written as code: Swift packages, Observation/MVVM, APNs, StoreKit, scene engines, App Store | Any native iOS app |
 | `PLAYBOOK_URLS.md` | Route/URL contract for API and SPA routes; the user-type segment never authorizes | Designing endpoints or permissions |
 | `PLAYBOOK_TESTS.md` | Testing contract, slice-aligned, doubling as audit evidence | Every implementation |
 | `PLAYBOOK_SECURITY.md` | Security contract with per-language profiles (Node, Python, Go, Rust) | Every backend, before release |
@@ -161,14 +164,22 @@ specialized to it, and the matching `.claude/` plane:
 | `python/` | Runnable Python 3.12 + uv template (FastAPI, pydantic v2, SQLAlchemy 2 async, Alembic, full auth core, outbox worker, WebSocket + SSE) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents, 9 skills/commands, 14 kit contract evals | Ready |
 | `extension/` | Runnable Chrome MV3 template (Vite 7, React 19 side panel, classic service worker, zod message protocol with sender validation, versioned storage, managed policy, zero host permissions) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, node contract evals | Ready |
 | `desktop/` | Runnable Qt 6 Widgets template (C++20, CMake presets, one static library per layer with link-time rules, MVVM notes slice, SQLite, managed policy, headless Qt Test) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, C++ contract evals | Ready |
+| `frontend-mobile/` | Runnable React Native + Expo template (SDK 58, React 19.3, RN 0.88, plain App entry, device tiers + quality governor, typed route table, MVVM notes slice, vitest architecture tests, Metro export gate) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, node contract evals | Ready |
+| `mobile-android/` | Runnable native Android template (Gradle 9.6, AGP 9.5, Kotlin 2.4, Compose, one Gradle module per layer, Navigation 3 typed NavKey, UDF notes slice, JVM tests, Gradle kit evals) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, JVM contract evals | Ready |
 
 The Go directory is the reference implementation for the backend kits; the
 extension kit is the reference for the client kits.
 
+Every kit is a **runnable template**, not a snapshot: a renamed copy is a
+working project. The contract a kit must satisfy — required surface, two eval
+tiers, frozen domain-adapted fixtures, local playbook copies — is
+`PLAYBOOK_CLAUDE_CODE.md` §21; the shared gate surface (`make ci`, `make evals`,
+`make verify`) and what each gate proves is `PLAYBOOK_TESTS.md` §12.
+
 ### 3.3 Client families and the instruction budget
 
 Each client family gets its own playbook and its own path-scoped rule
-(`frontend.md`, `desktop.md`, `mobile.md`, `extension.md`), and **none is
+(`frontend.md`, `desktop.md`, `mobile.md`, `android.md`, `extension.md`), and **none is
 `@`-imported**. The harness keeps the first 40,000 chars of an instruction
 file and caps the always-on set (CLAUDE.md/AGENTS.md + imports + path-less
 rules) at 120,000 chars; importing a playbook set is how a repo silently loses

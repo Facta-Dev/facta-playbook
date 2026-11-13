@@ -46,8 +46,10 @@ Q='(\\")?'
 # --- BLOCK rules (exit 2) ---------------------------------------------------
 
 # rm -rf on filesystem root, home dirs, ~, $HOME, or core system directories.
-if has "${RM_RF}${Q}"'(/(etc|usr|var|bin|lib|opt|boot|dev|home)(/[^[:space:]"]*)?|/+|~|\$HOME)'"${Q}${T}"; then
-  echo "guard-bash: BLOCKED — rm -rf targeting a system root, /home, ~, or \$HOME." >&2
+# The home roots are covered like /home: ~, $HOME, /root and /Users/<user>,
+# with or without a trailing slash.
+if has "${RM_RF}${Q}"'(/(etc|usr|var|bin|lib|opt|boot|dev|home|root|Users)(/[^[:space:]"]*)?|/+|~(/[^[:space:]"]*)?|\$HOME(/[^[:space:]"]*)?)'"${Q}${T}"; then
+  echo "guard-bash: BLOCKED — rm -rf targeting a system root, a home directory (/home, /root, /Users), ~, or \$HOME." >&2
   exit 2
 fi
 

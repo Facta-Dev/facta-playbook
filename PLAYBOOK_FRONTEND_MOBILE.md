@@ -60,7 +60,7 @@ The rules that carry the whole file:
 | D1 | Framework | **Expo (current SDK, e.g., 58) with Continuous Native Generation + development builds**; escape to bare only for unsupported native needs | New Architecture only, Hermes V1 default, EAS Build/Submit/Update, config plugins, Expo Modules API for custom native code |
 | D2 | Language | TypeScript `strict` | Same as web/extension; shared ViewModels and SDK |
 | D3 | Variants | **Three apps from one monorepo** via `APP_VARIANT` (`game`, `market`, `avatar`), separate bundle IDs and store listings; a combined "super app" is **not** recommended | Binary size, memory, permissions and review surface stay minimal per product (critical on low-end) |
-| D4 | Navigation | **Expo Router** (file-based, deep links by default) | Routes mirror `PLAYBOOK_URLS.md`; verify the router's `root` option for placing the routes folder **(verify)** |
+| D4 | Navigation | **Expo Router** (file-based, deep links by default); a plain app entry is valid when the typed route table is small | Routes mirror `PLAYBOOK_URLS.md`; the typed route table stays the source of truth either way (section 6); verify the router's `root` option for placing the routes folder **(verify)** |
 | D5 | Server state | TanStack Query + the shared SDK | Same contract as other clients |
 | D6 | Client state | Zustand (selector-based) + MMKV for tiny persisted prefs; no heavy global stores | Fewer re-renders on slow CPUs |
 | D7 | Lists | **FlashList v2** | Virtualization with recycling; New Architecture only |
@@ -297,6 +297,33 @@ Rules:
 * Native dependencies are declared **in the feature package** and included by
   config plugins only for the variant that needs them.
 
+**Workspace and bundler rules (pnpm + Metro).** The apps and the shared packages
+live in one pnpm workspace, and React Native has one non-negotiable invariant:
+**exactly one copy of `react` and `react-native` in the tree**. pnpm's default
+isolated layout nests a second copy under the app and Metro does not resolve a
+nested duplicate the way a bundler would — the renderer breaks at runtime, and
+the export dies with Metro's `Invariant Violation: Failed to collapse`
+(metro-file-map cannot collapse a workspace symlink that resolves above the
+project root). Two settings prevent it, and both belong in the repository:
+
+```text
+.npmrc               node-linker=hoisted                 # flat node_modules, like npm
+app/metro.config.js  watchFolders = [workspaceRoot]
+                      resolver.nodeModulesPaths = [app/node_modules, root/node_modules]
+                      resolver.disableHierarchicalLookup = true
+```
+
+* `.npmrc` sets `node-linker=hoisted`, so the committed lockfile resolves the flat
+  layout: the app and the shared packages install from the same tree.
+* `metro.config.js` (in the app package) watches the **workspace root**, not only
+  the app folder — the shared packages live outside it and pnpm links them as
+  symlinks. `nodeModulesPaths` lists the app's `node_modules` first and the
+  workspace root's second; `disableHierarchicalLookup` stops Metro from walking
+  up from a file and finding a nested duplicate of React Native.
+* The reference kit ships exactly this pair (`frontend-mobile/.npmrc`,
+  `frontend-mobile/app/metro.config.js`). `expo export` is the gate that proves
+  it: a workspace that resolves is the only way to know before a store build.
+
 ### 5.1 Directory inside a feature pack
 
 ```text
@@ -321,10 +348,18 @@ Session-less (public experience):  /onboarding  /login  /register  /forgot-passw
 
 * Expo Router file layout mirrors this (route groups for layouts; `app/` vs `public`
   experiences; place the routes under a folder that yields the exact URL paths **(verify
-  router `root` and typed-routes behavior)**).
+  router `root` and typed-routes behavior)**). The router is an implementation
+  detail, not the contract: the typed route table below is. A file-based
+  convention is acceptable only while it cannot contradict that table — the
+  reference kit ships a plain `App.tsx` entry and resolves every path against the
+  table (`frontend-mobile/docs/adr/0001-expo-with-a-plain-app-entry.md`).
 * **Universal/App Links and custom scheme:** `https://<domain>/app/...` and
   `<scheme>://app/...`, associated domains / `assetlinks.json` per variant.
 * Route builders are generated from the shared route table; no hand-written paths.
+* The **typed route table is the source of truth for the paths the app ships**: the
+  optional `{subresource}` segment is part of the grammar, and a client whose table
+  declares no subresource route **refuses a five-segment path as unknown** — it never
+  guesses a route.
 * Guards (`RequireAuth`, `RequireUserType`, `RequirePermission`) only shape UX (redirect to
   `/login`, `/403`, allowed home); **the server authorizes every call**.
 * Deep-link/notification parameters are **untrusted**: validate IDs, never trigger
@@ -561,7 +596,9 @@ transactional and security notifications; kill switch per category. Implements t
 4. **No library without a fallback or a replacement plan** if it is unmaintained.
 5. **Avoid CSS-in-JS runtimes and heavy UI kits** on low-end; prefer StyleSheet + tokens or a compile-time styling tool
    (**verify** impact on your pool).
-6. **Pin versions** with the SDK's compatibility set (`expo install`, `expo-doctor`); upgrade SDKs deliberately. Note: Expo
+6. **Pin versions** with the SDK's compatibility set (`expo install`, `expo-doctor`); upgrade SDKs deliberately. Pin `react`
+   and `react-native` **exactly** (no range): a newer `react` patch can fail `expo-doctor` against the SDK's compatibility set, so
+   a floating range breaks the build on a patch bump nobody chose. Note: Expo
    SDK 56 had a Hermes V1 memory regression affecting apps using Reanimated/worklets, fixed in later patch releases (SDK 57.0.9 and
    newer): never run an unpatched SDK on the Low pool.
 
@@ -570,7 +607,7 @@ transactional and security notifications; kill switch per category. Implements t
 | Area | Library (default) | Low/mid-end notes | Alternatives / cautions |
 |---|---|---|---|
 | Runtime | **React Native 0.88 + Expo SDK 58**, Hermes V1 | New Architecture only; Hermes V1 default | Verify patch level for known regressions |
-| Navigation | **Expo Router** | File-based, deep linking built in | React Navigation underneath |
+| Navigation | **Expo Router** | File-based, deep linking built in | React Navigation underneath; a plain app entry + the typed route table is enough for a small app (section 6) |
 | Lists | **@shopify/flash-list v2** | Recycling and virtualization; New Arch | FlatList only for tiny lists |
 | Images | **expo-image** | Disk/memory cache, blurhash, WebP/AVIF, downscaling | Avoid un-sized remote images |
 | Animation | **react-native-reanimated 4 + worklets**, gesture-handler | Use sparingly on Low: few simultaneous worklets; verify memory on the pool | RN `Animated` with native driver for simple fades |
@@ -601,8 +638,16 @@ transactional and security notifications; kill switch per category. Implements t
 | i18n | **i18next + expo-localization** | Lazy-load locales | — |
 | Observability | **@sentry/react-native** or Crashlytics; `react-native-performance` | Sample rates tuned for Low | — |
 | Flags/config | Remote config (Firebase RC, GrowthBook, Statsig) + backend config | Device-tier overrides | — |
-| Testing | **Jest + @testing-library/react-native**, **Maestro** (or Detox), **Reassure**, **Flashlight**, MSW | Real-device farm | — |
+| Testing | **Vitest** (or Jest) for the framework-free layers, **@testing-library/react-native** for views, `node --test` for contract evals, **Maestro** (or Detox), **Reassure**, **Flashlight**, MSW | Real-device farm | Below the view layer there is usually nothing to render: a node environment is enough (section 17.1) |
 | Asset tooling | **gltf-transform / gltfpack, toktx (KTX2/Basis), meshopt/Draco** | Mandatory in CI for 3D assets | — |
+
+**Pinned baseline.** Start from the set the reference kit locks and verified against
+Expo SDK 58 (`frontend-mobile/package.json`, `frontend-mobile/app/package.json`,
+`frontend-mobile/MEMORY.md`): Expo **~58.0.24**, React **19.3.0** (exact),
+React Native **0.88.1** (exact), TypeScript **~6.0.3**, Vitest **~5.1.0**,
+zod **^4.6.7**, Node **≥ 24**, pnpm **10.x**. Copy them verbatim; move one at a
+time with `expo install` + `expo-doctor`, and re-measure the Low-pool budgets
+(section 3.2) in the same pull request.
 
 ### 9.3 Libraries and patterns to avoid on low-end
 
@@ -978,10 +1023,10 @@ tests/_platform/{architecture,device-perf,push,auth,store-readiness}/
 
 | Level | Scope | Tooling |
 |---|---|---|
-| Unit | domain, application, ViewModels with fake ports | Jest, `@testing-library/react-native` (`renderHook`) |
+| Unit | domain, application, ViewModels with fake ports | Vitest or Jest in a node environment — the domain and application layers hold no JSX and need no renderer; a ViewModel needs one only when it uses React hooks (`renderHook`, `@testing-library/react-native`), so prefer a plain state machine plus a hook in the views layer (section 4.1) |
 | SDK/contract | SDK vs OpenAPI, notification payload schema, performance-script schema, route table parity, permission catalog | schema tests, MSW |
 | Component | Views per ViewModel status; accessibility roles/labels | RNTL |
-| Integration | ViewModel + SDK + SQLite/outbox, realtime transport conformance, push handling state machine (foreground/background/killed) with fakes | Jest + fakes |
+| Integration | ViewModel + SDK + SQLite/outbox, realtime transport conformance, push handling state machine (foreground/background/killed) with fakes | Vitest or Jest + fakes |
 | **E2E** | Onboarding → register → verify → login → forgot → reset; permission denial paths; push tap deep links; market checkout; game encounter (mock GPS); avatar session (mock audio/script) | Maestro or Detox on emulators **and** real devices |
 | Device performance | Cold start, list scroll (FlashList), scene frame time/memory/thermal on the Low/Mid pool | Flashlight (Android), Reassure (render regressions), Perfetto/Instruments traces, custom scene harness |
 | Scene/asset | Asset budgets, GLB validity, tier fallback behavior, engine init failure injection | CI scripts, harness |
@@ -1161,7 +1206,8 @@ export default (): ExpoConfig => ({
   name: v.name, slug: v.slug, scheme: v.slug,
   ios:     { bundleIdentifier: v.id, associatedDomains: [`applinks:${process.env.LINK_DOMAIN}`] },
   android: { package: v.id, permissions: [...v.permissions], blockedPermissions: [] },
-  plugins: ['expo-router', 'expo-secure-store', 'expo-notifications', ...v.plugins],
+  plugins: ['expo-router', // only when the variant uses the file-based router (section 6)
+            'expo-secure-store', 'expo-notifications', ...v.plugins],
   extra:   { variant: process.env.APP_VARIANT, apiBaseUrl: process.env.API_BASE_URL },
   runtimeVersion: { policy: 'appVersion' },
   updates: { url: process.env.EAS_UPDATE_URL },

@@ -194,7 +194,14 @@ bash ~/ai-coding-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos \
 bash ~/ai-coding-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos --kit=golang
 ```
 
-`--kit=` is one of `golang`, `nodejs`, `python`, `rust`.
+`--kit=` is one of `golang`, `nodejs`, `python`, `rust`, `extension`,
+`desktop`, `frontend-mobile`, `mobile-android`.
+
+Every kit is a runnable template with the same gate surface: `make ci` (the
+working tree), `make evals` (the `.claude` contract harness) and `make verify`
+(a staged renamed copy in a temp dir, the working tree untouched). The kit
+contract is `PLAYBOOK_CLAUDE_CODE.md` §21; the gate meanings are
+`PLAYBOOK_TESTS.md` §12.
 
 The script is idempotent and does exactly this:
 

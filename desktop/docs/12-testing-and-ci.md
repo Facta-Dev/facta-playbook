@@ -55,7 +55,7 @@ make test           # build with ENABLE_TESTS=ON and run ctest
 make evals          # configure build-evals with -DEVALS=ON and run the harness
 make lint           # clang-format --dry-run -Werror
 make tidy           # clang-tidy -p build
-make ci             # lint + verify (the gate)
+make ci             # lint + test (the gate)
 ```
 
 `make lint` and `make tidy` **skip with a printed notice** when `clang-format` or
@@ -64,6 +64,7 @@ make ci             # lint + verify (the gate)
 ## The template verification
 
 ```sh
+make verify                      # the same script, through the Makefile
 bash scripts/verify-template.sh
 ```
 

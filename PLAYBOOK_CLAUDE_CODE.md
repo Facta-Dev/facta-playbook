@@ -1374,6 +1374,96 @@ enforced lever — an `allow` list is inert — so user-scope denies must anchor
 
 ---
 
+## 21. Shipping a new runnable stack kit
+
+The kit directories are **runnable templates**: a renamed copy is a working
+project. `golang/` is the reference for the backend kits and `extension/` the
+reference for the client kits. A kit that installs but cannot be renamed,
+evaluated or gated is not shippable. The four client kits
+(`extension/`, `desktop/`, `frontend-mobile/`, `mobile-android/`) are the
+reference for the checklist below.
+
+### 21.1 Required surface
+
+| Path | Contract |
+|---|---|
+| `AGENTS.md` + `CLAUDE.md` | `CLAUDE.md` is a symlink to `AGENTS.md`: one agent-agnostic source of truth |
+| `MEMORY.md`, `README.md`, `Makefile`, `.gitignore`, `.env.example` | consumer entry points; the `Makefile` exposes `ci` and `verify` |
+| `docs/00-*.md` … `docs/14-*.md`, `docs/adr/` | the numbered doc set and the ADRs the consumer inherits |
+| `.claude/agents/`, `.claude/skills/`, `.claude/commands/`, `.claude/schemas/` | the capability plane, one directory per module kind |
+| `.claude/settings.json`, `.claude/manifest.json` | the control plane; the manifest declares the modules, the always-on set, the opt-ins, the runtime config dirs and the format adapters |
+| `scripts/hooks/guard-bash.sh` | the `PreToolUse` guard, byte-identical across the client kits |
+| `scripts/lint-agents.sh`, `lint-skills.sh`, `lint-commands.sh`, `leak-guard.sh`, `instruction-budget.sh` | the static gates every renamed copy must pass |
+| `scripts/rename.sh` | placeholder substitution (`<scope>` → `<APP>` → `<app>`, text only); it validates the new slug **before** touching the tree |
+| `scripts/verify-template.sh` | stages a renamed copy in a temp dir and runs every gate on it, one `PASS`/`FAIL` per stage, without mutating the working tree |
+| `scripts/install-claude-runtime.sh` | the manifest-driven installer; `configure-repo.sh --kit=<kit>` runs it (kit-local, repo-local as fallback) |
+| `evals/` | the contract suite, `fixtures/{valid,invalid}/` and `run-live.sh` |
+
+The template ships placeholders (`<app>`, `<APP>`, `<scope>`), never a real
+product name. `scripts/**` and `evals/fixtures/**` are excluded from
+substitution on purpose: the gates keep their literal patterns and the
+fixtures stay frozen.
+
+The four client kits are the reference, not the definition: where a shipped
+kit drifts from this table, the table wins and the kit is fixed.
+
+### 21.2 Two eval tiers
+
+- **Offline contract tier** — fixtures only, no network, no API budget. It is
+  the `evals` gate and `verify` runs it on the staged renamed copy (gate
+  names and their meaning: [PLAYBOOK_TESTS.md](PLAYBOOK_TESTS.md) §12).
+- **Live tier** — `evals/run-live.sh`, opt-in with `EVALS=1`; it needs a live
+  `claude` CLI and `ANTHROPIC_API_KEY`. Without them it prints why it skipped
+  and **exits 0**. The default gate may call it, but only as a no-op: the
+  live tier never spends budget unless a human opted in.
+
+A kit that ships `evals/run-live.sh` proves the no-op with a `run-live no-op
+guard` stage in `verify-template.sh`, and the live tier's default skill must
+exist in the kit (`review` in the client kits).
+
+### 21.3 Fixtures are frozen and domain-adapted
+
+`evals/fixtures/**` never changes with a rename and is never copied from
+another kit. Each kit writes its fixtures in its own domain: the extension
+kit's valid fixture is an extension reviewer, the desktop kit's an ownership
+reviewer, the mobile kits' an Android and a mobile reviewer. Reuse the file
+*names* for the same failure modes, write the *content* for the new domain.
+The `invalid/` fixtures keep their placeholders deliberately — they are what
+the leak and lint gates must catch.
+
+### 21.4 Local playbook copies
+
+- Client kits ship **byte-identical** copies of the root playbooks they
+  include. When a root playbook changes, re-copy it into every client kit
+  that ships it, in the same change: a stale copy is a silent second source
+  of truth.
+- Backend kits ship **stack-specialized** copies (the Go kit's
+  `PLAYBOOK_TESTS.md` is not the root's). Edit those in place; never
+  byte-compare them against the root.
+- Never fix a root rule by hand-editing a kit copy. Fix the root, then sync.
+- **Known gap:** no root gate enforces the copy sync. Each kit's `verify`
+  checks its own tree only, so a stale client copy passes every gate — the
+  sync has to happen in the same change as the root edit, by discipline.
+
+### 21.5 Adding a kit updates every enumeration
+
+A kit missing from one of these lists is invisible to the installer or to
+the user. Update all of them in the same change:
+
+1. `README.md` §3.2 — one row in the per-stack kits table, same columns.
+2. `README.md` — the `--kit=` list in the decision tree.
+3. `PLAYBOOK_INSTALL.md` §4 — the `--kit=` list.
+4. `scripts/claude-kit/configure-repo.sh` — the usage comment and the
+   `unknown kit` error message.
+5. `scripts/claude-kit/bootstrap.sh` — the next-steps echo.
+6. `scripts/claude-kit/README.md` — the `configure-repo.sh` row.
+7. `PLAYBOOK_TESTS.md` §12 — the client kits that ship the same gate surface.
+
+Then `configure-repo.sh <repo> --kit=<kit> --dry-run` must resolve the new
+kit, and the kit's own `make ci` must be green.
+
+---
+
 ## Appendix A — Reference templates
 
 ### A.1 `CLAUDE.md` skeleton

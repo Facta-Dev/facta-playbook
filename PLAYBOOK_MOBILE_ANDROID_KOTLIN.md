@@ -80,7 +80,7 @@ The rules that carry the whole file:
 | D15 | 3D | Tiered behind a `SceneEngine` port: **2D fallback → Filament (directly or via SceneView) → Godot (Compatibility renderer) → Unity (AR-heavy, high tier only)** | Same tier model as RN; see section 13 |
 | D16 | AR | **ARCore** (optional, never required for install); Geospatial API for location-anchored AR | `uses-feature … required="false"` + `com.google.ar.core=optional` |
 | D17 | Maps (Game) | **MapLibre Native Android** (or Mapbox SDK); Google Maps Compose only for small marker counts | GL layers for entities |
-| D18 | Min/target SDK | `minSdk` **24** (AndroidX/Play services floor; raise with fleet data), `targetSdk` **36**, `compileSdk` **37** with AGP **9.1.1+** (required by Compose 1.12) | Verify the current Play target-API rule each year |
+| D18 | Min/target SDK | `minSdk` **24** (AndroidX/Play services floor; raise with fleet data), `compileSdk` **37** with AGP **9.1.1+** (required by Compose 1.12), `targetSdk` **37** — Play's floor is **36** (since 31 Aug 2026), so 36 is compliant but 37 is the target once the §15.2 Android 17 checklist is green | Verify the current Play target-API rule each year |
 | D19 | ABIs | **arm64-v8a** primary; **armeabi-v7a** only where your fleet needs it (many low-end devices still run 32-bit userland) | Smaller downloads; use fleet analytics |
 | D20 | Native libs | All `.so` files **16 KB page-size aligned** | Play requirement for native code; enforcement dates have been extended before **(verify current date)** |
 | D21 | Optimization | **R8 full mode + Baseline Profiles + Startup Profiles** mandatory for release builds | Target reported ~6% smaller APK from R8 full mode and ~10% faster startup from Baseline Profiles, with ~11% faster startup and ~6% smaller APK after enabling full mode |
@@ -324,6 +324,12 @@ android/
 docs/{adr,support-matrix.md,dependency-register.md,permissions-register.md,device-pool.md,runbooks/}
 ```
 
+**Scope of the shipped template:** the template that ships with this playbook is the **minimal instantiation** of the graph above, not the recommended production
+graph: one variant (a single `:app`, not `:apps/{game,market,avatar}`), one slice (`:feature:notes` split into `contracts`/`domain`/`data`/`ui`) and the shared
+modules that slice needs (`:core:kernel`, `:core:ui-core`), plus `:evals` for the contract tests. The full variant grid, the `shell/*` modules and the remaining
+`:core/*` modules are the **growth path**: add them when the product needs them, one consumer at a time. The rules in §4.1 hold for the minimal instantiation —
+the module boundary is the enforcement — so the template proves the architecture without shipping modules nothing consumes.
+
 **Tests placement ADR:** Gradle requires JVM and instrumented tests inside each module (`src/test`, `src/androidTest`);
 colocate **unit/ViewModel/UI-component** tests there. Cross-module suites (e2e, contract, device performance, security,
 accessibility audits, architecture) live under `tests/…/android/` to match `PLAYBOOK_TESTS.md` and are wired as separate
@@ -344,6 +350,15 @@ Gradle modules/tasks.
   release candidate and after major UI changes.
 * **Dynamic feature modules** (Play Feature Delivery) for heavy engines (Godot/Unity/AR) and rarely used features; PAD for assets.
 * **16 KB alignment** check in CI for every native library (e.g., verify ELF `LOAD` segment alignment); run a test on a 16 KB-page emulator.
+* **Full JDK, pinned.** *Toolchain reality:* Gradle runs on `JAVA_HOME`, or on `java` from `PATH` when `JAVA_HOME` is unset, and AGP compiles with the `javac` of that
+  same installation — so a JRE-only default JVM fails the build with `does not provide the required capabilities: [JAVA_COMPILER]`. Pin a **full JDK (17+)**, and
+  verify that `bin/java` and `bin/javac` come from the same installation: a `java` from one JDK and a `javac` from another fails the same way. The build entry point
+  — the CI job and the developer target — resolves such a JDK and exports `JAVA_HOME` before the first `./gradlew` call. A Kotlin `jvmToolchain` does not replace
+  that: the toolchain drives compilation, not the plugin that runs the build.
+* **Every shipped linter runs in the gate.** Android Lint, Detekt and the architecture checks are part of the PR gate, not side commands nobody remembers. A linter the
+  project ships but the gate does not run finds nothing until a human review finds it for it.
+* **The instantiation script validates its arguments before it mutates the tree.** A slug and a scope that cannot be package segments are rejected up front; a
+  half-applied rename leaves an unbuildable copy behind and the failure surfaces far from its cause.
 
 ---
 
@@ -725,7 +740,7 @@ tier ceiling **and below the Android 17 RAM-based limit for the device class**.
 * **SMS OTP protections** (including WebOTP-format messages): use SMS Retriever/User Consent, not SMS permissions.
 * **ECH** for TLS on apps targeting 37; **cross-profile loopback** blocked; **local-network access** changes; **static final fields** immutable; **IME visibility after rotation** not restored automatically;
   **new lock-free MessageQueue** for apps targeting 37; stricter RemoteViews memory limits.
-* Run the app on API 37 devices/emulators in CI before raising `targetSdk` to 37; until then keep `targetSdk` 36 (Play's current floor).
+* Run the app on API 37 devices/emulators in CI before raising `targetSdk` to 37; until then hold at `targetSdk` 36 (Play's floor — compliant, not the target).
 
 ### 15.3 Privacy and Play policy
 
@@ -793,7 +808,9 @@ Follows `PLAYBOOK_TESTS.md`; adds an `android` side (placement ADR in section 5)
 | Store readiness | Manifest/permissions diff, 16 KB alignment, Data safety forms, listing assets, Play pre-launch report | CI scripts |
 
 Rules: tests run on the **Low pool**, not only emulators; no production data; flaky tests quarantined with owner/expiry; every notification type and route has a contract/e2e test;
-performance gates compare to the last release (e.g., +10% regression fails the build) and are stored as release evidence.
+performance gates compare to the last release (e.g., +10% regression fails the build) and are stored as release evidence. **The contract tests cover every declared failure
+mode**: each schema's *Validation Failure Modes* list — missing key, bad division, missing section, placeholder leak, CRLF, empty frontmatter, name/slug mismatch — has
+a fixture and an assertion. A declared mode without a test is a gap, not a documentation line.
 
 ---
 
@@ -830,6 +847,7 @@ performance gates compare to the last release (e.g., +10% regression fails the b
 | One APK with all three products and all engines | Size, memory, permissions and review surface |
 | Product flavors that only hide code (still compiling other variants' deps) | Leaks engines/permissions into the wrong binary |
 | Android imports in domain modules | Breaks testability and layering |
+| An `androidx.*` dependency in a pure JVM module whose artifact has no JVM variant | The module stops being pure; the desktop/JVM build breaks |
 | Business logic in composables or in Activities | Untestable, recomposition cost |
 | Blocking the main thread (disk, network, JSON, crypto) | Jank/ANR on low-end |
 | Reflection-heavy libs at startup (Gson/reflection DI), kapt | Slow startup and builds |
@@ -847,6 +865,8 @@ performance gates compare to the last release (e.g., +10% regression fails the b
 | No baseline/startup profile, R8 compat mode, no macrobenchmarks | Slow startup, unproven performance |
 | Ignoring 16 KB alignment, target-API and edge-to-edge changes | Upload rejection/UI breakage |
 | No Low-pool testing; trusting emulators | Unproven claims |
+| A linter the project ships but the gate does not run | It finds nothing until a review finds it for it |
+| An instantiation/rename script that mutates the tree before validating its arguments | A half-renamed tree or an unbuildable namespace, discovered far from its cause |
 
 ---
 
@@ -859,7 +879,7 @@ performance gates compare to the last release (e.g., +10% regression fails the b
 - [ ] Low-tier path implemented and verified on the Low pool; governor behavior defined.
 - [ ] Uses the Kotlin SDK; no hand-written paths/DTOs; error taxonomy handled; correlation IDs surfaced.
 - [ ] Permissions requested in context with primer + degraded path; register and merged-manifest diff updated.
-- [ ] Accessibility verified (TalkBack, 200% font scale, contrast, touch targets); strings are resources; RTL/pseudo-locale checked.
+- [ ] Accessibility verified (TalkBack, 200% font scale, contrast, touch targets); strings are resources — every module owns its own `strings.xml` and no user-visible literal lives in Kotlin; RTL/pseudo-locale checked.
 - [ ] Offline/slow-network behavior defined; outbox/idempotency for mutations.
 - [ ] Baseline profile journeys updated; macrobenchmark within budget; no main-thread violations (StrictMode clean).
 - [ ] Telemetry and redaction verified; no sensitive data in logs/analytics/push.
@@ -876,9 +896,11 @@ performance gates compare to the last release (e.g., +10% regression fails the b
 
 ### 21.3 Architecture acceptance checklist
 
-- [ ] Kotlin 2.x, Compose (current BOM), Navigation 3, Hilt/KSP; `compileSdk 37`/AGP 9.1.1+ (or a documented hold) and `targetSdk 36`.
+- [ ] Kotlin 2.x, Compose (current BOM), Navigation 3, Hilt/KSP; `compileSdk 37`/AGP 9.1.1+ (or a documented hold) and `targetSdk 37` (36 is Play's floor, not the target — see D18).
 - [ ] Three thin app modules; per-variant dependencies, permissions and native libs verified by CI.
 - [ ] Domain modules are pure Kotlin; `ui` never depends on `data`; cross-slice access only via `contracts`; Konsist/graph checks green.
+- [ ] Pure JVM modules import no `android.*`; an `androidx.*` dependency is legal only where the artifact publishes a JVM variant (the multiplatform Navigation3 runtime in `contracts`).
+- [ ] The build runs on a pinned full JDK (`javac`), and the PR gate runs every linter the project ships — Android Lint, Detekt, the architecture check and the contract tests.
 - [ ] UDF with immutable UiState, effects channel, shared statuses; Compose compiler reports reviewed.
 - [ ] Route table parity with `NavKey` set; App Links verified; deep links validated and resumed after auth.
 - [ ] Shared shell: onboarding, login (Credential Manager/AppAuth), registration, forgot/reset, session security, deletion.
@@ -904,7 +926,7 @@ class AndroidAppConventionPlugin : Plugin<Project> {
     pluginManager.apply("org.jetbrains.kotlin.plugin.compose")
     extensions.configure<ApplicationExtension> {
       compileSdk = 37
-      defaultConfig { minSdk = 24; targetSdk = 36 }
+      defaultConfig { minSdk = 24; targetSdk = 37 }
       buildTypes { release { isMinifyEnabled = true; isShrinkResources = true
         proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") } }
       packaging { jniLibs { useLegacyPackaging = false } }     // uncompressed, aligned native libs
@@ -1045,7 +1067,7 @@ val source = EventSources.createFactory(sseClient).newEventSource(
 ```markdown
 # Support matrix (per release)
 | Item | Value |
-| minSdk / targetSdk / compileSdk | 24 / 36 / 37 (AGP 9.1.1+) |
+| minSdk / targetSdk / compileSdk | 24 / 37 / 37 (AGP 9.1.1+) |
 | ABIs | arm64-v8a (+armeabi-v7a if required) · 16 KB page-size aligned |
 | GMS policy | Required | Optional (fallback providers: push/location/integrity) |
 | Device tiers | Low (≤3 GB, Go) · Mid (4–6 GB) · High (≥8 GB) · device pool: <list> |

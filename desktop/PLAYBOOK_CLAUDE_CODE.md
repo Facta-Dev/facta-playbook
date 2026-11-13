@@ -89,6 +89,8 @@ acceptance checklist).
 | 20 | MCP servers (`.mcp.json`), plugins | Optional | 6.6 |
 | 21 | Managed settings / managed CLAUDE.md (organizations) | Optional (org level) | 14.5 |
 | 22 | Output styles, status line | Optional | 6.7 |
+| 23 | `kit/CLAUDE.md` — user-scope instructions (installed at `~/.claude/CLAUDE.md`) | Required (user scope) | 20 |
+| 24 | `kit/settings.fragment.json` + `kit/settings.ollama.json` — base fragment (default model + deny list) merged everywhere; Ollama-only fragment (tier env + endpoint) merged when Ollama is the provider — into `~/.claude/settings.json` | Required (user scope) | 20 |
 
 ---
 
@@ -123,6 +125,22 @@ toward usage limits). Delegate to a subagent when output would flood the main
 conversation; do small, tightly coupled edits in the main thread. Route
 low-reasoning work (search, mapping) to lower-cost models via the agent's
 `model` field.
+
+A fresh machine pays this budget before any work starts: the installation
+runbook ([PLAYBOOK_INSTALL.md](PLAYBOOK_INSTALL.md), §0) keeps the
+always-loaded surface under target and measures it with `kit_check.py`.
+Installation is shell-only, so it costs zero model tokens; the model is
+consulted only for judgment.
+
+### 2.4 Language policy
+
+All generated artifacts are in **English**: source code, identifiers, comments,
+docstrings, test names, commit messages, specs and ADRs, `CLAUDE.md` and rules,
+agent and skill definitions, and documentation. State it once in the root
+`CLAUDE.md` so every session and subagent inherits it; non-English text appears
+only in user-facing localization resources. Mixed-language code, comments and
+prompts cost context, break grep/search, and produce inconsistent review
+findings.
 
 ---
 
@@ -385,7 +403,10 @@ Design rules:
 5. **Model/effort**: reasoning-heavy roles (architecture, security, curation)
    `opus`/high effort; execution roles `sonnet`; mapping/search `haiku`.
    Never hard-code a model the organization may disallow without `inherit`
-   as the fallback (`availableModels` can substitute).
+   as the fallback (`availableModels` can substitute). A worked three-tier
+   mapping (escalation / workhorse / cheap) with an `advisor` agent that
+   reproduces the native advisor pattern on any Anthropic-compatible backend
+   is in [CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md](CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md).
 6. **Isolation**: `isolation: worktree` for agents that make broad edits in
    parallel; their worktree is auto-removed when unchanged.
 7. **Hooks inside agents** (e.g., read-only SQL validator) only run after the
@@ -1302,6 +1323,145 @@ ownership files before generalizing.
 - [ ] Compliance evidence mapping reviewed with the audit playbook.
 - [ ] Rollout plan with pilot team and success criteria.
 
+### Installation
+- [ ] `install-user-kit.sh` ran; `kit_check.py` exits 0, or 1 with known warnings.
+- [ ] `settings.json` is `chmod 600` and holds no plaintext secret.
+- [ ] The working set was cloned by group (`clone-repos.sh --group=...`).
+- [ ] Skill packs were registered and installed (`install-skill-packs.sh`), and the cost tracker's `install.sh` ran.
+- [ ] Every active repo passes `configure-repo.sh --check`.
+
+---
+
+## 20. Installation and bootstrap
+
+This section says what an install needs; [PLAYBOOK_INSTALL.md](PLAYBOOK_INSTALL.md)
+is the full runbook (flags, groups, verification, rollback). Installation is
+shell-only and therefore costs **zero model tokens**; the model is consulted
+only for judgment calls.
+
+**`kit/` ships the user-scope layer** — the files installed into `~/.claude`:
+`kit/CLAUDE.md` (instructions), `kit/agents/` (`advisor`, `kit-curator`),
+`kit/skills/` (the SDD and audit skills), `kit/templates/sdd/` and the settings
+fragments (`kit/settings.fragment.json` — default model and the deny list;
+`kit/settings.ollama.json` — the Ollama tier env, merged only when Ollama is
+the provider; both merged into `settings.json`, never a replacement for it).
+
+**`scripts/claude-kit/` ships the install scripts:**
+
+| Script | Role |
+|---|---|
+| `install-user-kit.sh` | Installs `kit/` into `~/.claude`; skips user-owned files unless `--force`, backs up every overwrite, merges the settings fragments by provider (auto-detects Ollama) |
+| `clone-repos.sh` | Clones the working set by group (`selected` — the default install set — `core`, `products`, `tools`, `clients`, `reference`, or `all`); `--dry-run` prints the plan |
+| `install-skill-packs.sh` | Registers each skill-pack marketplace and installs its plugins into user scope; shell only, idempotent, `--dry-run` plans, `--self-test` checks the table against the clones |
+| `configure-repo.sh` | Wires one repo: routing block, `.claude/README.md`, deny list, `.gitignore`, optional language kit; `--check` verifies without writing |
+| `kit_check.py` | Read-only validator: agents, skills, rules, `CLAUDE.md`, settings, command collisions |
+| `dedupe_plugins.py` | Moves user copies of plugin components aside (dry run by default, `--restore` puts them back) |
+
+**A new machine runs four commands:**
+
+```bash
+bash scripts/claude-kit/install-user-kit.sh       # user scope
+bash scripts/claude-kit/clone-repos.sh --group=selected --dir ~/work
+bash scripts/claude-kit/install-skill-packs.sh --dir ~/work
+bash scripts/claude-kit/configure-repo.sh ~/work/<repo> --kit=<lang>
+```
+
+Every step is idempotent: re-running skips what is already there and never
+duplicates the `model-routing:ollama` marker. Note that under
+`permissions.defaultMode: "bypassPermissions"` the **deny** list is the
+enforced lever — an `allow` list is inert — so user-scope denies must anchor
+`//` or `~/`, never `./`.
+
+---
+
+## 21. Shipping a new runnable stack kit
+
+The kit directories are **runnable templates**: a renamed copy is a working
+project. `golang/` is the reference for the backend kits and `extension/` the
+reference for the client kits. A kit that installs but cannot be renamed,
+evaluated or gated is not shippable. The four client kits
+(`extension/`, `desktop/`, `frontend-mobile/`, `mobile-android/`) are the
+reference for the checklist below.
+
+### 21.1 Required surface
+
+| Path | Contract |
+|---|---|
+| `AGENTS.md` + `CLAUDE.md` | `CLAUDE.md` is a symlink to `AGENTS.md`: one agent-agnostic source of truth |
+| `MEMORY.md`, `README.md`, `Makefile`, `.gitignore`, `.env.example` | consumer entry points; the `Makefile` exposes `ci` and `verify` |
+| `docs/00-*.md` … `docs/14-*.md`, `docs/adr/` | the numbered doc set and the ADRs the consumer inherits |
+| `.claude/agents/`, `.claude/skills/`, `.claude/commands/`, `.claude/schemas/` | the capability plane, one directory per module kind |
+| `.claude/settings.json`, `.claude/manifest.json` | the control plane; the manifest declares the modules, the always-on set, the opt-ins, the runtime config dirs and the format adapters |
+| `scripts/hooks/guard-bash.sh` | the `PreToolUse` guard, byte-identical across the client kits |
+| `scripts/lint-agents.sh`, `lint-skills.sh`, `lint-commands.sh`, `leak-guard.sh`, `instruction-budget.sh` | the static gates every renamed copy must pass |
+| `scripts/rename.sh` | placeholder substitution (`<scope>` → `<APP>` → `<app>`, text only); it validates the new slug **before** touching the tree |
+| `scripts/verify-template.sh` | stages a renamed copy in a temp dir and runs every gate on it, one `PASS`/`FAIL` per stage, without mutating the working tree |
+| `scripts/install-claude-runtime.sh` | the manifest-driven installer; `configure-repo.sh --kit=<kit>` runs it (kit-local, repo-local as fallback) |
+| `evals/` | the contract suite, `fixtures/{valid,invalid}/` and `run-live.sh` |
+
+The template ships placeholders (`<app>`, `<APP>`, `<scope>`), never a real
+product name. `scripts/**` and `evals/fixtures/**` are excluded from
+substitution on purpose: the gates keep their literal patterns and the
+fixtures stay frozen.
+
+The four client kits are the reference, not the definition: where a shipped
+kit drifts from this table, the table wins and the kit is fixed.
+
+### 21.2 Two eval tiers
+
+- **Offline contract tier** — fixtures only, no network, no API budget. It is
+  the `evals` gate and `verify` runs it on the staged renamed copy (gate
+  names and their meaning: [PLAYBOOK_TESTS.md](PLAYBOOK_TESTS.md) §12).
+- **Live tier** — `evals/run-live.sh`, opt-in with `EVALS=1`; it needs a live
+  `claude` CLI and `ANTHROPIC_API_KEY`. Without them it prints why it skipped
+  and **exits 0**. The default gate may call it, but only as a no-op: the
+  live tier never spends budget unless a human opted in.
+
+A kit that ships `evals/run-live.sh` proves the no-op with a `run-live no-op
+guard` stage in `verify-template.sh`, and the live tier's default skill must
+exist in the kit (`review` in the client kits).
+
+### 21.3 Fixtures are frozen and domain-adapted
+
+`evals/fixtures/**` never changes with a rename and is never copied from
+another kit. Each kit writes its fixtures in its own domain: the extension
+kit's valid fixture is an extension reviewer, the desktop kit's an ownership
+reviewer, the mobile kits' an Android and a mobile reviewer. Reuse the file
+*names* for the same failure modes, write the *content* for the new domain.
+The `invalid/` fixtures keep their placeholders deliberately — they are what
+the leak and lint gates must catch.
+
+### 21.4 Local playbook copies
+
+- Client kits ship **byte-identical** copies of the root playbooks they
+  include. When a root playbook changes, re-copy it into every client kit
+  that ships it, in the same change: a stale copy is a silent second source
+  of truth.
+- Backend kits ship **stack-specialized** copies (the Go kit's
+  `PLAYBOOK_TESTS.md` is not the root's). Edit those in place; never
+  byte-compare them against the root.
+- Never fix a root rule by hand-editing a kit copy. Fix the root, then sync.
+- **Known gap:** no root gate enforces the copy sync. Each kit's `verify`
+  checks its own tree only, so a stale client copy passes every gate — the
+  sync has to happen in the same change as the root edit, by discipline.
+
+### 21.5 Adding a kit updates every enumeration
+
+A kit missing from one of these lists is invisible to the installer or to
+the user. Update all of them in the same change:
+
+1. `README.md` §3.2 — one row in the per-stack kits table, same columns.
+2. `README.md` — the `--kit=` list in the decision tree.
+3. `PLAYBOOK_INSTALL.md` §4 — the `--kit=` list.
+4. `scripts/claude-kit/configure-repo.sh` — the usage comment and the
+   `unknown kit` error message.
+5. `scripts/claude-kit/bootstrap.sh` — the next-steps echo.
+6. `scripts/claude-kit/README.md` — the `configure-repo.sh` row.
+7. `PLAYBOOK_TESTS.md` §12 — the client kits that ship the same gate surface.
+
+Then `configure-repo.sh <repo> --kit=<kit> --dry-run` must resolve the new
+kit, and the kit's own `make ci` must be green.
+
 ---
 
 ## Appendix A — Reference templates
@@ -1432,7 +1592,7 @@ warn mode: {"systemMessage": "..."}; always log violations to the coordination l
     "allow": ["Bash(git status *)", "Bash(git diff *)", "Bash(git log *)",
               "Bash(scripts/tdd/run-tests *)", "Bash(scripts/claude/doctor)"],
     "deny":  ["Bash(git push --force *)", "Bash(git reset --hard *)", "Bash(rm -rf *)",
-              "Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)", "Read(**/*.pem)"]
+              "Read(./.env)", "Read(./.env.*)", "Read(./secrets/**)", "Read(**/*.pem)", "Read(**/*.key)"]
   },
   "hooks": {
     "SessionStart": [{ "matcher": "startup|resume|clear|compact",
@@ -1494,3 +1654,86 @@ If the project follows hexagonal vertical slicing with companion playbooks:
 | Test strategy | Matrix from the test playbook (unit, integration, contract, e2e, security, concurrency, migration) per AC |
 | Shared files | Shared kernel, SDK, generated API specs, lockfiles, CI/infra → integrator |
 | Evidence | Spec/test traceability, release evidence bundle, guard logs → SOC 2 / ISO SDLC controls |
+
+---
+
+## Appendix C — Facta-Dev companion repositories
+
+Companion repositories that plug into this kit: Agent Skill packs per stack,
+a cost tracker for the metrics plane, and skill packs for the capability plane.
+Treat every clone as external code: review, pin and allowlist it (§6.6, §14.1),
+and accept workspace trust deliberately (§14.3).
+
+### C.1 Stack kits and cost tracking
+
+```bash
+gh repo clone Facta-Dev/beautifulpython              # Python backend
+gh repo clone Facta-Dev/beautifulrust                # Rust
+gh repo clone Facta-Dev/beautifulgo                  # Go
+gh repo clone Facta-Dev/beautifulnodejs              # Node.js + TypeScript
+gh repo clone Facta-Dev/claude-code-cli-cost-tracker # agent cost tracking
+```
+
+| Repository | Stack / concern | What it provides | Upstream |
+|---|---|---|---|
+| `beautifulpython` | Python backend | Agent Skills plus a lint config that teach agents to write, review, port and enforce idiomatic Python | main project |
+| `beautifulrust` | Rust | Agent Skills plus a tested clippy config for idiomatic Rust | `morganlinton/BeautifulRust` (fork) |
+| `beautifulgo` | Go | Agent Skills for idiomatic Go | main project |
+| `beautifulnodejs` | Node.js + TypeScript | Agent Skills plus lint config for a Fastify/Zod/tsyringe/Drizzle/BullMQ/Pino/OTel stack | main project |
+| `claude-code-cli-cost-tracker` | Cost tracking | Reports what agent work actually costs; feeds the cost metrics (§13.5) and session budgets (§8.7) | main project |
+
+Language kits install as project or user skills (`.claude/skills/`,
+`~/.claude/skills/`); `paths`-scoped skills auto-activate on matching files
+(§6.4). Their lint config belongs to project tooling, not to a rule file.
+
+### C.2 Skill packs
+
+```bash
+gh repo clone Facta-Dev/skills
+gh repo clone Facta-Dev/claude-skill
+gh repo clone Facta-Dev/garden-skills
+gh repo clone Facta-Dev/ponytail
+gh repo clone Facta-Dev/ui-ux-pro-max-skill
+gh repo clone Facta-Dev/superpowers
+gh repo clone Facta-Dev/awesome-claude-skills
+```
+
+Cloning is not installing. Register each pack's marketplace and install its
+plugins into user scope with one shell-only, idempotent command:
+
+```bash
+bash scripts/claude-kit/install-skill-packs.sh --dir ~/work
+```
+
+It covers `beautifulpython`, `beautifulrust`, `beautifulgo`,
+`beautifulnodejs`, `skills`, `claude-skill`, `garden-skills` (six plugins),
+`ui-ux-pro-max-skill` and `superpowers`; the exact marketplace and plugin
+names are listed in [PLAYBOOK_INSTALL.md §4.1](PLAYBOOK_INSTALL.md#41-repositories-that-install-something).
+`awesome-claude-skills` ships no plugin manifest (clone and read it), and
+`ponytail` stays on the baseline upstream marketplace `ponytail@ponytail`.
+
+| Repository | Content | Upstream (fork) |
+|---|---|---|
+| `skills` | "Skills for Real Engineers": small, composable engineering skills | `mattpocock/skills` |
+| `claude-skill` | MotionSites Web Builder: cinematic landing pages | `Motionsites-AI/claude-skill` |
+| `garden-skills` | Curated production-ready skills: web design, knowledge retrieval, image generation | `ConardLi/garden-skills` |
+| `ponytail` | Lazy-senior-dev behavior rules: the best code is the code never written | `DietrichGebert/ponytail` |
+| `ui-ux-pro-max-skill` | Design intelligence for professional UI/UX across platforms | `nextlevelbuilder/ui-ux-pro-max-skill` |
+| `superpowers` | Agentic skills framework and software-development methodology | `obra/superpowers` |
+| `awesome-claude-skills` | Curated index of Claude Skills, resources and tools (default branch `master`) | `ComposioHQ/awesome-claude-skills` |
+
+### C.3 Fork handling
+
+The seven skill repositories above plus `beautifulrust` are Facta-Dev forks
+with an `upstream` remote configured; `beautifulpython`, `beautifulgo`,
+`beautifulnodejs` and `claude-code-cli-cost-tracker` are the main projects.
+To refresh a fork that has no local commits:
+
+```bash
+git fetch --all --prune
+git merge --ff-only upstream/main        # master for awesome-claude-skills
+```
+
+If a fork has local commits, integrate upstream through a PR; never rewrite or
+force-push (`git push --force` is denied in §7.2). Agents may run the fetch and
+fast-forward commands; they never push from the kit.

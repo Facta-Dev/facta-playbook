@@ -564,7 +564,40 @@ Campaign-launch flow adds: `queue` and `concurrency` suites in `extraction`
 for Apify with a nightly live-sandbox smoke, and the
 `_journeys/launch-campaign-to-billing` end-to-end.
 
-## 12. Checklist
+## 12. The client kits' own gates
+
+The four client kits — `extension`, `desktop`, `frontend-mobile` and
+`mobile-android` — ship the same gate surface under the same names, so one
+command means the same thing in every one of them:
+
+| Gate | What it proves |
+| --- | --- |
+| `ci` | The fast gate on the working tree: lint, build and the test suite |
+| `evals` | The `.claude` contract harness: the agents, skills and commands against `.claude/schemas/` |
+| `verify` | A staged renamed copy in a temp dir, every gate run on it — the working tree is never mutated |
+
+`ci` and `verify` are Make targets in every client kit; the contract harness
+is `make evals`, except in the extension kit, whose Makefile does not wrap
+the `evals` package script.
+
+Three rules keep the four kits interchangeable:
+
+1. **Same name, same meaning.** `verify` is always the staged renamed copy —
+   never an alias of `test`, and never a target the documentation contradicts.
+2. **A live-eval tier defaults to something that exists.** `evals/run-live.sh`
+   defaults to a skill slug the kit ships (`review` in all four). A default
+   that skips by default turns the tier into a no-op that still exits 0.
+3. **A schema doc describes the harness the kit ships.**
+   `.claude/schemas/*.schema.md` states what parses it: the bash linters
+   always, plus the contract eval. The desktop kit's
+   `evals/contracts_test.cpp` reads every list from the schema at runtime;
+   the React Native kit's `evals/contracts.test.mjs` reads the division enum
+   from it and mirrors the required keys and sections by hand; the extension
+   kit's eval and the Android kit's `evals/src/` mirror the lists. Never
+   document a harness the kit does not ship, and never tell the reader to
+   update a file that does not exist.
+
+## 13. Checklist
 
 - [ ] Tests live under `tests/{slice}/{backend|frontend}/{type}`; cross-cutting
       suites under `_platform`, cross-slice journeys under `_journeys`.
@@ -602,3 +635,5 @@ for Apify with a nightly live-sandbox smoke, and the
       green.
 - [ ] Control mapping and this playbook are reviewed with the auditor at least
       annually.
+- [ ] The client kits expose the same gate surface (`ci`, `evals`, `verify`),
+      each with the meaning of section 12.

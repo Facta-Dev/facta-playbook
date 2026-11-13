@@ -1,0 +1,8 @@
+# <app> — the pnpm workspace.
+#
+# The app is the composition root; every reusable piece lives in a package
+# under packages/. The template ships no lockfile: the first pnpm install
+# happens on the renamed copy, after scripts/rename.sh.
+packages:
+  - app
+  - packages/*

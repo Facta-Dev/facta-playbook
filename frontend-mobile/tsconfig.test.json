@@ -1,0 +1,15 @@
+// <app> — the test program.
+//
+// Extends the build tsconfig; the packages and the app are checked as one
+// program with the tests, so a test sees exactly the types the app ships.
+// The architecture suite reads the source files as text, so the whole tree
+// must be inside the program.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["packages/*/src", "app", "tests", "vitest.config.mts"],
+  "exclude": ["node_modules", "dist", ".expo"]
+}

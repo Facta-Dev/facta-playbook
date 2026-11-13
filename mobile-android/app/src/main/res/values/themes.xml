@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose draws the UI; the platform theme only needs to keep the
+         action bar out of the way before the first frame. -->
+    <style name="Theme.<APP>" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

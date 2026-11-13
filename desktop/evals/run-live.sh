@@ -18,7 +18,7 @@
 # Usage:
 #   EVALS=1 bash evals/run-live.sh                      # tier 2 smoke only
 #   EVALS=1 TIER=3 bash evals/run-live.sh                # tier 2 + tier 3 judge
-#   EVALS=1 SKILL_SLUG=ownership-review bash evals/run-live.sh
+#   EVALS=1 SKILL=review bash evals/run-live.sh         # pick the skill slug
 #
 # Every guard below exits 0 on skip, so an accidental default-path call
 # (EVALS unset, no claude CLI, no API key, no skill in the tree) is always a
@@ -44,11 +44,11 @@ if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
 fi
 
 TIER="${TIER:-2}"
-SKILL_SLUG="${SKILL_SLUG:-ownership-review}"
-SKILL_FILE="$ROOT_DIR/.claude/skills/$SKILL_SLUG/SKILL.md"
+SKILL="${SKILL:-review}"
+SKILL_FILE="$ROOT_DIR/.claude/skills/$SKILL/SKILL.md"
 
 if [[ ! -f "$SKILL_FILE" ]]; then
-  echo "run-live: no skill at .claude/skills/$SKILL_SLUG/SKILL.md; skipping."
+  echo "run-live: skill '$SKILL' not found at .claude/skills/$SKILL/SKILL.md; skipping."
   exit 0
 fi
 
@@ -61,8 +61,8 @@ SAMPLE_DIFF='--- a/src/features/notes/domain/note.cpp
 +  }
  }'
 
-echo "run-live: tier 2 — smoke-testing the '$SKILL_SLUG' skill end to end"
-tier2_out="$(claude -p "Invoke the skill from .claude/skills/$SKILL_SLUG/SKILL.md against this diff and report findings per its Output Format section:
+echo "run-live: tier 2 — smoke-testing the '$SKILL' skill end to end"
+tier2_out="$(claude -p "Invoke the skill from .claude/skills/$SKILL/SKILL.md against this diff and report findings per its Output Format section:
 ${SAMPLE_DIFF}" 2>&1)" || {
   echo "run-live: tier 2 FAILED — claude -p returned nonzero" >&2
   exit 1

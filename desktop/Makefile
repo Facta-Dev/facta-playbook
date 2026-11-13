@@ -66,6 +66,7 @@ evals: ## Build the evals harness (EVALS=ON) and run its checks
 	$(CMAKE) --build $(EVALS_BUILD_DIR) -j $(JOBS)
 	$(CTEST) --test-dir $(EVALS_BUILD_DIR) --output-on-failure
 
-verify: test ## Configure, build and run the tests
+verify: ## Stage a renamed copy and run every gate on it
+	bash scripts/verify-template.sh
 
-ci: lint verify ## The gate: format check, build and tests
+ci: lint test ## The gate: format check, build and tests

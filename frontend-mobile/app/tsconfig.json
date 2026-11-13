@@ -1,0 +1,10 @@
+// <app> — the app program.
+//
+// The app extends the workspace program: the same strictness, the same
+// path mapping. It adds nothing of its own — the app is a composition
+// root, not a second source of truth.
+{
+  "extends": "../../tsconfig.json",
+  "include": ["index.ts", "App.tsx"],
+  "exclude": ["node_modules", "dist", ".expo"]
+}

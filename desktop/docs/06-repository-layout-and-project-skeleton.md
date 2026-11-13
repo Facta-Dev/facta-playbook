@@ -65,8 +65,8 @@ Every command below is a real `Makefile` target.
 | `make lint` | `clang-format --dry-run -Werror` over `src packages tests evals`; **skipped with a notice** when the tool is absent |
 | `make tidy` | `clang-tidy -p build` over `src` and `packages`; **skipped with a notice** when the tool or `compile_commands.json` is absent |
 | `make evals` | Configures `build-evals` with `-DEVALS=ON -DENABLE_TESTS=ON`, builds it and runs the harness |
-| `make verify` | Alias of `make test` |
-| `make ci` | `lint` + `verify`: the gate |
+| `make verify` | Stages a renamed copy and runs every gate on it |
+| `make ci` | `lint` + `test`: the gate |
 
 Variables: `PRESET`, `BUILD_DIR`, `CONFIG`, `JOBS`, `ENABLE_TESTS`.
 

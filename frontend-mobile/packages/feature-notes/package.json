@@ -1,0 +1,16 @@
+{
+  "name": "@<scope>/feature-notes",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The notes slice: domain, application, adapters, view models and views.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@<scope>/contracts": "workspace:*",
+    "@<scope>/core": "workspace:*"
+  }
+}

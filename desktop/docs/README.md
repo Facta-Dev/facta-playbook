@@ -77,8 +77,8 @@ Starting a project? Copy the kit, run `scripts/rename.sh`, then follow
 | `make lint`                 | `clang-format --dry-run -Werror` over every source (skipped without the tool)  |
 | `make tidy`                 | `clang-tidy` over `src/` and `packages/` (skipped without the tool)            |
 | `make evals`                | The `.claude` contract harness                                                |
-| `make verify`               | `make test`                                                                    |
-| `bash scripts/verify-template.sh` | The whole kit, renamed in a temp copy, gate by gate                      |
+| `make verify`               | The whole kit, renamed in a temp copy, gate by gate                            |
+| `bash scripts/verify-template.sh` | The same gate `make verify` runs, called directly                        |
 
 ## Known gaps of the template
 
