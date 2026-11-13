@@ -121,6 +121,7 @@ never duplicate a baseline plugin in a project file.
 | `PLAYBOOK_FRONTEND.md` | Frontend on React: SPA, MVVM + shared SDK (the client playbooks specialize it) | Any web client |
 | `PLAYBOOK_CHROME_EXTENSION.md` | Chrome MV3 extension: service worker, messaging, permissions, store review | Any extension |
 | `PLAYBOOK_DESKTOP_QT.md` | Desktop client on Qt/QML: layering, threading, packaging and updates | Desktop clients |
+| `PLAYBOOK_CLI.md` | Cross-platform terminal CLI/TUI: headless core + many frontends, stdout/stderr and exit-code contracts, PTY tests, signing and updates | Any CLI/TUI product |
 | `PLAYBOOK_FRONTEND_MOBILE.md` | Mobile frontend on React Native + Expo: variants, device classes, quality governor, scene engines, push | Any RN/Expo app |
 | `PLAYBOOK_MOBILE_ANDROID_KOTLIN.md` | Native Android on Kotlin + Compose: Gradle module graph, UDF, Navigation 3, FCM, ARCore | Any native Android app |
 | `PLAYBOOK_MOBILE_IOS_SWIFT.md` | Native iOS on Swift 6 + SwiftUI written as code: Swift packages, Observation/MVVM, APNs, StoreKit, scene engines, App Store | Any native iOS app |
