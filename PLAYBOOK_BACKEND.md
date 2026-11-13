@@ -13,6 +13,9 @@ The runnable, machine-checkable companions are
 (write, review, port) and a drop-in linter config per language, enforcing this
 contract.
 
+The language-specific specialization for Java enterprise (J2EE / Jakarta EE)
+is `PLAYBOOK_JAVA_J2EE.md`.
+
 The rules that carry the whole file:
 
 1. **A slice owns a business capability end to end** (routes → use cases →

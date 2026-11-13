@@ -118,6 +118,7 @@ never duplicate a baseline plugin in a project file.
 | `PLAYBOOK_INSTALL.md` | Installation and bootstrap: clone order, idempotent kit configuration, user-scope validation, minimal-token install path | Preparing a new machine or re-provisioning one |
 | `PLAYBOOK_CLAUDE_CODE.md` | The Claude Code implementation kit: files, agents, skills, rules, hooks, permissions, memory, collaboration protocol, parallel sessions, SDD + TDD loop | Starting a repo, or auditing whether a repo is agent-ready |
 | `PLAYBOOK_BACKEND.md` | Backend architecture: hexagonal + vertical slices, language-agnostic folder and dependency rules | Any backend service, any language |
+| `PLAYBOOK_JAVA_J2EE.md` | Java enterprise (J2EE / Jakarta EE 11): Maven modules, CDI, JPA/JTA, JMS/outbox, JAX-RS, app-server deployment | Any Java enterprise backend |
 | `PLAYBOOK_FRONTEND.md` | Frontend on React: SPA, MVVM + shared SDK (the client playbooks specialize it) | Any web client |
 | `PLAYBOOK_CHROME_EXTENSION.md` | Chrome MV3 extension: service worker, messaging, permissions, store review | Any extension |
 | `PLAYBOOK_DESKTOP_QT.md` | Desktop client on Qt/QML: layering, threading, packaging and updates | Desktop clients |
