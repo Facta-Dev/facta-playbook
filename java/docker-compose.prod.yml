@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+  app:
+    image: ${APP_IMAGE}
+    restart: always
+    depends_on: [db]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    ports: ["8080:8080"]
+volumes:
+  pgdata:

@@ -11,7 +11,7 @@
 #   bash scripts/claude-kit/configure-repo.sh <repo-path> [--kit=NAME]
 #        [--check] [--dry-run]
 #     <repo-path   repository root (must be a git work tree)
-#     --kit=NAME   also install that stack kit: golang|nodejs|python|rust|
+#     --kit=NAME   also install that stack kit: golang|nodejs|python|rust|java|
 #                  extension|desktop|frontend-mobile|mobile-android|mobile-ios
 #     --check      verify the repo, write nothing; exit 1 on drift
 #     --dry-run    print the diff it would apply, write nothing
@@ -50,7 +50,7 @@ die() { echo "configure-repo: ERROR — $*" >&2; exit 1; }
 [[ -n "$REPO" ]] || die "repo path required"
 [[ -d "$REPO" ]] || die "no such directory: $REPO"
 if [[ -n "$KIT" && ! -d "$ROOT_DIR/$KIT" ]]; then
-  die "unknown kit '$KIT' (golang|nodejs|python|rust|extension|desktop|frontend-mobile|mobile-android|mobile-ios)"
+  die "unknown kit '$KIT' (golang|nodejs|python|rust|java|extension|desktop|frontend-mobile|mobile-android|mobile-ios)"
 fi
 
 # The repo root is the git work tree root, not the path as typed.

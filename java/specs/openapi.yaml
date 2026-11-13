@@ -1,0 +1,40 @@
+openapi: 3.1.0
+info:
+  title: <app> API
+  version: 0.1.0
+paths:
+  /api/v1/app/widgets/{id}/archive:
+    post:
+      operationId: archiveWidget
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: If-Match
+          in: header
+          required: true
+          schema: { type: string }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Archived widget
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Widget' }
+        '403': { description: Forbidden }
+        '404': { description: Not found }
+        '409': { description: Version conflict }
+components:
+  schemas:
+    Widget:
+      type: object
+      required: [id, name, status, version]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [READY, ARCHIVED] }
+        version: { type: integer, format: int64 }

@@ -194,7 +194,7 @@ bash ~/ai-coding-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos \
 bash ~/ai-coding-playbook/scripts/claude-kit/configure-repo.sh ~/work/talos --kit=golang
 ```
 
-`--kit=` is one of `golang`, `nodejs`, `python`, `rust`, `extension`,
+`--kit=` is one of `golang`, `nodejs`, `python`, `rust`, `java`, `extension`,
 `desktop`, `frontend-mobile`, `mobile-android`, `mobile-ios`.
 
 Every kit is a runnable template with the same gate surface: `make ci` (the

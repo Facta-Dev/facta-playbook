@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             version="3.2">
+  <persistence-unit name="app" transaction-type="JTA">
+    <jta-data-source>java:comp/DefaultDataSource</jta-data-source>
+    <class>com.example.app.widgets.adapters.WidgetEntity</class>
+    <class>com.example.app.widgets.adapters.OutboxEntity</class>
+    <properties>
+      <property name="hibernate.hbm2ddl.auto" value="validate"/>
+      <property name="hibernate.jdbc.time_zone" value="UTC"/>
+    </properties>
+  </persistence-unit>
+</persistence>

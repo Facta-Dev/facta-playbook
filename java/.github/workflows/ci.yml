@@ -1,0 +1,27 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  gates:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Maven gate
+        run: mvn -q verify
+      - name: Claude layer
+        run: |
+          python3 evals/contracts_test.py
+          bash scripts/lint-agents.sh
+          bash scripts/lint-skills.sh
+          bash scripts/lint-commands.sh
+          bash scripts/leak-guard.sh
+          bash scripts/instruction-budget.sh

@@ -43,7 +43,7 @@ bash ~/ai-coding-playbook/scripts/claude-kit/bootstrap.sh             # install
              ├─ working set   clone-repos.sh --group=selected --dir ~/work
              ├─ skill packs   install-skill-packs.sh --dir ~/work
              ├─ cost tracker  ~/work/claude-code-cli-cost-tracker/install.sh
-             └─ each repo     configure-repo.sh <repo> --kit=<golang|nodejs|python|rust|extension|desktop|frontend-mobile|mobile-android|mobile-ios>
+             └─ each repo     configure-repo.sh <repo> --kit=<golang|nodejs|python|rust|java|extension|desktop|frontend-mobile|mobile-android|mobile-ios>
 
 VERIFY: kit_check.py · deny probe (PLAYBOOK_INSTALL §5) · routing probes (§9)
         · /context · /doctor
@@ -164,6 +164,7 @@ specialized to it, and the matching `.claude/` plane:
 | `rust/` | Runnable Rust workspace (11 crates, axum 0.8, sqlx 0.8, sessions, outbox, realtime) + `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents (incl. `unsafe-reviewer`), 9 skills/commands, contract evals | Ready |
 | `nodejs/` | Runnable Node 24 + TypeScript template (Fastify 5, Kysely, full auth core, outbox worker, WebSocket + SSE) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents, 9 skills/commands, 14 kit contract evals | Ready |
 | `python/` | Runnable Python 3.12 + uv template (FastAPI, pydantic v2, SQLAlchemy 2 async, Alembic, full auth core, outbox worker, WebSocket + SSE) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 11 agents, 9 skills/commands, 14 kit contract evals | Ready |
+| `java/` | Runnable Jakarta EE 11 template (Java 21, Maven, CDI, JPA/Hibernate, Flyway, JAX-RS, widgets slice, JUnit/ArchUnit tests) + `docs/` 00–14 + ADRs, `AGENTS.md`, `MEMORY.md`, 6 backend playbooks, 7 agents, 6 skills/commands, contract evals | Ready (Maven gates in CI) |
 | `extension/` | Runnable Chrome MV3 template (Vite 7, React 19 side panel, classic service worker, zod message protocol with sender validation, versioned storage, managed policy, zero host permissions) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, node contract evals | Ready |
 | `desktop/` | Runnable Qt 6 Widgets template (C++20, CMake presets, one static library per layer with link-time rules, MVVM notes slice, SQLite, managed policy, headless Qt Test) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, C++ contract evals | Ready |
 | `frontend-mobile/` | Runnable React Native + Expo template (SDK 58, React 19.3, RN 0.88, plain App entry, device tiers + quality governor, typed route table, MVVM notes slice, vitest architecture tests, Metro export gate) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, node contract evals | Ready |
