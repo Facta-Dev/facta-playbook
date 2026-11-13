@@ -19,7 +19,7 @@ It extends and must stay consistent with `PLAYBOOK_FRONTEND_MOBILE.md` (same
 variants, contracts, budgets, device tiers and flows), `PLAYBOOK_FRONTEND.md`
 (MVVM + SDK), `PLAYBOOK_URLS.md` (routes and permissions), `PLAYBOOK_BACKEND.md`
 (slices, realtime, idempotency), `PLAYBOOK_SECURITY.md`, `PLAYBOOK_TESTS.md`,
-`PLAYBOOK_AUDIT.md`, `PLAYBOOK_CLAUDE.md`, and reuses patterns from
+`PLAYBOOK_AUDIT.md`, `PLAYBOOK_CLAUDE_CODE.md`, and reuses patterns from
 `PLAYBOOK_DESKTOP_QT.md` (realtime state machine, quality governor) and
 `PLAYBOOK_CHROME_EXTENSION.md` (managed config, kill switch, diagnostics).
 
@@ -835,7 +835,7 @@ a fixture and an assertion. A declared mode without a test is a gap, not a docum
 * **Documents:** ADRs, dependency and permissions registers, device pool/tiers, support matrix, threat model, data-flow diagrams, privacy review, Play submission checklist, runbooks.
 * **Compliance mapping** (`PLAYBOOK_AUDIT.md`): SDLC controls via CI gates; vendor management for SDKs/providers (FCM, maps, payments, voice/LLM, avatar, ARCore); privacy evidence for location/voice/face data; change management via staged rollouts; incident runbooks;
   evidence bundle per release (builds, SBOM, test/perf reports, permission diffs, approvals). CRA applicability for distributed apps: assess with counsel **(verify)**.
-* **Claude Code** (`PLAYBOOK_CLAUDE.md`): path-scoped rules for `core/**`, `shell/**`, `feature/**`, `core/scene/**`; integrator role owns Gradle build logic, version catalog, manifests and lockfiles; skills: `new-android-feature` (module scaffold: domain/data/ui/contracts + tests),
+* **Claude Code** (`PLAYBOOK_CLAUDE_CODE.md`): path-scoped rules for `core/**`, `shell/**`, `feature/**`, `core/scene/**`; integrator role owns Gradle build logic, version catalog, manifests and lockfiles; skills: `new-android-feature` (module scaffold: domain/data/ui/contracts + tests),
   `new-notification-type` (schema, channel, deep link, handler, test), `new-scene-asset` (pipeline + budgets), `baseline-profile-refresh`, `device-perf-check`; specs list variants, permissions, tiers, budgets, push types, routes and test levels per AC.
 
 ---

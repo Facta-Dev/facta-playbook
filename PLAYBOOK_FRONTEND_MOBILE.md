@@ -17,7 +17,7 @@ flagships.
 It extends `PLAYBOOK_FRONTEND.md` (MVVM + SDK), `PLAYBOOK_URLS.md` (route and
 permission model), `PLAYBOOK_BACKEND.md` (slices, realtime, idempotency),
 `PLAYBOOK_SECURITY.md`, `PLAYBOOK_TESTS.md`, `PLAYBOOK_AUDIT.md`,
-`PLAYBOOK_CLAUDE.md`, and reuses patterns from `PLAYBOOK_CHROME_EXTENSION.md` and
+`PLAYBOOK_CLAUDE_CODE.md`, and reuses patterns from `PLAYBOOK_CHROME_EXTENSION.md` and
 `PLAYBOOK_DESKTOP_QT.md` (managed config, kill switch, diagnostics, realtime).
 
 The rules that carry the whole file:
@@ -1109,7 +1109,7 @@ avatar-provider loss (switch provider), voice/LLM provider outage (degrade to te
   voice/LLM, avatar); privacy (location/voice/face data) and consent evidence; change management via staged rollouts; incident response runbooks; evidence
   bundle per release (builds, SBOM, test and performance reports, permission diffs, approvals). CRA applicability for distributed apps: assess with counsel
   **(verify)**.
-* **Claude Code** (`PLAYBOOK_CLAUDE.md`): path-scoped rules for `packages/mobile-core/**`, `packages/feature-*/**`, `packages/scene-engine/**`;
+* **Claude Code** (`PLAYBOOK_CLAUDE_CODE.md`): path-scoped rules for `packages/mobile-core/**`, `packages/feature-*/**`, `packages/scene-engine/**`;
   integrator role owns `app.config.ts`, native deps, lockfiles, CI; skills: `new-mobile-feature` (slice scaffold with ports, ViewModel, View, tests),
   `new-notification-type` (schema, category/channel, deep link, handler, test), `new-scene-asset` (pipeline + budgets), `device-perf-check`;
   specs list variants affected, permissions, tiers, budgets, push types, routes and test levels per AC.

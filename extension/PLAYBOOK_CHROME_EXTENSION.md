@@ -8,7 +8,7 @@ through a governed pipeline.
 
 It extends `PLAYBOOK_FRONTEND.md` (MVVM + SDK, extension section),
 `PLAYBOOK_URLS.md` (route/permission model), `PLAYBOOK_SECURITY.md`,
-`PLAYBOOK_TESTS.md`, `PLAYBOOK_AUDIT.md` and `PLAYBOOK_CLAUDE.md`. It is
+`PLAYBOOK_TESTS.md`, `PLAYBOOK_AUDIT.md` and `PLAYBOOK_CLAUDE_CODE.md`. It is
 project-agnostic: replace `<product>`, `<tenant>` and `<api>` with your own.
 
 The rules that carry the whole file:
@@ -936,7 +936,7 @@ misconfiguration at a customer · mass sign-out/IdP outage · data incident
 
 ## 21. Working with Claude Code on this project
 
-Per `PLAYBOOK_CLAUDE.md`:
+Per `PLAYBOOK_CLAUDE_CODE.md`:
 
 * A **path-scoped rule** for `apps/extension/**` carrying the layer rules, the
   messaging/sender-validation rule, the "no `chrome.*` outside `platform/`" and

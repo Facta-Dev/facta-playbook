@@ -22,7 +22,7 @@ It builds on and must stay consistent with:
 | `PLAYBOOK_TESTS.md` | Test pyramid, authz matrix, tenant isolation, evidence (§1–§10) |
 | `PLAYBOOK_AUDIT.md` | Control library, evidence, CRA/SOC 2/ISO mapping (§4–§14) |
 | `PLAYBOOK_CHROME_EXTENSION.md` | Enterprise policy, kill switch, diagnostics bundle, release governance patterns reused here |
-| `PLAYBOOK_CLAUDE.md` | SDD + TDD workflow, roles and kit for AI-assisted development |
+| `PLAYBOOK_CLAUDE_CODE.md` | SDD + TDD workflow, roles and kit for AI-assisted development |
 
 The rules that carry the whole file:
 
@@ -1036,7 +1036,7 @@ accordingly **(confirm applicability with counsel)**. Reporting obligations for 
 
 ## 18. Working with Claude Code on this project
 
-Per `PLAYBOOK_CLAUDE.md`:
+Per `PLAYBOOK_CLAUDE_CODE.md`:
 
 * A path-scoped rule for `apps/desktop/**` with the layer rules, "no `#ifdef` outside `platform/`", "GUI thread
   never blocks", "no embedded browser", realtime rules, and links to this playbook (not `@`-imported).

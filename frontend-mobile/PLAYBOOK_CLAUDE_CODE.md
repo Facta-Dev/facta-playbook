@@ -1,4 +1,4 @@
-# PLAYBOOK_CLAUDE.md — Claude Code implementation kit: what every project must have
+# PLAYBOOK_CLAUDE_CODE.md — Claude Code implementation kit: what every project must have
 
 Specification of the **Claude Code implementation kit** for any software project:
 the files, directories, agents, skills, rules, hooks, permissions, switches,
