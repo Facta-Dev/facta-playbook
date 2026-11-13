@@ -1,5 +1,8 @@
 # `<app>` — Rust backend skeleton
 
+> Companion repo: [beautifulrust](https://github.com/Facta-Dev/beautifulrust) —
+> the Agent Skills and linter config for this stack.
+
 An enterprise-grade axum 0.8 + sqlx 0.8 workspace template. Every `<app>` and
 `<scope>` token is a **literal placeholder** — it is NOT a valid crate name and
 the workspace will not parse until you rename it. See [How to apply](#how-to-apply).

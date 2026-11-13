@@ -193,6 +193,34 @@ over budget. To adopt a playbook, add the rule that names it — not an import.
 When a playbook passes ~40k chars it stops working as one instruction file:
 split it by concern.
 
+### 3.4 The Beautiful series
+
+Every stack playbook has a runnable, machine-checkable companion repository.
+Each one ships three standard Agent Skills — write (`<stack>-best-practices`),
+review (`<stack>-review`) and port (`<stack>-port`) — plus a drop-in linter
+config whose rules are proven to fire, a skill validator, and the same gate
+shape (`check-skill`, `check-examples`, `check-lints` or the native
+equivalent). The playbooks are the contract; these repositories are the
+enforcement and the worked examples for frontier models.
+
+| Playbook | Companion repo(s) | Stack |
+| --- | --- | --- |
+| `PLAYBOOK_BACKEND.md` | [beautifulgo](https://github.com/Facta-Dev/beautifulgo), [beautifulnodejs](https://github.com/Facta-Dev/beautifulnodejs), [beautifulpython](https://github.com/Facta-Dev/beautifulpython), [beautifulrust](https://github.com/Facta-Dev/beautifulrust) | Go, Node.js/TypeScript, Python, Rust |
+| `PLAYBOOK_FRONTEND.md` | [beautifulreact](https://github.com/Facta-Dev/beautifulreact) | React 19 + TypeScript |
+| `PLAYBOOK_CHROME_EXTENSION.md` | [beautifulextension](https://github.com/Facta-Dev/beautifulextension) | Chrome MV3 + TypeScript |
+| `PLAYBOOK_DESKTOP_QT.md` | [beautifulqt](https://github.com/Facta-Dev/beautifulqt) | Qt 6 + C++20 |
+| `PLAYBOOK_FRONTEND_MOBILE.md` | [beautifulreactnative](https://github.com/Facta-Dev/beautifulreactnative) | React Native + Expo |
+| `PLAYBOOK_MOBILE_ANDROID_KOTLIN.md` | [beautifulandroid](https://github.com/Facta-Dev/beautifulandroid) | Kotlin + Compose |
+| `PLAYBOOK_MOBILE_IOS_SWIFT.md` | [beautifulios](https://github.com/Facta-Dev/beautifulios) | Swift 6 + SwiftUI |
+| `PLAYBOOK_CLI.md` | [beautifulcli](https://github.com/Facta-Dev/beautifulcli) | TypeScript CLI/TUI |
+
+The shared contracts — `PLAYBOOK_URLS.md`, `PLAYBOOK_TESTS.md`,
+`PLAYBOOK_SECURITY.md`, `PLAYBOOK_AUDIT.md` and `PLAYBOOK_CLAUDE_CODE.md` —
+apply across the series: every companion repo carries the same three-skill
+shape, the same "unbreakable contract" wording, and a CI workflow, and every
+rule it enforces cites the playbook it comes from. All repositories are public
+under <https://github.com/Facta-Dev> and link to each other as siblings.
+
 ## 4. Repository map
 
 Orgs: **Facta-Dev** (products, tooling), **contextzero** (NEST / CTX0),

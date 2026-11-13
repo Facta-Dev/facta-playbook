@@ -1,5 +1,8 @@
 # `<app>` — native iOS skeleton
 
+> Companion repo: [beautifulios](https://github.com/Facta-Dev/beautifulios) —
+> the Agent Skills and linter config for this stack.
+
 A native iOS template: Swift 6 with strict concurrency, SwiftUI, iOS 18, an
 XcodeGen `project.yml` that generates the project file, **one SwiftPM package
 per architectural layer**, typed routes, a unidirectional-data-flow `notes`

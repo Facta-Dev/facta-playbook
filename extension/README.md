@@ -1,5 +1,9 @@
 # `<app>` — Chrome extension skeleton
 
+> Companion repo:
+> [beautifulextension](https://github.com/Facta-Dev/beautifulextension) — the
+> Agent Skills and linter config for this stack.
+
 A Manifest V3 Chrome extension template: TypeScript + React 19 side panel, a
 classic service worker, zod contracts shared by both ends of the message
 protocol, a typed storage layer with schema versions, and **zero host

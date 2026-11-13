@@ -23,6 +23,11 @@ variants, contracts, budgets, device tiers and flows), `PLAYBOOK_FRONTEND.md`
 `PLAYBOOK_DESKTOP_QT.md` (realtime state machine, quality governor) and
 `PLAYBOOK_CHROME_EXTENSION.md` (managed config, kill switch, diagnostics).
 
+The runnable, machine-checkable companion is
+[beautifulandroid](https://github.com/Facta-Dev/beautifulandroid): three Agent
+Skills (write, review, port) and a drop-in detekt/ktlint config that enforces
+this contract.
+
 The rules that carry the whole file:
 
 1. **Native means we can do things React Native can't cheaply do**: baseline

@@ -1,5 +1,8 @@
 # `<app>` — Qt 6 desktop client template
 
+> Companion repo: [beautifulqt](https://github.com/Facta-Dev/beautifulqt) — the
+> Agent Skills and linter config for this stack.
+
 A hexagonal, vertically-sliced **Qt 6 / C++20** desktop template: Qt Widgets
 (never QML by default), MVVM with `QObject` view models, a SQLite local cache
 in WAL mode, a generated C++ SDK and a CMake link-time dependency law. Every

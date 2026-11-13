@@ -20,6 +20,11 @@ permission model), `PLAYBOOK_BACKEND.md` (slices, realtime, idempotency),
 `PLAYBOOK_CLAUDE_CODE.md`, and reuses patterns from `PLAYBOOK_CHROME_EXTENSION.md` and
 `PLAYBOOK_DESKTOP_QT.md` (managed config, kill switch, diagnostics, realtime).
 
+The runnable, machine-checkable companion is
+[beautifulreactnative](https://github.com/Facta-Dev/beautifulreactnative): three
+Agent Skills (write, review, port) and a drop-in eslint config that enforces
+this contract.
+
 The rules that carry the whole file:
 
 1. **The app shell is React Native; heavy 3D is a replaceable module.** The shell

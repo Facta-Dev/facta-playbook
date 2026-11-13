@@ -1,5 +1,9 @@
 # `<app>` — Node/TypeScript backend skeleton
 
+> Companion repo:
+> [beautifulnodejs](https://github.com/Facta-Dev/beautifulnodejs) — the Agent
+> Skills and linter config for this stack.
+
 A hexagonal, vertically-sliced Node 24 + TypeScript 5.9 backend template:
 Fastify 5, `pg` + Kysely typed queries, node-pg-migrate, zod 4, full auth
 core, outbox email worker, WebSocket + SSE, Cucumber acceptance over a

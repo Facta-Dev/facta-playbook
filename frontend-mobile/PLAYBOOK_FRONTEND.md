@@ -6,6 +6,11 @@ Architecture contract for every Heimdall client: **React (web SPA)**,
 `PLAYBOOK_URLS.md`. Companion of `PLAYBOOK_BACKEND.md` (slices, permissions,
 error envelope).
 
+The runnable, machine-checkable companion is
+[beautifulreact](https://github.com/Facta-Dev/beautifulreact): three Agent
+Skills (write, review, port) and a drop-in eslint config that enforces this
+contract.
+
 The rules that carry the whole file:
 
 1. **View → ViewModel → SDK.** A View renders and forwards events. A

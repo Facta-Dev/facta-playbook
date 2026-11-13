@@ -5,6 +5,14 @@ Architecture contract for Heimdall's backend: **hexagonal architecture
 rule is expressed in terms of folders, dependencies and contracts, not
 frameworks. Companion of `PLAYBOOK_URLS.md` (routes and authorization model).
 
+The runnable, machine-checkable companions are
+[beautifulgo](https://github.com/Facta-Dev/beautifulgo),
+[beautifulnodejs](https://github.com/Facta-Dev/beautifulnodejs),
+[beautifulpython](https://github.com/Facta-Dev/beautifulpython) and
+[beautifulrust](https://github.com/Facta-Dev/beautifulrust): three Agent Skills
+(write, review, port) and a drop-in linter config per language, enforcing this
+contract.
+
 The rules that carry the whole file:
 
 1. **A slice owns a business capability end to end** (routes → use cases →

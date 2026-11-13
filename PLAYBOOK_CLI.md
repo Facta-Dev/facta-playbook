@@ -18,6 +18,10 @@ skills, hooks, multi-session patterns), `PLAYBOOK_DESKTOP_QT.md` (realtime
 state machine, policy, updater) and the mobile playbooks (device-code style
 sign-in is new here; push is not applicable).
 
+The runnable, machine-checkable companion is
+[beautifulcli](https://github.com/Facta-Dev/beautifulcli): three Agent Skills
+(write, review, port) and a drop-in eslint config that enforces this contract.
+
 The rules that carry the whole file:
 
 1. **One headless core, many frontends.** The engine (use cases, ports, event

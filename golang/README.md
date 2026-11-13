@@ -1,5 +1,8 @@
 # `<app>` — Go backend skeleton
 
+> Companion repo: [beautifulgo](https://github.com/Facta-Dev/beautifulgo) — the
+> Agent Skills and linter config for this stack.
+
 A hexagonal, vertically-sliced Go 1.27 backend template: stdlib `net/http`
 ServeMux, pgx/v5, sqlc, goose, godog acceptance tests, golangci-lint v2 with
 depguard slice-isolation. Every `<app>`, `<APP>` and `<scope>` token is a

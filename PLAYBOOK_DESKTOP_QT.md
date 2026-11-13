@@ -24,6 +24,11 @@ It builds on and must stay consistent with:
 | `PLAYBOOK_CHROME_EXTENSION.md` | Enterprise policy, kill switch, diagnostics bundle, release governance patterns reused here |
 | `PLAYBOOK_CLAUDE_CODE.md` | SDD + TDD workflow, roles and kit for AI-assisted development |
 
+The runnable, machine-checkable companion is
+[beautifulqt](https://github.com/Facta-Dev/beautifulqt): three Agent Skills
+(write, review, port), a drop-in clang-tidy/clang-format config and a compiled
+example.
+
 The rules that carry the whole file:
 
 1. **Keep the GUI thread sacred.** Nothing that can block (network, disk, parsing,

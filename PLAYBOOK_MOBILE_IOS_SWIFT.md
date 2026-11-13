@@ -27,6 +27,11 @@ of slices, ports and budgets), `PLAYBOOK_FRONTEND.md` (MVVM + SDK),
 from `PLAYBOOK_DESKTOP_QT.md` (realtime state machine) and
 `PLAYBOOK_CHROME_EXTENSION.md` (managed config, kill switch, diagnostics).
 
+The runnable, machine-checkable companion is
+[beautifulios](https://github.com/Facta-Dev/beautifulios): three Agent Skills
+(write, review, port) and a drop-in SwiftLint/swift-format config that enforces
+this contract.
+
 The rules that carry the whole file:
 
 1. **Views are code.** SwiftUI first (UIKit only in code, never via Interface

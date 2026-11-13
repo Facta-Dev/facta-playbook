@@ -1,5 +1,9 @@
 # `<app>` — native Android skeleton
 
+> Companion repo:
+> [beautifulandroid](https://github.com/Facta-Dev/beautifulandroid) — the Agent
+> Skills and linter config for this stack.
+
 A native Android template: Kotlin 2.4 + Jetpack Compose, Gradle 9.6 with AGP
 9.5, **one Gradle module per architectural layer**, Navigation 3 typed
 `NavKey` routes, a unidirectional-data-flow `notes` slice, and manual

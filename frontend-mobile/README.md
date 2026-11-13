@@ -1,5 +1,9 @@
 # `<app>` — React Native + Expo mobile skeleton
 
+> Companion repo:
+> [beautifulreactnative](https://github.com/Facta-Dev/beautifulreactnative) —
+> the Agent Skills and linter config for this stack.
+
 A mobile app template: Expo SDK 58 + React Native 0.88 + TypeScript 6 in a
 pnpm workspace, the hexagonal layers of the mobile playbook (pure domain and
 application, framework-free view models, React Native only at the views), a

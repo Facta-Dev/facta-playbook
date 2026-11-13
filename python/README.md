@@ -1,5 +1,9 @@
 # `<app>` — Python backend skeleton
 
+> Companion repo:
+> [beautifulpython](https://github.com/Facta-Dev/beautifulpython) — the Agent
+> Skills and linter config for this stack.
+
 A hexagonal, vertically-sliced Python 3.12 backend template: FastAPI,
 pydantic v2, SQLAlchemy 2.0 async + asyncpg, Alembic, PyJWT HS256, argon2id,
 full auth core, DB outbox email worker, WebSocket + SSE, pytest/pytest-bdd
