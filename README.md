@@ -207,6 +207,7 @@ enforcement and the worked examples for frontier models.
 | Playbook | Companion repo(s) | Stack |
 | --- | --- | --- |
 | `PLAYBOOK_BACKEND.md` | [beautifulgo](https://github.com/Facta-Dev/beautifulgo), [beautifulnodejs](https://github.com/Facta-Dev/beautifulnodejs), [beautifulpython](https://github.com/Facta-Dev/beautifulpython), [beautifulrust](https://github.com/Facta-Dev/beautifulrust) | Go, Node.js/TypeScript, Python, Rust |
+| `PLAYBOOK_JAVA_J2EE.md` | [beautiful-j2ee](https://github.com/Facta-Dev/beautiful-j2ee) | Java enterprise (J2EE / Jakarta EE 11) |
 | `PLAYBOOK_FRONTEND.md` | [beautifulreact](https://github.com/Facta-Dev/beautifulreact) | React 19 + TypeScript |
 | `PLAYBOOK_CHROME_EXTENSION.md` | [beautifulextension](https://github.com/Facta-Dev/beautifulextension) | Chrome MV3 + TypeScript |
 | `PLAYBOOK_DESKTOP_QT.md` | [beautifulqt](https://github.com/Facta-Dev/beautifulqt) | Qt 6 + C++20 |

@@ -12,6 +12,11 @@ stay consistent with `PLAYBOOK_URLS.md` (routes and authorization),
 `PLAYBOOK_TESTS.md` (the proof), `PLAYBOOK_SECURITY.md` and
 `PLAYBOOK_AUDIT.md`.
 
+The runnable, machine-checkable companion is
+[beautiful-j2ee](https://github.com/Facta-Dev/beautiful-j2ee): three Agent
+Skills (write, review, port) and a drop-in Checkstyle config that enforces
+this contract.
+
 The rules that carry the whole file:
 
 1. **A slice owns a business capability end to end** (resource → use case →
