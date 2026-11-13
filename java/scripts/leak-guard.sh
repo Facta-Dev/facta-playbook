@@ -26,7 +26,8 @@ leaks=0
 # the leak detector), and the pure-bash gate machinery (linter/leak-guard/
 # installer/rename/verify scripts) whose <app>/<APP>/<scope> literals are
 # PATTERN TOKENS, not template placeholders to flag — rename.sh excludes the
-# whole scripts/ dir from its substitution pass.
+# whole scripts/ dir from its substitution pass. `pom.xml` is excluded too:
+# Maven's <scope> element is not a template placeholder.
 placeholder_hits="$(grep -rIl -e '<app>' -e '<APP>' -e '<scope>' \
   --exclude-dir=bin --exclude-dir=.git --exclude-dir=node_modules \
   --exclude-dir=fixtures --exclude-dir=evals \
@@ -35,7 +36,7 @@ placeholder_hits="$(grep -rIl -e '<app>' -e '<APP>' -e '<scope>' \
   --exclude='lint-skills.sh' --exclude='lint-commands.sh' \
   --exclude='leak-guard.sh' --exclude='install-claude-runtime.sh' \
   --exclude='lint-agents.sh' --exclude='verify-template.sh' \
-  --exclude='rename.sh' \
+  --exclude='rename.sh' --exclude='pom.xml' \
   . 2>/dev/null || true)"
 if [[ -n "$placeholder_hits" ]]; then
   echo "leak-guard: PLACEHOLDER LEAK — residual <app>/<APP>/<scope> found:" >&2

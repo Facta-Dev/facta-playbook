@@ -19,7 +19,7 @@ echo "verify-template: rename"
 
 survivors=$(grep -rlE '<app>|<APP>|<scope>' "$TMP" \
   --exclude-dir=scripts --exclude-dir=.claude --exclude-dir=evals \
-  --exclude-dir=.git --exclude-dir=target 2>/dev/null || true)
+  --exclude-dir=.git --exclude-dir=target --exclude=pom.xml 2>/dev/null || true)
 if [[ -n "$survivors" ]]; then
   echo "verify-template: FAIL — literal placeholders survived the rename:" >&2
   echo "$survivors" >&2

@@ -8,17 +8,15 @@
 #
 # Notes:
 #   - <APP> (uppercase) lands in env-var prefixes and display names only.
-#   - Substitution order is <scope> -> <APP> -> <app> (COLLABORATION.md §3.1):
-#     the module path "github.com/<scope>/<app>" becomes
-#     "github.com/acme/mycompany" in one pass, without partial-token overlap.
-#   - Run before the first `mvn verify`; the Java package stays `com.example.app`.
+#   - Substitution order is <scope> -> <APP> -> <app>, without partial-token
+#     overlap; the Java package stays `com.example.app` (rename it by hand).
+#   - Run before the first `mvn verify`.
 #   - scripts/*.sh are EXCLUDED: they are the template machinery and keep
 #     their literal placeholder patterns so the gates keep working post-rename.
 #   - evals/fixtures/* are EXCLUDED: frozen test data whose deliberate residual
-#     <app> tokens exercise the evals leak detector (contracts_test.go asserts
+#     <app> tokens exercise the evals leak detector (contracts_test.py asserts
 #     the validator still rejects them); rewriting them would defuse the test.
-#   - evals/*.go + evals/run-live.sh carry no placeholders; evals/go.mod IS
-#     rewritten (its module path is github.com/<scope>/<app>/evals).
+#   - pom.xml is EXCLUDED: its Maven <scope> element is not the placeholder.
 #   - Text rewrites only; no directory renames (slices use clean names).
 
 set -euo pipefail
@@ -40,6 +38,7 @@ cd "$ROOT_DIR"
 files=$(find . \
   -type f \
   -not -path './.git/*' \
+  -not -path './pom.xml' \
   -not -path '*/node_modules/*' \
   -not -path './scripts/*' \
   -not -path './evals/fixtures/*' \
