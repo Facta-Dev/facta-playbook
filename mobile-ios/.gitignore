@@ -1,0 +1,16 @@
+# Xcode
+# XcodeGen emits the project from project.yml; a tracked .xcodeproj is a
+# second source of truth and a merge conflict generator.
+*.xcodeproj/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# SwiftPM
+.build/
+.swiftpm/
+Package.resolved
+
+# Local secrets: never committed (.env.example is the tracked template)
+.env
+.DS_Store

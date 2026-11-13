@@ -1,0 +1,6 @@
+{
+  "name": "@<scope>/<app>-evals",
+  "private": true,
+  "type": "module",
+  "description": "Native contract tests for the template's .claude layer (node --test, zero dependencies)."
+}

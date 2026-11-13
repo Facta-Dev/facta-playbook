@@ -43,7 +43,7 @@ bash ~/ai-coding-playbook/scripts/claude-kit/bootstrap.sh             # install
              ├─ working set   clone-repos.sh --group=selected --dir ~/work
              ├─ skill packs   install-skill-packs.sh --dir ~/work
              ├─ cost tracker  ~/work/claude-code-cli-cost-tracker/install.sh
-             └─ each repo     configure-repo.sh <repo> --kit=<golang|nodejs|python|rust|extension|desktop|frontend-mobile|mobile-android>
+             └─ each repo     configure-repo.sh <repo> --kit=<golang|nodejs|python|rust|extension|desktop|frontend-mobile|mobile-android|mobile-ios>
 
 VERIFY: kit_check.py · deny probe (PLAYBOOK_INSTALL §5) · routing probes (§9)
         · /context · /doctor
@@ -166,6 +166,7 @@ specialized to it, and the matching `.claude/` plane:
 | `desktop/` | Runnable Qt 6 Widgets template (C++20, CMake presets, one static library per layer with link-time rules, MVVM notes slice, SQLite, managed policy, headless Qt Test) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, C++ contract evals | Ready |
 | `frontend-mobile/` | Runnable React Native + Expo template (SDK 58, React 19.3, RN 0.88, plain App entry, device tiers + quality governor, typed route table, MVVM notes slice, vitest architecture tests, Metro export gate) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, node contract evals | Ready |
 | `mobile-android/` | Runnable native Android template (Gradle 9.6, AGP 9.5, Kotlin 2.4, Compose, one Gradle module per layer, Navigation 3 typed NavKey, UDF notes slice, JVM tests, Gradle kit evals) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, JVM contract evals | Ready |
+| `mobile-ios/` | Runnable native iOS template (Swift 6, SwiftUI, iOS 18, XcodeGen `project.yml`, one SwiftPM package per layer, typed `NotesRoute` enum, UDF notes slice, Swift Testing, node contract evals, native gates that SKIP off macOS) + `docs/` 00–14, `AGENTS.md`, `MEMORY.md`, 7 client playbooks, 11 agents, 9 skills/commands, node contract evals | Ready (native gates pending macOS/CI) |
 
 The Go directory is the reference implementation for the backend kits; the
 extension kit is the reference for the client kits.

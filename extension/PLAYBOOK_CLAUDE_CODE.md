@@ -1379,9 +1379,9 @@ enforced lever — an `allow` list is inert — so user-scope denies must anchor
 The kit directories are **runnable templates**: a renamed copy is a working
 project. `golang/` is the reference for the backend kits and `extension/` the
 reference for the client kits. A kit that installs but cannot be renamed,
-evaluated or gated is not shippable. The four client kits
-(`extension/`, `desktop/`, `frontend-mobile/`, `mobile-android/`) are the
-reference for the checklist below.
+evaluated or gated is not shippable. The five client kits
+(`extension/`, `desktop/`, `frontend-mobile/`, `mobile-android/`,
+`mobile-ios/`) are the reference for the checklist below.
 
 ### 21.1 Required surface
 
@@ -1394,7 +1394,7 @@ reference for the checklist below.
 | `.claude/settings.json`, `.claude/manifest.json` | the control plane; the manifest declares the modules, the always-on set, the opt-ins, the runtime config dirs and the format adapters |
 | `scripts/hooks/guard-bash.sh` | the `PreToolUse` guard, byte-identical across the client kits |
 | `scripts/lint-agents.sh`, `lint-skills.sh`, `lint-commands.sh`, `leak-guard.sh`, `instruction-budget.sh` | the static gates every renamed copy must pass |
-| `scripts/rename.sh` | placeholder substitution (`<scope>` → `<APP>` → `<app>`, text only); it validates the new slug **before** touching the tree |
+| `scripts/rename.sh` | placeholder substitution (`<scope>` → `<APP>` → `<app>`); it validates the new slug **before** touching the tree |
 | `scripts/verify-template.sh` | stages a renamed copy in a temp dir and runs every gate on it, one `PASS`/`FAIL` per stage, without mutating the working tree |
 | `scripts/install-claude-runtime.sh` | the manifest-driven installer; `configure-repo.sh --kit=<kit>` runs it (kit-local, repo-local as fallback) |
 | `evals/` | the contract suite, `fixtures/{valid,invalid}/` and `run-live.sh` |
@@ -1404,7 +1404,7 @@ product name. `scripts/**` and `evals/fixtures/**` are excluded from
 substitution on purpose: the gates keep their literal patterns and the
 fixtures stay frozen.
 
-The four client kits are the reference, not the definition: where a shipped
+The five client kits are the reference, not the definition: where a shipped
 kit drifts from this table, the table wins and the kit is fixed.
 
 ### 21.2 Two eval tiers

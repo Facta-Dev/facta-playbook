@@ -1,0 +1,51 @@
+# XcodeGen manifest — the project file is generated, never committed.
+#
+# One app target, six local Swift packages. The dependency graph is declared
+# here and in each Package.swift; scripts/check-architecture.sh gates the
+# edges the compiler cannot.
+name: <APP>
+options:
+  bundleIdPrefix: com.<scope>
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    GENERATE_INFOPLIST_FILE: YES
+packages:
+  Kernel:
+    path: Packages/Core/Kernel
+  UICore:
+    path: Packages/Core/UICore
+  NotesContracts:
+    path: Packages/Feature/Notes/Contracts
+  NotesDomain:
+    path: Packages/Feature/Notes/Domain
+  NotesData:
+    path: Packages/Feature/Notes/Data
+  NotesUI:
+    path: Packages/Feature/Notes/UI
+targets:
+  <APP>:
+    type: application
+    platform: iOS
+    sources:
+      - path: Apps/<APP>/Sources
+    dependencies:
+      - package: Kernel
+      - package: UICore
+      - package: NotesContracts
+      - package: NotesDomain
+      - package: NotesData
+      - package: NotesUI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.<scope>.<app>
+        INFOPLIST_KEY_CFBundleDisplayName: <APP>
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "0.1.0"

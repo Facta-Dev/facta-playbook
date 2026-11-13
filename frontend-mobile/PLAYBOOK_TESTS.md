@@ -566,8 +566,9 @@ for Apify with a nightly live-sandbox smoke, and the
 
 ## 12. The client kits' own gates
 
-The four client kits — `extension`, `desktop`, `frontend-mobile` and
-`mobile-android` — ship the same gate surface under the same names, so one
+The five client kits — `extension`, `desktop`, `frontend-mobile`,
+`mobile-android` and `mobile-ios` — ship the same gate surface under the same
+names, so one
 command means the same thing in every one of them:
 
 | Gate | What it proves |
@@ -580,12 +581,12 @@ command means the same thing in every one of them:
 is `make evals`, except in the extension kit, whose Makefile does not wrap
 the `evals` package script.
 
-Three rules keep the four kits interchangeable:
+Three rules keep the five kits interchangeable:
 
 1. **Same name, same meaning.** `verify` is always the staged renamed copy —
    never an alias of `test`, and never a target the documentation contradicts.
 2. **A live-eval tier defaults to something that exists.** `evals/run-live.sh`
-   defaults to a skill slug the kit ships (`review` in all four). A default
+   defaults to a skill slug the kit ships (`review` in all five). A default
    that skips by default turns the tier into a no-op that still exits 0.
 3. **A schema doc describes the harness the kit ships.**
    `.claude/schemas/*.schema.md` states what parses it: the bash linters
@@ -593,7 +594,8 @@ Three rules keep the four kits interchangeable:
    `evals/contracts_test.cpp` reads every list from the schema at runtime;
    the React Native kit's `evals/contracts.test.mjs` reads the division enum
    from it and mirrors the required keys and sections by hand; the extension
-   kit's eval and the Android kit's `evals/src/` mirror the lists. Never
+   kit's eval, the Android kit's `evals/src/` and the iOS kit's
+   `evals/contracts.test.mjs` do the same. Never
    document a harness the kit does not ship, and never tell the reader to
    update a file that does not exist.
 
