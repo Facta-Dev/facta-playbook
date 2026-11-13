@@ -2,7 +2,7 @@
 #
 # Standalone Cargo package (NOT a workspace member): the workspace `members`
 # list names only crates/<app>-*, so this package is built/tested in isolation
-# via `cargo test --manifest-path evals/Cargo.toml` (the `test:contracts` recipe).
+# via `cargo test --manifest-path evals/Cargo.toml` (the `test-contracts` recipe).
 # Zero external dependencies — the frontmatter parser and body-section checker
 # are hand-rolled on std only, so `cargo test` runs offline with no network.
 #

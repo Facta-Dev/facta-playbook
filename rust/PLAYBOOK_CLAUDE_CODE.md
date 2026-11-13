@@ -520,7 +520,7 @@ idea → /spec (scoped issue) → /plan (docs/plans/<slug>.md) → implementatio
 | Supply chain | `just audit` | release |
 | Migrations | `just migrate` against a live Postgres | release |
 
-`just ci` = `fmt-check + lint + check + test + test:contracts`. It does not
+`just ci` = `fmt-check + lint + check + test + test-contracts`. It does not
 include `just audit` or `just gen-check`; run those explicitly when the change
 touches dependencies or the HTTP surface.
 

@@ -1,8 +1,8 @@
 # justfile — local + CI task runner. `just ci` mirrors the CI gate.
 # ponytail: `just` must be installed (cargo install just).
 
-# Run the full gate: fmt-check + lint + check + test + test:contracts.
-ci: fmt-check lint check test test:contracts
+# Run the full gate: fmt-check + lint + check + test + test-contracts.
+ci: fmt-check lint check test test-contracts
 
 fmt-check:
     cargo fmt --all -- --check
@@ -17,7 +17,7 @@ check:
 # Standalone package (NOT a workspace member), zero external deps — runs
 # offline. Mirrors the gtm valid+invalid fixture pair + regex-match-on-failure
 # pattern in the stack's native runner.
-test:contracts:
+test-contracts:
     cargo test --manifest-path evals/Cargo.toml
 
 test:
