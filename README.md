@@ -234,60 +234,17 @@ apply across the series: every companion repo carries the same three-skill
 shape, the same "unbreakable contract" wording, and a CI workflow, and every
 rule it enforces cites the playbook it comes from. All repositories are public
 under <https://github.com/Facta-Dev> and link to each other as siblings. The
-twelve companion repositories are also listed in the repository map [§4.4](#44-skills-and-factory-packs).
+twelve companion repositories are also listed under skills in [§4.1](#41-skills-and-factory-packs).
 
-## 4. Repository map
+## 4. Skills, tooling and references
 
-Orgs: [**Facta-Dev**](https://github.com/Facta-Dev) (products, tooling),
-[**contextzero**](https://github.com/contextzero) (NEST / CTX0),
-[**everythink-ai**](https://github.com/everythink-ai) +
-[**Technorides**](https://github.com/Technorides) (client rebuilds),
-[**matiasbaglieri**](https://github.com/matiasbaglieri) (owner's personal tooling). Visibility varies; several public repos are
-forked skill packs vendored for use, not authored here.
+Orgs: [**Facta-Dev**](https://github.com/Facta-Dev) (skills and tooling),
+[**contextzero**](https://github.com/contextzero) (tooling), and
+[**matiasbaglieri**](https://github.com/matiasbaglieri) (personal tooling).
+Visibility varies; several public repos are forked skill packs vendored for
+use, not authored here.
 
-### 4.1 Products
-
-| Repo | Stack | What it is |
-| --- | --- | --- |
-| [Facta-Dev/talos](https://github.com/Facta-Dev/talos) | Python | TALOS — organizational AI infrastructure: Cortex (multi-agent chat), Billing, Conductor (orchestration), System Config, Pulse (insights) |
-| [Facta-Dev/deino](https://github.com/Facta-Dev/deino) | TypeScript | Deino — oracle intelligence / auditable forecasting infrastructure |
-| [Facta-Dev/staxis](https://github.com/Facta-Dev/staxis) | TypeScript | Staxis — crypto trading infrastructure |
-| [Facta-Dev/v0ss](https://github.com/Facta-Dev/v0ss) | Rust | v0ss — real-time subtitles plus answers from your own knowledge base |
-| [Facta-Dev/enyo-platform](https://github.com/Facta-Dev/enyo-platform) | Go | ENYO — self-hosted security testing and OSINT platform |
-| [Facta-Dev/heimdall-platform](https://github.com/Facta-Dev/heimdall-platform) | TypeScript | Heimdall — "the guardian of the pipeline": reply triage. Reference implementation for every playbook here |
-| [Facta-Dev/trustanova](https://github.com/Facta-Dev/trustanova) | Python | TrustaNova — AI-assisted online dispute resolution (ODR) |
-| [Facta-Dev/ReachPilot](https://github.com/Facta-Dev/ReachPilot), [Facta-Dev/ReachPilotPro](https://github.com/Facta-Dev/ReachPilotPro) | Python / Rust | ReachPilot — multi-platform social engagement engine |
-| [Facta-Dev/package_builder](https://github.com/Facta-Dev/package_builder) | HTML | Package Builder ([`pb`](https://github.com/Facta-Dev/package_builder)) — the FACTA template factory: project skeletons (React, Python, Rust, RN, CLI, Chrome ext), the [`pb`](https://github.com/Facta-Dev/package_builder) Claude Code plugin, 16 invariants as PR blockers ([`pb.facta.dev`](https://pb.facta.dev)) |
-| [Facta-Dev/ei2](https://github.com/Facta-Dev/ei2) | Python | **Eidos** — 1,756 book-derived archetype packages for Claude Code across 12 segments; assets-only offer |
-| [Facta-Dev/zypho-editor](https://github.com/Facta-Dev/zypho-editor), [zypho-platform](https://github.com/Facta-Dev/zypho-platform), [zypho_backend](https://github.com/Facta-Dev/zypho_backend), [zypho_frontend](https://github.com/Facta-Dev/zypho_frontend), [zypho-chrome-extension](https://github.com/Facta-Dev/zypho-chrome-extension) | TS / Python / HTML | The zypho editor suite |
-| [contextzero/nest](https://github.com/contextzero/nest) | — | NEST — local-first control plane for AI coding agents (free, self-hosted) |
-| [contextzero/ctx0](https://github.com/contextzero/ctx0) | — | CTX0 — the managed-cloud version of NEST |
-
-### 4.2 Content, site and side products
-
-| Repo | Stack | What it is |
-| --- | --- | --- |
-| [Facta-Dev/facta_archetype](https://github.com/Facta-Dev/facta_archetype) | HTML + Python | Content/social engine: landings, slide decks, GIFs, MP4s, per-product identities |
-| [Facta-Dev/facta_frontend](https://github.com/Facta-Dev/facta_frontend) | JavaScript | [facta.dev](https://facta.dev) site and the private investor deck |
-| [Facta-Dev/blog-templates](https://github.com/Facta-Dev/blog-templates) | HTML | Crawled blog post templates by provider (`article.md`, `article.html`, `meta.json`) |
-| [Facta-Dev/3d-landings-pro](https://github.com/Facta-Dev/3d-landings-pro) | Python | Scroll-scrubbed "fly through the world" landing templates |
-| [Facta-Dev/claude-skill](https://github.com/Facta-Dev/claude-skill) | Python | Skill that makes Claude build cinematic landing pages |
-| [Facta-Dev/ai-job-search](https://github.com/Facta-Dev/ai-job-search) | JavaScript | AI job-application framework that runs locally |
-| [Facta-Dev/agents-office](https://github.com/Facta-Dev/agents-office) | JavaScript | Agents Office v3 — 3D isometric office where agents do real work |
-| [Facta-Dev/synthia_frontend](https://github.com/Facta-Dev/synthia_frontend) | JavaScript | SYNTHIA platform — enterprise AI orchestration dashboard (React) |
-
-### 4.3 Client rebuilds
-
-| Repo | Org | What it is |
-| --- | --- | --- |
-| [everythink_platform](https://github.com/everythink-ai/everythink_platform) | [everythink-ai](https://github.com/everythink-ai) | EveryThink platform (the 90-day rebuild, in progress) |
-| [everythink_android](https://github.com/matiasbaglieri/everythink_android), [everythink_ios](https://github.com/matiasbaglieri/everythink_ios), [everythink_backend](https://github.com/matiasbaglieri/everythink_backend) | [matiasbaglieri](https://github.com/matiasbaglieri) | EveryThink mobile + backend |
-| [everythiink_arxiv](https://github.com/everythink-ai/everythiink_arxiv) | [everythink-ai](https://github.com/everythink-ai) | EveryThink arXiv corpus |
-| [transportation-bank](https://github.com/Technorides/transportation-bank) | [Technorides](https://github.com/Technorides) | TechnoRides — transportation bank backend + reference book |
-| [technorides_eu](https://github.com/Technorides/technorides_eu), [technorides_web](https://github.com/Technorides/technorides_web), [technorides_web_premium](https://github.com/Technorides/technorides_web_premium) | [Technorides](https://github.com/Technorides) | TechnoRides platform surfaces |
-| [trustanova-platform](https://github.com/Facta-Dev/trustanova-platform) | [Facta-Dev](https://github.com/Facta-Dev) | TrustaNova platform rebuild — ODR monorepo; the legacy surface being replaced sits in [`to_migrate/`](https://github.com/Facta-Dev/trustanova-platform/tree/main/to_migrate) |
-
-### 4.4 Skills and factory packs
+### 4.1 Skills and factory packs
 
 | Repo | What it is |
 | --- | --- |
@@ -299,7 +256,7 @@ forked skill packs vendored for use, not authored here.
 | [Facta-Dev/ponytail](https://github.com/Facta-Dev/ponytail) | Fork of the lazy-senior-dev skill behind the `ponytail` plugin |
 | [Facta-Dev/superpowers](https://github.com/Facta-Dev/superpowers), [Facta-Dev/frontend-slides](https://github.com/Facta-Dev/frontend-slides), [Facta-Dev/marketingskills](https://github.com/Facta-Dev/marketingskills), [Facta-Dev/ui-ux-pro-max-skill](https://github.com/Facta-Dev/ui-ux-pro-max-skill), [Facta-Dev/awesome-claude-skills](https://github.com/Facta-Dev/awesome-claude-skills), [Facta-Dev/awesome-claude-*](https://github.com/orgs/Facta-Dev/repositories?q=awesome-claude) | Vendored skill/framework collections |
 
-### 4.5 Internal tooling
+### 4.2 Internal tooling
 
 | Repo | What it is |
 | --- | --- |
@@ -310,7 +267,7 @@ forked skill packs vendored for use, not authored here.
 | [Facta-Dev/OmniRoute](https://github.com/Facta-Dev/OmniRoute) | Model/gateway routing dashboard (private working copy of [diegosouzapw/OmniRoute](https://github.com/diegosouzapw/OmniRoute)) |
 | [contextzero/repomix](https://github.com/contextzero/repomix) | Private working copy of [yamadashy/repomix](https://github.com/yamadashy/repomix) with local changes on `main` |
 
-### 4.6 Reference clones (upstream, read-only)
+### 4.3 Reference clones (upstream, read-only)
 
 Cloned for study or as vendored dependencies, not owned or contributed to:
 [storytold/craft-anything](https://github.com/storytold/craft-anything), [rmcrackan/Libation](https://github.com/rmcrackan/Libation), [OlaProeis/Ferrite](https://github.com/OlaProeis/Ferrite),
@@ -322,11 +279,11 @@ Cloned for study or as vendored dependencies, not owned or contributed to:
 
 ---
 
-## 5. Adding a project to the map
+## 5. Adding a repo to the inventory
 
 A repo belongs here when it is actively worked on. To add one:
 
-1. Add a row to the matching table — repo, stack, one line of role.
+1. Add a row to the matching table — repo and one line of role.
 2. Append the `model-routing:ollama` block to its [`CLAUDE.md`](CLAUDE.md) (idempotent
    marker; see [`CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md` §6](CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md)).
 3. Enable only the project-level plugins the baseline does not cover.

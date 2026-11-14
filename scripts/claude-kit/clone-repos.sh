@@ -8,7 +8,7 @@
 # consumed from here, not authored in it.
 #
 # Usage:
-#   bash scripts/claude-kit/clone-repos.sh [--group=selected|core|products|tools|clients|reference|all]
+#   bash scripts/claude-kit/clone-repos.sh [--group=selected|core|tools|reference|all]
 #        [--dir=DIR] [--depth=N] [--dry-run]
 #     --group=NAME  group to clone (default: selected -- the install set)
 #     --dir=DIR     destination root (default: $HOME/work)
