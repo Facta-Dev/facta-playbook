@@ -129,6 +129,10 @@ never duplicate a baseline plugin in a project file.
 | [`PLAYBOOK_INSTALL.md`](PLAYBOOK_INSTALL.md) | Installation and bootstrap: clone order, idempotent kit configuration, user-scope validation, minimal-token install path | Preparing a new machine or re-provisioning one |
 | [`PLAYBOOK_CLAUDE_CODE.md`](PLAYBOOK_CLAUDE_CODE.md) | The Claude Code implementation kit: files, agents, skills, rules, hooks, permissions, memory, collaboration protocol, parallel sessions, SDD + TDD loop | Starting a repo, or auditing whether a repo is agent-ready |
 | [`PLAYBOOK_BACKEND.md`](PLAYBOOK_BACKEND.md) | Backend architecture: hexagonal + vertical slices, language-agnostic folder and dependency rules | Any backend service, any language |
+| [`PLAYBOOK_GOLANG.md`](PLAYBOOK_GOLANG.md) | Go backend architecture: hexagonal ports and vertical slices, cmd/internal layout, chi, pgx/sqlc, River, go-redis, depguard gates. | Any Go backend |
+| [`PLAYBOOK_NODEJS.md`](PLAYBOOK_NODEJS.md) | Node.js backend architecture: Fastify 5, pg + Kysely, migrations, email outbox, realtime hub, ESLint layer walls. | Any Node.js/TypeScript backend |
+| [`PLAYBOOK_PYTHON.md`](PLAYBOOK_PYTHON.md) | Python backend architecture: FastAPI + pydantic v2, SQLAlchemy 2 async, Alembic, outbox, import-linter boundaries. | Any Python backend |
+| [`PLAYBOOK_RUST.md`](PLAYBOOK_RUST.md) | Rust backend architecture: crate-per-capability, dependencies point inward, axum + sqlx, outbox worker, clippy pedantic. | Any Rust backend |
 | [`PLAYBOOK_JAVA_J2EE.md`](PLAYBOOK_JAVA_J2EE.md) | Java enterprise (J2EE / Jakarta EE 11): Maven modules, CDI, JPA/JTA, JMS/outbox, JAX-RS, app-server deployment | Any Java enterprise backend |
 | [`PLAYBOOK_FRONTEND.md`](PLAYBOOK_FRONTEND.md) | Frontend on React: SPA, MVVM + shared SDK (the client playbooks specialize it) | Any web client |
 | [`PLAYBOOK_CHROME_EXTENSION.md`](PLAYBOOK_CHROME_EXTENSION.md) | Chrome MV3 extension: service worker, messaging, permissions, store review | Any extension |
