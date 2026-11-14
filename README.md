@@ -49,9 +49,9 @@ VERIFY: kit_check.py · deny probe (PLAYBOOK_INSTALL §5) · routing probes (§9
         · /context · /doctor
 ```
 
-Interactive diagram: [Install decision tree](docs/architecture/install-decision-tree.workflow.html)
-— the same branches, rendered with [Archify](https://github.com/tt-a1i/archify). Source:
-[`install-decision-tree.workflow.json`](docs/architecture/install-decision-tree.workflow.json).
+[![Install decision tree: preflight → OS? → provider? → scope → verify](docs/architecture/install-decision-tree.workflow.png)](docs/architecture/install-decision-tree.workflow.html)
+
+The image above is the same tree rendered with [Archify](https://github.com/tt-a1i/archify); click it for the interactive version. Source: [`install-decision-tree.workflow.json`](docs/architecture/install-decision-tree.workflow.json).
 
 The provider branch changes only which settings env lands in
 `~/.claude/settings.json`; everything downstream is identical shell work.
