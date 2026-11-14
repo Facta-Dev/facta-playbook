@@ -4,6 +4,9 @@ A runnable enterprise Java backend on **Jakarta EE 11** (J2EE), Java 21, Maven,
 CDI, JPA/Hibernate, Flyway, JAX-RS and PostgreSQL. It implements the facta
 hexagonal + vertical-slice contract with a reference `widgets` slice.
 
+> Companion repo: [beautiful-j2ee](https://github.com/Facta-Dev/beautiful-j2ee) —
+> the Agent Skills and linter config for this stack.
+
 ## Quick start
 
 ```bash

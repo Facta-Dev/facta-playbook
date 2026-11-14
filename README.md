@@ -222,7 +222,8 @@ The shared contracts — `PLAYBOOK_URLS.md`, `PLAYBOOK_TESTS.md`,
 apply across the series: every companion repo carries the same three-skill
 shape, the same "unbreakable contract" wording, and a CI workflow, and every
 rule it enforces cites the playbook it comes from. All repositories are public
-under <https://github.com/Facta-Dev> and link to each other as siblings.
+under <https://github.com/Facta-Dev> and link to each other as siblings. The
+twelve companion repositories are also listed in the repository map (§4.4).
 
 ## 4. Repository map
 
@@ -280,7 +281,7 @@ forked skill packs vendored for use, not authored here.
 | `Facta-Dev/skills` | Engineering skill pack ("skills for real engineers") |
 | `Facta-Dev/skills-images-video-audio-3d` | Image, video, audio and 3D generation skills (84 skills) |
 | `Facta-Dev/garden-skills` | Web design, knowledge retrieval, video presentation skill pack |
-| `Facta-Dev/beautifulgo`, `beautifulnodejs`, `beautifulpython`, `beautifulrust` | Idiomatic-language skill packs |
+| `Facta-Dev/beautifulgo`, `beautifulnodejs`, `beautifulpython`, `beautifulrust`, `beautiful-j2ee`, `beautifulreact`, `beautifulextension`, `beautifulcli`, `beautifulreactnative`, `beautifulqt`, `beautifulandroid`, `beautifulios` | The twelve Beautiful-series skill packs (see §3.4) |
 | `Facta-Dev/archify` | Architecture / workflow / sequence diagram skill |
 | `Facta-Dev/ponytail` | Fork of the lazy-senior-dev skill behind the `ponytail` plugin |
 | `Facta-Dev/superpowers`, `Facta-Dev/frontend-slides`, `Facta-Dev/marketingskills`, `Facta-Dev/ui-ux-pro-max-skill`, `Facta-Dev/awesome-claude-skills`, `Facta-Dev/awesome-claude-*` | Vendored skill/framework collections |
