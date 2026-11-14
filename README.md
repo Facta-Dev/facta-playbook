@@ -144,6 +144,26 @@ never duplicate a baseline plugin in a project file.
 | [`PLAYBOOK_REA.md`](PLAYBOOK_REA.md) | REA setup: register the reverse-engineering MCP + skill with every agent on the machine | Analyzing binaries, bundles or captured traffic |
 | [`CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md`](CLAUDE_CODE_ROUTING_MODELS_OLLAMA.md) | Model tiers (`opus`/`sonnet`/`haiku`), `advisor` agent, settings, verification, gotchas, rollback | Setting up a new machine or a new repo |
 
+### Playbook copies per kit
+
+Every kit ships its own byte-specialized copies of the root playbooks. The
+backend kits carry the six shared contracts; the client kits add their stack
+playbook and `PLAYBOOK_FRONTEND.md`. Together with the table above, this
+covers every `PLAYBOOK_*.md` file in the repository.
+
+| Kit | Playbook copies |
+| --- | --- |
+| [`golang/`](golang/) | [`PLAYBOOK_BACKEND.md`](golang/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](golang/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](golang/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](golang/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](golang/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](golang/PLAYBOOK_CLAUDE_CODE.md) |
+| [`rust/`](rust/) | [`PLAYBOOK_BACKEND.md`](rust/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](rust/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](rust/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](rust/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](rust/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](rust/PLAYBOOK_CLAUDE_CODE.md) |
+| [`nodejs/`](nodejs/) | [`PLAYBOOK_BACKEND.md`](nodejs/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](nodejs/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](nodejs/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](nodejs/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](nodejs/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](nodejs/PLAYBOOK_CLAUDE_CODE.md) |
+| [`python/`](python/) | [`PLAYBOOK_BACKEND.md`](python/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](python/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](python/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](python/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](python/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](python/PLAYBOOK_CLAUDE_CODE.md) |
+| [`java/`](java/) | [`PLAYBOOK_BACKEND.md`](java/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](java/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](java/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](java/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](java/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](java/PLAYBOOK_CLAUDE_CODE.md) |
+| [`extension/`](extension/) | [`PLAYBOOK_CHROME_EXTENSION.md`](extension/PLAYBOOK_CHROME_EXTENSION.md), [`PLAYBOOK_FRONTEND.md`](extension/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](extension/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](extension/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](extension/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](extension/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](extension/PLAYBOOK_CLAUDE_CODE.md) |
+| [`desktop/`](desktop/) | [`PLAYBOOK_DESKTOP_QT.md`](desktop/PLAYBOOK_DESKTOP_QT.md), [`PLAYBOOK_FRONTEND.md`](desktop/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](desktop/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](desktop/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](desktop/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](desktop/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](desktop/PLAYBOOK_CLAUDE_CODE.md) |
+| [`frontend-mobile/`](frontend-mobile/) | [`PLAYBOOK_FRONTEND_MOBILE.md`](frontend-mobile/PLAYBOOK_FRONTEND_MOBILE.md), [`PLAYBOOK_FRONTEND.md`](frontend-mobile/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](frontend-mobile/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](frontend-mobile/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](frontend-mobile/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](frontend-mobile/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](frontend-mobile/PLAYBOOK_CLAUDE_CODE.md) |
+| [`mobile-android/`](mobile-android/) | [`PLAYBOOK_MOBILE_ANDROID_KOTLIN.md`](mobile-android/PLAYBOOK_MOBILE_ANDROID_KOTLIN.md), [`PLAYBOOK_FRONTEND.md`](mobile-android/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](mobile-android/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](mobile-android/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](mobile-android/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](mobile-android/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](mobile-android/PLAYBOOK_CLAUDE_CODE.md) |
+| [`mobile-ios/`](mobile-ios/) | [`PLAYBOOK_MOBILE_IOS_SWIFT.md`](mobile-ios/PLAYBOOK_MOBILE_IOS_SWIFT.md), [`PLAYBOOK_FRONTEND.md`](mobile-ios/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](mobile-ios/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](mobile-ios/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](mobile-ios/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](mobile-ios/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](mobile-ios/PLAYBOOK_CLAUDE_CODE.md) |
+
 ### 3.1 User-scope kit and install path
 
 [`kit/`](kit/) is the canonical user-scope (`~/.claude`) layer, versioned here so a new
@@ -236,24 +256,6 @@ rule it enforces cites the playbook it comes from. All repositories are public
 under <https://github.com/Facta-Dev> and link to each other as siblings. The
 twelve companion repositories are also listed under skills in [§4.1](#41-skills-and-factory-packs).
 
-### 3.5 Playbook copies per kit
-
-Every kit ships its own byte-specialized copies of the root playbooks. The
-backend kits carry the six shared contracts; the client kits add their stack
-playbook and `PLAYBOOK_FRONTEND.md`.
-
-| Kit | Playbook copies |
-| --- | --- |
-| [`golang/`](golang/) | [`PLAYBOOK_BACKEND.md`](golang/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](golang/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](golang/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](golang/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](golang/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](golang/PLAYBOOK_CLAUDE_CODE.md) |
-| [`rust/`](rust/) | [`PLAYBOOK_BACKEND.md`](rust/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](rust/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](rust/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](rust/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](rust/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](rust/PLAYBOOK_CLAUDE_CODE.md) |
-| [`nodejs/`](nodejs/) | [`PLAYBOOK_BACKEND.md`](nodejs/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](nodejs/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](nodejs/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](nodejs/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](nodejs/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](nodejs/PLAYBOOK_CLAUDE_CODE.md) |
-| [`python/`](python/) | [`PLAYBOOK_BACKEND.md`](python/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](python/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](python/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](python/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](python/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](python/PLAYBOOK_CLAUDE_CODE.md) |
-| [`java/`](java/) | [`PLAYBOOK_BACKEND.md`](java/PLAYBOOK_BACKEND.md), [`PLAYBOOK_TESTS.md`](java/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](java/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](java/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](java/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](java/PLAYBOOK_CLAUDE_CODE.md) |
-| [`extension/`](extension/) | [`PLAYBOOK_CHROME_EXTENSION.md`](extension/PLAYBOOK_CHROME_EXTENSION.md), [`PLAYBOOK_FRONTEND.md`](extension/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](extension/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](extension/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](extension/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](extension/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](extension/PLAYBOOK_CLAUDE_CODE.md) |
-| [`desktop/`](desktop/) | [`PLAYBOOK_DESKTOP_QT.md`](desktop/PLAYBOOK_DESKTOP_QT.md), [`PLAYBOOK_FRONTEND.md`](desktop/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](desktop/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](desktop/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](desktop/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](desktop/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](desktop/PLAYBOOK_CLAUDE_CODE.md) |
-| [`frontend-mobile/`](frontend-mobile/) | [`PLAYBOOK_FRONTEND_MOBILE.md`](frontend-mobile/PLAYBOOK_FRONTEND_MOBILE.md), [`PLAYBOOK_FRONTEND.md`](frontend-mobile/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](frontend-mobile/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](frontend-mobile/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](frontend-mobile/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](frontend-mobile/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](frontend-mobile/PLAYBOOK_CLAUDE_CODE.md) |
-| [`mobile-android/`](mobile-android/) | [`PLAYBOOK_MOBILE_ANDROID_KOTLIN.md`](mobile-android/PLAYBOOK_MOBILE_ANDROID_KOTLIN.md), [`PLAYBOOK_FRONTEND.md`](mobile-android/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](mobile-android/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](mobile-android/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](mobile-android/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](mobile-android/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](mobile-android/PLAYBOOK_CLAUDE_CODE.md) |
-| [`mobile-ios/`](mobile-ios/) | [`PLAYBOOK_MOBILE_IOS_SWIFT.md`](mobile-ios/PLAYBOOK_MOBILE_IOS_SWIFT.md), [`PLAYBOOK_FRONTEND.md`](mobile-ios/PLAYBOOK_FRONTEND.md), [`PLAYBOOK_TESTS.md`](mobile-ios/PLAYBOOK_TESTS.md), [`PLAYBOOK_SECURITY.md`](mobile-ios/PLAYBOOK_SECURITY.md), [`PLAYBOOK_URLS.md`](mobile-ios/PLAYBOOK_URLS.md), [`PLAYBOOK_AUDIT.md`](mobile-ios/PLAYBOOK_AUDIT.md), [`PLAYBOOK_CLAUDE_CODE.md`](mobile-ios/PLAYBOOK_CLAUDE_CODE.md) |
 
 ## 4. Skills, tooling and references
 
