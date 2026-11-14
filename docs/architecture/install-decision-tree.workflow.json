@@ -1,0 +1,293 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "FACTA Playbook — install decision tree",
+    "quality_profile": "showcase",
+    "output": "install-decision-tree.workflow.html",
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "precondition / branch"
+        },
+        "backend": {
+          "label": "install step"
+        },
+        "security": {
+          "label": "decision / verify"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "preflight",
+      "label": "Preflight"
+    },
+    {
+      "id": "windows",
+      "label": "Native Windows"
+    },
+    {
+      "id": "provider",
+      "label": "Provider"
+    },
+    {
+      "id": "ollama",
+      "label": "Ollama path"
+    },
+    {
+      "id": "anthropic",
+      "label": "Anthropic path"
+    },
+    {
+      "id": "install",
+      "label": "Scope"
+    },
+    {
+      "id": "verify",
+      "label": "Verify"
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase-preflight",
+      "label": "Preflight",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "phase-provider",
+      "label": "Provider",
+      "fromCol": 3,
+      "toCol": 3
+    },
+    {
+      "id": "phase-paths",
+      "label": "Settings env",
+      "fromCol": 4,
+      "toCol": 4
+    },
+    {
+      "id": "phase-install",
+      "label": "Install + verify",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "start",
+    "preconditions",
+    "os",
+    "provider",
+    "ollama",
+    "scope",
+    "verify"
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "lane": "preflight",
+      "col": 0,
+      "type": "external",
+      "label": "Start here",
+      "sublabel": "one command reads the machine",
+      "tag": "shell only",
+      "icon": "start"
+    },
+    {
+      "id": "preconditions",
+      "lane": "preflight",
+      "col": 1,
+      "type": "external",
+      "label": "Preconditions",
+      "sublabel": "git · python3 · claude · gh auth",
+      "icon": "flag"
+    },
+    {
+      "id": "os",
+      "lane": "preflight",
+      "col": 2,
+      "type": "security",
+      "label": "OS?",
+      "sublabel": "Linux/macOS/WSL2 · Windows→WSL2",
+      "tag": "decision",
+      "icon": "decision"
+    },
+    {
+      "id": "wsl2",
+      "lane": "windows",
+      "col": 2,
+      "type": "external",
+      "label": "Use WSL2",
+      "sublabel": "re-run the bootstrap inside WSL2",
+      "tag": "branch",
+      "icon": "external"
+    },
+    {
+      "id": "provider",
+      "lane": "provider",
+      "col": 3,
+      "type": "security",
+      "label": "Provider?",
+      "sublabel": "Ollama :11434? else Anthropic",
+      "tag": "decision",
+      "icon": "decision"
+    },
+    {
+      "id": "ollama",
+      "lane": "ollama",
+      "col": 4,
+      "type": "backend",
+      "label": "Ollama path",
+      "sublabel": "aliases · endpoint · token",
+      "tag": "settings env",
+      "icon": "cloud"
+    },
+    {
+      "id": "anthropic",
+      "lane": "anthropic",
+      "col": 4,
+      "type": "backend",
+      "label": "Anthropic path",
+      "sublabel": "no endpoint · sonnet · advisor",
+      "tag": "settings env",
+      "icon": "security"
+    },
+    {
+      "id": "scope",
+      "lane": "install",
+      "col": 5,
+      "type": "backend",
+      "label": "Scope: install",
+      "sublabel": "same shell steps on both paths",
+      "tag": "user kit → repos → kits",
+      "icon": "backend"
+    },
+    {
+      "id": "verify",
+      "lane": "verify",
+      "col": 5,
+      "type": "security",
+      "label": "Verify",
+      "sublabel": "kit_check · deny · routing · doctor",
+      "tag": "gate",
+      "icon": "success"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-start-pre",
+      "from": "start",
+      "to": "preconditions",
+      "label": "bootstrap.sh",
+      "role": "main"
+    },
+    {
+      "id": "e-pre-os",
+      "from": "preconditions",
+      "to": "os",
+      "label": "preflight passes",
+      "role": "main"
+    },
+    {
+      "id": "e-os-provider",
+      "from": "os",
+      "to": "provider",
+      "label": "Linux / macOS / WSL2",
+      "role": "branch"
+    },
+    {
+      "id": "e-os-wsl2",
+      "from": "os",
+      "to": "wsl2",
+      "label": "native Windows",
+      "role": "branch",
+      "variant": "security"
+    },
+    {
+      "id": "e-wsl2-provider",
+      "from": "wsl2",
+      "to": "provider",
+      "label": "re-run inside WSL2",
+      "role": "return"
+    },
+    {
+      "id": "e-provider-ollama",
+      "from": "provider",
+      "to": "ollama",
+      "label": "Ollama answers",
+      "role": "branch"
+    },
+    {
+      "id": "e-provider-anthropic",
+      "from": "provider",
+      "to": "anthropic",
+      "label": "login / gateway",
+      "role": "branch"
+    },
+    {
+      "id": "e-ollama-scope",
+      "from": "ollama",
+      "to": "scope",
+      "label": "OLLAMA path",
+      "role": "main"
+    },
+    {
+      "id": "e-anthropic-scope",
+      "from": "anthropic",
+      "to": "scope",
+      "label": "ANTHROPIC path",
+      "role": "main"
+    },
+    {
+      "id": "e-scope-verify",
+      "from": "scope",
+      "to": "verify",
+      "label": "run gates",
+      "role": "main"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Preflight",
+      "items": [
+        "git · python3 ≥ 3.9 · claude ≥ 2.1.251 · gh auth",
+        "native Windows is not supported directly: use WSL2 first and re-run the bootstrap inside it",
+        "the provider branch changes only which settings env lands in ~/.claude/settings.json"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Provider paths",
+      "items": [
+        "OLLAMA: tier aliases (opus / sonnet / haiku → Ollama cloud models), endpoint, literal token `ollama`, cheap subagent routing; verify with the §9 probes",
+        "ANTHROPIC: no endpoint pinning; `model: sonnet` still applies; native `--advisor` is available (runbook §7)"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Scope: the same shell steps",
+      "items": [
+        "user kit: install-user-kit.sh [--provider=ollama|anthropic|auto]",
+        "kit check: kit_check.py (0 errors required)",
+        "working set: clone-repos.sh --group=selected --dir ~/work",
+        "skill packs: install-skill-packs.sh --dir ~/work",
+        "cost tracker: ~/work/claude-code-cli-cost-tracker/install.sh",
+        "each repo: configure-repo.sh <repo> --kit=<golang|nodejs|python|rust|java|extension|desktop|frontend-mobile|mobile-android|mobile-ios>"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Verify",
+      "items": [
+        "kit_check.py",
+        "deny probe (PLAYBOOK_INSTALL §5)",
+        "routing probes (§9)",
+        "/context and /doctor"
+      ]
+    }
+  ]
+}
